@@ -187,7 +187,7 @@ POST /checkout/apply-coupon/ → apply_coupon_ajax()
 ### Model
 ```python
 class Wishlist(models.Model):
-    user    = ForeignKey(User)
+    user = ForeignKey(User)
     product = ForeignKey(Product)
     added_at = DateTimeField(auto_now_add=True)
     # unique_together = (user, product) — no duplicates
@@ -257,9 +257,9 @@ User types in navbar search box (≥ 2 chars)
 ### Model
 ```python
 class NewsletterSubscriber(models.Model):
-    email         = EmailField(unique=True)
+    email = EmailField(unique=True)
     subscribed_at = DateTimeField(auto_now_add=True)
-    is_active     = BooleanField(default=True)
+    is_active = BooleanField(default=True)
 ```
 
 ### Subscribe Flow

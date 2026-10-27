@@ -1,4 +1,5 @@
 """Admin product and coupon management (admins only; staff can view products)."""
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -10,13 +11,18 @@ from bloomapp.permissions import admin_role_required, staff_required
 
 @staff_required
 def admin_products(request):
-    return render(request, 'bloomapp/admin_panel/products.html', {
-        'admin_user': request.admin_user,
-        'products': Product.objects.select_related('category').prefetch_related('extra_categories')
-                                   .order_by('-created_at'),
-        'categories': Category.objects.all(),
-        'is_staff': not request.admin_user.is_admin(),
-    })
+    return render(
+        request,
+        'bloomapp/admin_panel/products.html',
+        {
+            'admin_user': request.admin_user,
+            'products': Product.objects.select_related('category')
+            .prefetch_related('extra_categories')
+            .order_by('-created_at'),
+            'categories': Category.objects.all(),
+            'is_staff': not request.admin_user.is_admin(),
+        },
+    )
 
 
 @admin_role_required
@@ -79,7 +85,11 @@ def admin_coupons(request):
             messages.success(request, 'Coupon deleted.')
         return redirect('admin_coupons')
 
-    return render(request, 'bloomapp/admin_panel/coupons.html', {
-        'admin_user': request.admin_user,
-        'coupons': Coupon.objects.order_by('-created_at'),
-    })
+    return render(
+        request,
+        'bloomapp/admin_panel/coupons.html',
+        {
+            'admin_user': request.admin_user,
+            'coupons': Coupon.objects.order_by('-created_at'),
+        },
+    )

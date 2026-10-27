@@ -1,4 +1,5 @@
 """Access rules for the Bloomify admin panel (separate from /django-admin/)."""
+
 from functools import wraps
 
 from django.contrib import messages
@@ -8,6 +9,7 @@ from django.shortcuts import redirect
 
 def staff_required(view_fn):
     """Staff and admins only. Others are sent to the admin-panel login."""
+
     @wraps(view_fn)
     def wrapper(request, *args, **kwargs):
         user = request.user
@@ -15,11 +17,13 @@ def staff_required(view_fn):
             return redirect('admin_login')
         request.admin_user = user
         return view_fn(request, *args, **kwargs)
+
     return wrapper
 
 
 def admin_role_required(view_fn):
     """Admins only. Staff are sent back to the dashboard (or get a 403 for JSON)."""
+
     @wraps(view_fn)
     @staff_required
     def wrapper(request, *args, **kwargs):
@@ -29,4 +33,5 @@ def admin_role_required(view_fn):
             messages.error(request, '🚫 Admin access required.')
             return redirect('admin_dashboard')
         return view_fn(request, *args, **kwargs)
+
     return wrapper

@@ -13,13 +13,25 @@ ORDER_STATUS = [
     ('cancelled', 'Cancelled'),
 ]
 PAYMENT_MODE = [('online', 'Online (Razorpay)'), ('upi', 'UPI'), ('card', 'Card'), ('cod', 'Cash on Delivery')]
-FLOWER_CHOICES = [('rose', 'Rose'), ('lily', 'Lily'), ('tulip', 'Tulip'), ('sunflower', 'Sunflower'), ('orchid', 'Orchid')]
-WRAPPING_CHOICES = [('classic', 'Classic White'), ('rustic', 'Rustic Kraft'), ('luxury', 'Luxury Satin'), ('minimal', 'Minimal Green')]
+FLOWER_CHOICES = [
+    ('rose', 'Rose'),
+    ('lily', 'Lily'),
+    ('tulip', 'Tulip'),
+    ('sunflower', 'Sunflower'),
+    ('orchid', 'Orchid'),
+]
+WRAPPING_CHOICES = [
+    ('classic', 'Classic White'),
+    ('rustic', 'Rustic Kraft'),
+    ('luxury', 'Luxury Satin'),
+    ('minimal', 'Minimal Green'),
+]
 
 
 # ── User ────────────────────────────────────────────────────────────────────────
 class UserManager(BaseUserManager):
     """Users log in with their email address instead of a username."""
+
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
@@ -51,14 +63,15 @@ class User(AbstractUser):
     admin = everything). `is_staff`/`is_superuser` control the built-in
     Django admin at /django-admin/.
     """
-    username   = None
-    first_name = None
-    last_name  = None
 
-    full_name  = models.CharField(max_length=100)
-    email      = models.EmailField(unique=True)
-    phone      = models.CharField(max_length=15, blank=True, default='')
-    role       = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+    username = None
+    first_name = None
+    last_name = None
+
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15, blank=True, default='')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
@@ -84,26 +97,26 @@ class User(AbstractUser):
 
 # ── Saved Address ───────────────────────────────────────────────────────────────
 class SavedAddress(models.Model):
-    user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
-    label     = models.CharField(max_length=50, default='Home')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    label = models.CharField(max_length=50, default='Home')
     full_name = models.CharField(max_length=100)
-    phone     = models.CharField(max_length=15)
-    address   = models.TextField()
-    city      = models.CharField(max_length=100)
-    state     = models.CharField(max_length=100)
-    pincode   = models.CharField(max_length=10)
+    phone = models.CharField(max_length=15)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
     is_default = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.label} – {self.user.full_name}"
+        return f'{self.label} – {self.user.full_name}'
 
 
 # ── Category ────────────────────────────────────────────────────────────────────
 class Category(models.Model):
-    name   = models.CharField(max_length=100)
-    slug   = models.SlugField(unique=True)
-    image  = models.ImageField(upload_to='categories/', blank=True, null=True)
-    icon   = models.CharField(max_length=50, default='🌸')
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    icon = models.CharField(max_length=50, default='🌸')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -116,8 +129,8 @@ class Category(models.Model):
 
 # ── Product ──────────────────────────────────────────────────────────────────────
 class Product(models.Model):
-    name           = models.CharField(max_length=200)
-    category       = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    name = models.CharField(max_length=200)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     extra_categories = models.ManyToManyField(
         Category,
         related_name='extra_products',
@@ -125,20 +138,20 @@ class Product(models.Model):
         verbose_name='Also show in categories',
         help_text='Select additional categories where this product should also appear.',
     )
-    description    = models.TextField(blank=True, default='')
+    description = models.TextField(blank=True, default='')
     original_price = models.DecimalField(max_digits=10, decimal_places=2)
-    price          = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     stock_quantity = models.IntegerField(default=10)
-    image_main     = models.ImageField(upload_to='products/', blank=True, null=True)
-    image_2        = models.ImageField(upload_to='products/', blank=True, null=True)
-    image_3        = models.ImageField(upload_to='products/', blank=True, null=True)
-    image_url      = models.URLField(blank=True, default='')  # URL fallback for seeded demo data
-    flowers        = models.CharField(max_length=200, blank=True, default='')
-    occasion_tags  = models.CharField(max_length=200, blank=True, default='')
-    is_featured    = models.BooleanField(default=False)
-    status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
-    created_at     = models.DateTimeField(auto_now_add=True)
-    updated_at     = models.DateTimeField(auto_now=True)
+    image_main = models.ImageField(upload_to='products/', blank=True, null=True)
+    image_2 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image_3 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image_url = models.URLField(blank=True, default='')  # URL fallback for seeded demo data
+    flowers = models.CharField(max_length=200, blank=True, default='')
+    occasion_tags = models.CharField(max_length=200, blank=True, default='')
+    is_featured = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -177,37 +190,37 @@ class Product(models.Model):
 
 # ── Review ───────────────────────────────────────────────────────────────────────
 class Review(models.Model):
-    product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
-    user       = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating     = models.IntegerField(default=5)
-    comment    = models.TextField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField(default=5)
+    comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.full_name} → {self.product.name} ({self.rating}★)"
+        return f'{self.user.full_name} → {self.product.name} ({self.rating}★)'
 
 
 # ── Delivery Zone (Location-based charges) ─────────────────────────────────────
 class DeliveryZone(models.Model):
-    zone_name       = models.CharField(max_length=100)
-    pincode_prefix  = models.CharField(max_length=6)
+    zone_name = models.CharField(max_length=100)
+    pincode_prefix = models.CharField(max_length=6)
     delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, default=50)
 
     def __str__(self):
-        return f"{self.zone_name} ({self.pincode_prefix}*) – ₹{self.delivery_charge}"
+        return f'{self.zone_name} ({self.pincode_prefix}*) – ₹{self.delivery_charge}'
 
 
 # ── Delivery Slot ─────────────────────────────────────────────────────────────
 class DeliverySlot(models.Model):
-    date         = models.DateField()
-    slot_label   = models.CharField(max_length=50)
-    slot_start   = models.TimeField()
-    slot_end     = models.TimeField()
-    max_orders   = models.IntegerField(default=10)
+    date = models.DateField()
+    slot_label = models.CharField(max_length=50)
+    slot_start = models.TimeField()
+    slot_end = models.TimeField()
+    max_orders = models.IntegerField(default=10)
     booked_count = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.date} | {self.slot_label}"
+        return f'{self.date} | {self.slot_label}'
 
     @property
     def is_available(self):
@@ -220,49 +233,50 @@ class DeliverySlot(models.Model):
 
 # ── Coupon ────────────────────────────────────────────────────────────────────
 class Coupon(models.Model):
-    code             = models.CharField(max_length=30, unique=True)
+    code = models.CharField(max_length=30, unique=True)
     discount_percent = models.IntegerField(default=10)
-    max_uses         = models.IntegerField(default=100)
-    used_count       = models.IntegerField(default=0)
-    expiry           = models.DateField()
-    is_active        = models.BooleanField(default=True)
-    created_at       = models.DateTimeField(auto_now_add=True)
+    max_uses = models.IntegerField(default=100)
+    used_count = models.IntegerField(default=0)
+    expiry = models.DateField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.code} – {self.discount_percent}% off"
+        return f'{self.code} – {self.discount_percent}% off'
 
     @property
     def is_valid(self):
         from django.utils import timezone
+
         today = timezone.now().date()
         return self.is_active and self.used_count < self.max_uses and self.expiry >= today
 
 
 # ── Custom Bouquet ────────────────────────────────────────────────────────────
 class CustomBouquet(models.Model):
-    user          = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    flowers       = models.CharField(max_length=200, default='rose')
-    flower_count  = models.IntegerField(default=12)
-    wrapping      = models.CharField(max_length=30, choices=WRAPPING_CHOICES, default='classic')
-    message_card  = models.TextField(blank=True, default='')
-    price         = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    created_at    = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    flowers = models.CharField(max_length=200, default='rose')
+    flower_count = models.IntegerField(default=12)
+    wrapping = models.CharField(max_length=30, choices=WRAPPING_CHOICES, default='classic')
+    message_card = models.TextField(blank=True, default='')
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Custom bouquet by {self.user.full_name if self.user else 'Guest'}"
+        return f'Custom bouquet by {self.user.full_name if self.user else "Guest"}'
 
 
 # ── Cart Item ─────────────────────────────────────────────────────────────────
 class CartItem(models.Model):
-    user            = models.ForeignKey(User, on_delete=models.CASCADE)
-    product         = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
-    custom_bouquet  = models.ForeignKey(CustomBouquet, on_delete=models.CASCADE, null=True, blank=True)
-    quantity        = models.IntegerField(default=1)
-    added_at        = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    custom_bouquet = models.ForeignKey(CustomBouquet, on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.IntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        name = self.product.name if self.product else "Custom Bouquet"
-        return f"{self.user.full_name} – {name} x{self.quantity}"
+        name = self.product.name if self.product else 'Custom Bouquet'
+        return f'{self.user.full_name} – {name} x{self.quantity}'
 
     @property
     def unit_price(self):
@@ -279,30 +293,30 @@ class CartItem(models.Model):
 
 # ── Order ─────────────────────────────────────────────────────────────────────
 class Order(models.Model):
-    user             = models.ForeignKey(User, on_delete=models.CASCADE)
-    full_name        = models.CharField(max_length=100)
-    email            = models.EmailField()
-    phone            = models.CharField(max_length=20)
-    address          = models.TextField()
-    city             = models.CharField(max_length=100)
-    state            = models.CharField(max_length=100)
-    pincode          = models.CharField(max_length=10)
-    delivery_zone    = models.ForeignKey(DeliveryZone, on_delete=models.SET_NULL, null=True, blank=True)
-    delivery_charge  = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    coupon           = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
-    discount_amount  = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    subtotal         = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_amount     = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_mode     = models.CharField(max_length=10, choices=PAYMENT_MODE, default='cod')
-    status           = models.CharField(max_length=20, choices=ORDER_STATUS, default='placed')
-    delivery_slot    = models.ForeignKey(DeliverySlot, on_delete=models.SET_NULL, null=True, blank=True)
-    special_note     = models.TextField(blank=True, default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
+    delivery_zone = models.ForeignKey(DeliveryZone, on_delete=models.SET_NULL, null=True, blank=True)
+    delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_mode = models.CharField(max_length=10, choices=PAYMENT_MODE, default='cod')
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='placed')
+    delivery_slot = models.ForeignKey(DeliverySlot, on_delete=models.SET_NULL, null=True, blank=True)
+    special_note = models.TextField(blank=True, default='')
     razorpay_order_id = models.CharField(max_length=255, blank=True, default='')
-    created_at       = models.DateTimeField(auto_now_add=True)
-    updated_at       = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Order #{self.id} — {self.full_name}"
+        return f'Order #{self.id} — {self.full_name}'
 
     @property
     def status_display(self):
@@ -319,53 +333,53 @@ class Order(models.Model):
 
 # ── Order Item ────────────────────────────────────────────────────────────────
 class OrderItem(models.Model):
-    order          = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product        = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     custom_bouquet = models.ForeignKey(CustomBouquet, on_delete=models.CASCADE, null=True, blank=True)
-    quantity       = models.IntegerField()
-    price          = models.DecimalField(max_digits=10, decimal_places=2)
-    line_total     = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    line_total = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        name = self.product.name if self.product else "Custom Bouquet"
-        return f"{name} x{self.quantity}"
+        name = self.product.name if self.product else 'Custom Bouquet'
+        return f'{name} x{self.quantity}'
 
 
 # ── Payment ───────────────────────────────────────────────────────────────────
 class Payment(models.Model):
-    order          = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
-    user           = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount         = models.DecimalField(max_digits=10, decimal_places=2)
-    mode           = models.CharField(max_length=10, choices=PAYMENT_MODE)
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    mode = models.CharField(max_length=10, choices=PAYMENT_MODE)
     transaction_id = models.CharField(max_length=100, blank=True, default='')
-    status         = models.CharField(max_length=20, default='pending')
-    created_at     = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Payment for Order #{self.order.id}"
+        return f'Payment for Order #{self.order.id}'
 
 
 # ── Contact Message ───────────────────────────────────────────────────────────
 class ContactMessage(models.Model):
-    name       = models.CharField(max_length=100)
-    email      = models.EmailField()
-    phone      = models.CharField(max_length=20, blank=True, default='')
-    subject    = models.CharField(max_length=100)
-    message    = models.TextField()
-    is_read    = models.BooleanField(default=False)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True, default='')
+    subject = models.CharField(max_length=100)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.name} – {self.subject}"
+        return f'{self.name} – {self.subject}'
 
 
 # ── Wishlist ──────────────────────────────────────────────────────────────────
 class Wishlist(models.Model):
-    user     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
-    product  = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wishlisted_by')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wishlisted_by')
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -373,14 +387,14 @@ class Wishlist(models.Model):
         ordering = ['-added_at']
 
     def __str__(self):
-        return f"{self.user.full_name} ♥ {self.product.name}"
+        return f'{self.user.full_name} ♥ {self.product.name}'
 
 
 # ── Newsletter Subscriber ─────────────────────────────────────────────────────
 class NewsletterSubscriber(models.Model):
-    email         = models.EmailField(unique=True)
+    email = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
-    is_active     = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.email

@@ -1,10 +1,11 @@
 """Production settings (Render, Docker)."""
+
 import os
 
 import dj_database_url
 
 from .base import *  # noqa: F401,F403
-from .base import ALLOWED_HOSTS, SECRET_KEY, STORAGES, env_list
+from .base import ALLOWED_HOSTS, SECRET_KEY, SMTP_USER, STORAGES, env_list
 
 DEBUG = False
 
@@ -30,6 +31,11 @@ STORAGES = {
     **STORAGES,
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
 }
+
+# Without an SMTP account (e.g. the public demo) emails are written to the log,
+# so password-reset links can still be found there. Configure BLOOMIFY_EMAIL to send real mail.
+if not SMTP_USER:
+    SILENCED_SYSTEM_CHECKS = ['mail.E001']
 
 # ── HTTPS hardening ───────────────────────────────────────────────────────────
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

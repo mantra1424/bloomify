@@ -1,0 +1,44 @@
+[project]
+name = "bloomify"
+version = "1.0.0"
+description = "Online flower bouquet ordering and delivery management system (Django)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "bloomproject.settings.test"
+python_files = ["test_*.py"]
+addopts = "-q --strict-markers"
+# Fail on Django deprecations so upgrades never sneak up on us.
+filterwarnings = ["error::django.utils.deprecation.RemovedInDjango70Warning"]
+
+[tool.coverage.run]
+source = ["bloomapp", "bloomproject"]
+omit = ["*/migrations/*", "*/tests/*", "bloomproject/asgi.py", "bloomproject/wsgi.py", "manage.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["bloomapp/migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S"]
+ignore = [
+    "E221", "E241",  # aligned assignments are used on purpose in models
+    "S101",          # assert is fine in tests
+    "S105", "S106",  # test/demo passwords are not secrets
+    "S311",          # random is not used for security
+    "DJ001",         # existing CharFields use blank=True, default=''
+]
+
+[tool.ruff.lint.per-file-ignores]
+"bloomproject/settings/*" = ["F403", "F405"]
+"bloomapp/tests/*" = ["S"]
+"bloomapp/management/commands/seed_data.py" = ["S", "E501"]
+"bloomapp/views/__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "single"

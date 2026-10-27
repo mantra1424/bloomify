@@ -1,4 +1,5 @@
 """Customer emails. Sending is best-effort: a mail failure never breaks an order."""
+
 import logging
 
 from django.conf import settings

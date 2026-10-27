@@ -1,4 +1,5 @@
 """Browsing products, reviews, search, wishlist and the custom bouquet builder."""
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
@@ -51,38 +52,45 @@ def products_list(request):
     else:
         products = products.order_by(*SORTS.get(sort, SORTS['newest']))
 
-    return render(request, 'bloomapp/products/list.html', {
-        'products': products,
-        'categories': Category.objects.filter(status='available'),
-        'selected_cat': cat_slug,
-        'min_price': request.GET.get('min_price', ''),
-        'max_price': request.GET.get('max_price', ''),
-        'search_q': q,
-        'sort': sort,
-        'occasion': occasion,
-        'occasion_choices': OCCASIONS,
-        'wishlist_ids': _wishlist_ids(request.user),
-    })
+    return render(
+        request,
+        'bloomapp/products/list.html',
+        {
+            'products': products,
+            'categories': Category.objects.filter(status='available'),
+            'selected_cat': cat_slug,
+            'min_price': request.GET.get('min_price', ''),
+            'max_price': request.GET.get('max_price', ''),
+            'search_q': q,
+            'sort': sort,
+            'occasion': occasion,
+            'occasion_choices': OCCASIONS,
+            'wishlist_ids': _wishlist_ids(request.user),
+        },
+    )
 
 
 def product_detail(request, pk):
     product = get_object_or_404(Product.objects.select_related('category'), pk=pk, status='available')
     recommendations = (
-        Product.objects
-        .filter(Q(category=product.category) | Q(extra_categories=product.category), status='available')
+        Product.objects.filter(Q(category=product.category) | Q(extra_categories=product.category), status='available')
         .exclude(pk=pk)
         .distinct()
         .annotate(ocount=Count('orderitem'))
         .order_by('-ocount')[:4]
     )
-    return render(request, 'bloomapp/products/detail.html', {
-        'product': product,
-        'reviews': product.reviews.select_related('user').order_by('-created_at'),
-        'recommendations': recommendations,
-        'star_range': range(1, 6),
-        'avg_rating': product.avg_rating,
-        'in_wishlist': product.pk in _wishlist_ids(request.user),
-    })
+    return render(
+        request,
+        'bloomapp/products/detail.html',
+        {
+            'product': product,
+            'reviews': product.reviews.select_related('user').order_by('-created_at'),
+            'recommendations': recommendations,
+            'star_range': range(1, 6),
+            'avg_rating': product.avg_rating,
+            'in_wishlist': product.pk in _wishlist_ids(request.user),
+        },
+    )
 
 
 @login_required
@@ -94,7 +102,8 @@ def submit_review(request, pk):
     if comment:
         # One review per user per product; a second submission updates the first.
         Review.objects.update_or_create(
-            product=product, user=request.user, defaults={'rating': rating, 'comment': comment})
+            product=product, user=request.user, defaults={'rating': rating, 'comment': comment}
+        )
         messages.success(request, 'Review submitted! Thank you 🌸')
     return redirect('product_detail', pk=pk)
 
@@ -108,14 +117,21 @@ def search_autocomplete(request):
         .filter(Q(name__icontains=q) | Q(flowers__icontains=q) | Q(occasion_tags__icontains=q))
         .select_related('category')[:8]
     )
-    return JsonResponse({'results': [{
-        'id': p.pk,
-        'name': p.name,
-        'price': str(p.price),
-        'image': p.get_image,
-        'url': reverse('product_detail', args=[p.pk]),
-        'category': p.category.name,
-    } for p in products]})
+    return JsonResponse(
+        {
+            'results': [
+                {
+                    'id': p.pk,
+                    'name': p.name,
+                    'price': str(p.price),
+                    'image': p.get_image,
+                    'url': reverse('product_detail', args=[p.pk]),
+                    'category': p.category.name,
+                }
+                for p in products
+            ]
+        }
+    )
 
 
 @login_required

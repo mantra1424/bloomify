@@ -1,4 +1,5 @@
 """Customer sign up, log in, log out and account dashboard."""
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -14,7 +15,8 @@ def _safe_next(request, default='home'):
     """Only follow ?next= links that stay on this site (stops open redirects)."""
     next_url = request.POST.get('next') or request.GET.get('next')
     if next_url and url_has_allowed_host_and_scheme(
-            next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
         return next_url
     return default
 
@@ -85,8 +87,12 @@ def user_dashboard(request):
 
         return redirect('dashboard')
 
-    return render(request, 'bloomapp/dashboard/dashboard.html', {
-        'orders': Order.objects.filter(user=user).select_related('payment').order_by('-created_at'),
-        'addresses': SavedAddress.objects.filter(user=user),
-        'tab': request.GET.get('tab', 'orders'),
-    })
+    return render(
+        request,
+        'bloomapp/dashboard/dashboard.html',
+        {
+            'orders': Order.objects.filter(user=user).select_related('payment').order_by('-created_at'),
+            'addresses': SavedAddress.objects.filter(user=user),
+            'tab': request.GET.get('tab', 'orders'),
+        },
+    )

@@ -1,4 +1,5 @@
 """Shopping cart."""
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,10 +19,14 @@ def cart_items_for(user):
 @login_required
 def cart_view(request):
     items = cart_items_for(request.user)
-    return render(request, 'bloomapp/cart/cart.html', {
-        'items': items,
-        'subtotal': sum(item.subtotal for item in items),
-    })
+    return render(
+        request,
+        'bloomapp/cart/cart.html',
+        {
+            'items': items,
+            'subtotal': sum(item.subtotal for item in items),
+        },
+    )
 
 
 @login_required

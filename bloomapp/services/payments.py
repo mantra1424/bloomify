@@ -1,4 +1,5 @@
 """Razorpay integration: creating payment orders and checking signatures."""
+
 import hashlib
 import hmac
 
@@ -16,23 +17,27 @@ def amount_in_paise(amount):
 
 def create_razorpay_order(order):
     """Create the Razorpay order a customer pays against, for the exact order total."""
-    rzp_order = get_client().order.create({
-        'amount': amount_in_paise(order.total_amount),
-        'currency': 'INR',
-        'receipt': f'bloomify_order_{order.id}',
-        'payment_capture': '1',
-    })
+    rzp_order = get_client().order.create(
+        {
+            'amount': amount_in_paise(order.total_amount),
+            'currency': 'INR',
+            'receipt': f'bloomify_order_{order.id}',
+            'payment_capture': '1',
+        }
+    )
     return rzp_order['id']
 
 
 def verify_payment_signature(razorpay_order_id, razorpay_payment_id, signature):
     """True if Razorpay really reported this payment for this Razorpay order."""
     try:
-        get_client().utility.verify_payment_signature({
-            'razorpay_order_id': razorpay_order_id,
-            'razorpay_payment_id': razorpay_payment_id,
-            'razorpay_signature': signature,
-        })
+        get_client().utility.verify_payment_signature(
+            {
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': signature,
+            }
+        )
         return True
     except razorpay.errors.SignatureVerificationError:
         return False

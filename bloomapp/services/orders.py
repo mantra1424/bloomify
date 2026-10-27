@@ -1,4 +1,5 @@
 """Placing, paying, cancelling and releasing orders."""
+
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
@@ -10,7 +11,13 @@ from django.db.models import F
 from django.utils import timezone
 
 from bloomapp.models import (
-    Coupon, DeliverySlot, DeliveryZone, Order, OrderItem, Payment, Product,
+    Coupon,
+    DeliverySlot,
+    DeliveryZone,
+    Order,
+    OrderItem,
+    Payment,
+    Product,
 )
 from bloomapp.services import emails, payments, pricing
 
@@ -59,9 +66,11 @@ def _claim_coupon(code):
     if not code:
         return None
     coupon = Coupon.objects.filter(code=code.strip().upper()).first()
-    if coupon and coupon.is_valid and Coupon.objects.filter(
-            pk=coupon.pk, used_count__lt=F('max_uses')
-    ).update(used_count=F('used_count') + 1):
+    if (
+        coupon
+        and coupon.is_valid
+        and Coupon.objects.filter(pk=coupon.pk, used_count__lt=F('max_uses')).update(used_count=F('used_count') + 1)
+    ):
         return coupon
     return None
 
@@ -70,9 +79,9 @@ def _book_slot(slot_id):
     if not slot_id:
         return None
     slot = DeliverySlot.objects.filter(id=slot_id).first()
-    if slot and DeliverySlot.objects.filter(
-            pk=slot.pk, booked_count__lt=F('max_orders')
-    ).update(booked_count=F('booked_count') + 1):
+    if slot and DeliverySlot.objects.filter(pk=slot.pk, booked_count__lt=F('max_orders')).update(
+        booked_count=F('booked_count') + 1
+    ):
         return slot
     return None
 
@@ -126,13 +135,16 @@ def place_order(user, cart_items, details: CheckoutDetails):
             )
             # Take stock only if enough is left right now (safe if two people buy at once).
             if item.product and not Product.objects.filter(
-                    pk=item.product.pk, stock_quantity__gte=item.quantity
+                pk=item.product.pk, stock_quantity__gte=item.quantity
             ).update(stock_quantity=F('stock_quantity') - item.quantity):
                 raise OutOfStock(item.product)
 
         is_online = details.payment_mode in ONLINE_PAYMENT_MODES
         Payment.objects.create(
-            order=order, user=user, amount=order.total_amount, mode=details.payment_mode,
+            order=order,
+            user=user,
+            amount=order.total_amount,
+            mode=details.payment_mode,
             status='pending' if is_online else 'cod_pending',
         )
         for item in cart_items:
@@ -184,14 +196,13 @@ def release_order(order, payment_status=None):
             return False
         for item in order.items.all():
             if item.product_id:
-                Product.objects.filter(pk=item.product_id).update(
-                    stock_quantity=F('stock_quantity') + item.quantity)
+                Product.objects.filter(pk=item.product_id).update(stock_quantity=F('stock_quantity') + item.quantity)
         if order.coupon_id:
-            Coupon.objects.filter(pk=order.coupon_id, used_count__gt=0).update(
-                used_count=F('used_count') - 1)
+            Coupon.objects.filter(pk=order.coupon_id, used_count__gt=0).update(used_count=F('used_count') - 1)
         if order.delivery_slot_id:
             DeliverySlot.objects.filter(pk=order.delivery_slot_id, booked_count__gt=0).update(
-                booked_count=F('booked_count') - 1)
+                booked_count=F('booked_count') - 1
+            )
         order.status = 'cancelled'
         order.save(update_fields=['status', 'updated_at'])
         if payment_status:

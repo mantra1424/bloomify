@@ -1,21 +1,22 @@
 """Prices and charges. This is the single source of truth for serviceable cities."""
+
 from decimal import ROUND_HALF_UP, Decimal
 
 from bloomapp.utils import parse_float
 
 # key → display name, base delivery charge (₹) and estimated delivery time.
 DELIVERY_CITIES = {
-    'anand':     {'name': 'Anand',     'charge': 20, 'eta': '2–4 hrs'},
-    'vadodara':  {'name': 'Vadodara',  'charge': 30, 'eta': '2–4 hrs'},
+    'anand': {'name': 'Anand', 'charge': 20, 'eta': '2–4 hrs'},
+    'vadodara': {'name': 'Vadodara', 'charge': 30, 'eta': '2–4 hrs'},
     'ahmedabad': {'name': 'Ahmedabad', 'charge': 40, 'eta': '3–5 hrs'},
-    'surat':     {'name': 'Surat',     'charge': 50, 'eta': '3–5 hrs'},
-    'bharuch':   {'name': 'Bharuch',   'charge': 25, 'eta': '2–4 hrs'},
-    'nadiad':    {'name': 'Nadiad',    'charge': 30, 'eta': '2–3 hrs'},
+    'surat': {'name': 'Surat', 'charge': 50, 'eta': '3–5 hrs'},
+    'bharuch': {'name': 'Bharuch', 'charge': 25, 'eta': '2–4 hrs'},
+    'nadiad': {'name': 'Nadiad', 'charge': 30, 'eta': '2–3 hrs'},
 }
 
 TIME_CHARGES = {'normal': 0, 'sameday': 50, 'midnight': 120}
 
-FREE_DELIVERY_ABOVE = 1000   # subtotal (₹) at which delivery is free
+FREE_DELIVERY_ABOVE = 1000  # subtotal (₹) at which delivery is free
 DELIVERY_DISCOUNT_ABOVE = 500  # subtotal (₹) at which ₹30 is taken off delivery
 DELIVERY_DISCOUNT = 30
 

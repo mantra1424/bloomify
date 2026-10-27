@@ -2,12 +2,19 @@
 Forms that validate everything users send us. Field names match the existing
 templates' <input name="..."> attributes, so templates post to them unchanged.
 """
+
 from django import forms
 from django.contrib.auth import password_validation
 from django.core.validators import RegexValidator
 
 from .models import (
-    FLOWER_CHOICES, PAYMENT_MODE, ContactMessage, Coupon, Product, SavedAddress, User,
+    FLOWER_CHOICES,
+    PAYMENT_MODE,
+    ContactMessage,
+    Coupon,
+    Product,
+    SavedAddress,
+    User,
 )
 from .services import pricing
 from .services.orders import CheckoutDetails
@@ -18,7 +25,7 @@ pincode_validator = RegexValidator(r'^[0-9]{6}$', 'Pincode must be exactly 6 dig
 # Real addresses use commas, slashes, hyphens, dots, '#', brackets and apostrophes.
 address_validator = RegexValidator(
     r"^[A-Za-z0-9\s,./#'()&:-]+$",
-    'Address can use letters, numbers, spaces and , . / - # \' ( ) & :',
+    "Address can use letters, numbers, spaces and , . / - # ' ( ) & :",
 )
 
 
@@ -98,9 +105,14 @@ class AddressForm(forms.Form):
     def save(self, user):
         d = self.cleaned_data
         return SavedAddress.objects.create(
-            user=user, label=d.get('label') or 'Home', full_name=d['addr_name'],
-            phone=d['addr_phone'], address=d['addr_street'], city=d['addr_city'],
-            state=d.get('addr_state', ''), pincode=d['addr_pincode'],
+            user=user,
+            label=d.get('label') or 'Home',
+            full_name=d['addr_name'],
+            phone=d['addr_phone'],
+            address=d['addr_street'],
+            city=d['addr_city'],
+            state=d.get('addr_state', ''),
+            pincode=d['addr_pincode'],
         )
 
 
@@ -130,12 +142,18 @@ class CheckoutForm(forms.Form):
     def to_details(self):
         d = self.cleaned_data
         return CheckoutDetails(
-            full_name=d['full_name'].strip(), email=d['email'], phone=d['phone'],
-            address=d['address'].strip(), city=d['city'], state=d.get('state') or '',
-            pincode=d['pincode'], payment_mode=d['payment_mode'],
+            full_name=d['full_name'].strip(),
+            email=d['email'],
+            phone=d['phone'],
+            address=d['address'].strip(),
+            city=d['city'],
+            state=d.get('state') or '',
+            pincode=d['pincode'],
+            payment_mode=d['payment_mode'],
             delivery_type=d.get('delivery_type') or 'normal',
             distance_km=d.get('distance_km') if d.get('distance_km') is not None else 3.0,
-            coupon_code=d.get('coupon_code') or '', slot_id=d.get('slot_id'),
+            coupon_code=d.get('coupon_code') or '',
+            slot_id=d.get('slot_id'),
             special_note=d.get('special_note') or '',
         )
 
@@ -162,9 +180,20 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
-            'name', 'category', 'extra_categories', 'description', 'original_price', 'price',
-            'stock_quantity', 'flowers', 'occasion_tags', 'is_featured', 'status',
-            'image_main', 'image_2', 'image_3',
+            'name',
+            'category',
+            'extra_categories',
+            'description',
+            'original_price',
+            'price',
+            'stock_quantity',
+            'flowers',
+            'occasion_tags',
+            'is_featured',
+            'status',
+            'image_main',
+            'image_2',
+            'image_3',
         ]
 
     def clean(self):

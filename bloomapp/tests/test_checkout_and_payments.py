@@ -8,11 +8,18 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import (
-    CartItem, Category, Coupon, CustomBouquet, DeliverySlot, Order, Payment,
-    Product, User,
+from bloomapp.models import (
+    CartItem,
+    Category,
+    Coupon,
+    CustomBouquet,
+    DeliverySlot,
+    Order,
+    Payment,
+    Product,
+    User,
 )
-from .services.orders import release_expired_online_orders
+from bloomapp.services.orders import release_expired_online_orders
 
 TEST_SECRET = 'test-razorpay-secret'
 _rzp_ids = count(1)
@@ -28,8 +35,13 @@ def sign(rzp_order_id, payment_id):
 
 
 CHECKOUT = {
-    'full_name': 'Test Buyer', 'phone': '9876543210', 'address': 'Shop 12 Main Road',
-    'pincode': '388001', 'city': 'Anand', 'state': 'Gujarat', 'email': 'buyer@example.com',
+    'full_name': 'Test Buyer',
+    'phone': '9876543210',
+    'address': 'Shop 12 Main Road',
+    'pincode': '388001',
+    'city': 'Anand',
+    'state': 'Gujarat',
+    'email': 'buyer@example.com',
 }
 
 
@@ -40,10 +52,10 @@ class BaseShopTest(TestCase):
         self.addCleanup(rzp_patch.stop)
         self.user = User.objects.create_user(email='buyer@example.com', password='pw', full_name='Buyer')
         cat = Category.objects.create(name='Roses', slug='roses')
-        self.cheap = Product.objects.create(name='Mini', category=cat, original_price=100,
-                                            price=100, stock_quantity=5)
-        self.pricey = Product.objects.create(name='Grand', category=cat, original_price=5000,
-                                             price=5000, stock_quantity=5)
+        self.cheap = Product.objects.create(name='Mini', category=cat, original_price=100, price=100, stock_quantity=5)
+        self.pricey = Product.objects.create(
+            name='Grand', category=cat, original_price=5000, price=5000, stock_quantity=5
+        )
         self.login()
 
     def login(self):
@@ -59,11 +71,14 @@ class PaymentVerificationTests(BaseShopTest):
         # 'online' is what the real checkout form sends.
         self.buy(self.pricey, payment_mode='online')
         order = Order.objects.get()
-        resp = self.client.post(reverse('confirm_payment'), {
-            'razorpay_order_id': order.razorpay_order_id,
-            'razorpay_payment_id': 'pay_1',
-            'razorpay_signature': sign(order.razorpay_order_id, 'pay_1'),
-        })
+        resp = self.client.post(
+            reverse('confirm_payment'),
+            {
+                'razorpay_order_id': order.razorpay_order_id,
+                'razorpay_payment_id': 'pay_1',
+                'razorpay_signature': sign(order.razorpay_order_id, 'pay_1'),
+            },
+        )
         self.assertRedirects(resp, reverse('order_success', args=[order.id]))
         self.assertEqual(Payment.objects.get(order=order).status, 'completed')
 
@@ -75,19 +90,25 @@ class PaymentVerificationTests(BaseShopTest):
 
         # Real payment + signature for the cheap order, sent while the expensive
         # order is the one waiting in the session.
-        self.client.post(reverse('confirm_payment'), {
-            'razorpay_order_id': cheap_order.razorpay_order_id,
-            'razorpay_payment_id': 'pay_cheap',
-            'razorpay_signature': sign(cheap_order.razorpay_order_id, 'pay_cheap'),
-        })
+        self.client.post(
+            reverse('confirm_payment'),
+            {
+                'razorpay_order_id': cheap_order.razorpay_order_id,
+                'razorpay_payment_id': 'pay_cheap',
+                'razorpay_signature': sign(cheap_order.razorpay_order_id, 'pay_cheap'),
+            },
+        )
         self.assertEqual(Payment.objects.get(order=pricey_order).status, 'pending')
 
         # Same proof, but claiming it belongs to the expensive order: rejected.
-        self.client.post(reverse('confirm_payment'), {
-            'razorpay_order_id': pricey_order.razorpay_order_id,
-            'razorpay_payment_id': 'pay_cheap',
-            'razorpay_signature': sign(cheap_order.razorpay_order_id, 'pay_cheap'),
-        })
+        self.client.post(
+            reverse('confirm_payment'),
+            {
+                'razorpay_order_id': pricey_order.razorpay_order_id,
+                'razorpay_payment_id': 'pay_cheap',
+                'razorpay_signature': sign(cheap_order.razorpay_order_id, 'pay_cheap'),
+            },
+        )
         self.assertEqual(Payment.objects.get(order=pricey_order).status, 'pending')
 
     def test_cannot_confirm_someone_elses_order(self):
@@ -95,16 +116,18 @@ class PaymentVerificationTests(BaseShopTest):
         order = Order.objects.get()
         other = User.objects.create_user(email='o@example.com', password='x', full_name='Other')
         self.client.force_login(other)
-        self.client.post(reverse('confirm_payment'), {
-            'razorpay_order_id': order.razorpay_order_id,
-            'razorpay_payment_id': 'pay_x',
-            'razorpay_signature': sign(order.razorpay_order_id, 'pay_x'),
-        })
+        self.client.post(
+            reverse('confirm_payment'),
+            {
+                'razorpay_order_id': order.razorpay_order_id,
+                'razorpay_payment_id': 'pay_x',
+                'razorpay_signature': sign(order.razorpay_order_id, 'pay_x'),
+            },
+        )
         self.assertEqual(Payment.objects.get(order=order).status, 'pending')
 
     def test_razorpay_amount_matches_order_total(self):
-        with patch('razorpay.resources.order.Order.create', autospec=True,
-                   side_effect=fake_rzp_create) as create:
+        with patch('razorpay.resources.order.Order.create', autospec=True, side_effect=fake_rzp_create) as create:
             self.buy(self.pricey, payment_mode='card')
         order = Order.objects.get()
         sent_amount = create.call_args.args[1]['amount']
@@ -113,13 +136,16 @@ class PaymentVerificationTests(BaseShopTest):
 
 class AbandonedOrderTests(BaseShopTest):
     def test_unpaid_online_order_releases_stock_coupon_and_slot(self):
-        coupon = Coupon.objects.create(code='SAVE10', discount_percent=10,
-                                       expiry=timezone.now().date() + timedelta(days=5))
-        slot = DeliverySlot.objects.create(date=timezone.now().date(), slot_label='AM',
-                                           slot_start='09:00', slot_end='11:00')
+        coupon = Coupon.objects.create(
+            code='SAVE10', discount_percent=10, expiry=timezone.now().date() + timedelta(days=5)
+        )
+        slot = DeliverySlot.objects.create(
+            date=timezone.now().date(), slot_label='AM', slot_start='09:00', slot_end='11:00'
+        )
         self.buy(self.pricey, qty=2, payment_mode='online', coupon_code='save10', slot_id=slot.id)
         order = Order.objects.get()
-        self.pricey.refresh_from_db(); coupon.refresh_from_db(); slot.refresh_from_db()
+        for obj in (self.pricey, coupon, slot):
+            obj.refresh_from_db()
         self.assertEqual((self.pricey.stock_quantity, coupon.used_count, slot.booked_count), (3, 1, 1))
 
         # Not old enough yet: nothing happens.
@@ -128,7 +154,8 @@ class AbandonedOrderTests(BaseShopTest):
         Order.objects.filter(pk=order.pk).update(created_at=timezone.now() - timedelta(hours=1))
         self.assertEqual(release_expired_online_orders(), 1)
 
-        order.refresh_from_db(); self.pricey.refresh_from_db(); coupon.refresh_from_db(); slot.refresh_from_db()
+        for obj in (order, self.pricey, coupon, slot):
+            obj.refresh_from_db()
         self.assertEqual(order.status, 'cancelled')
         self.assertEqual(Payment.objects.get(order=order).status, 'expired')
         self.assertEqual((self.pricey.stock_quantity, coupon.used_count, slot.booked_count), (5, 0, 0))
@@ -159,19 +186,19 @@ class AbandonedOrderTests(BaseShopTest):
 
 class InputValidationTests(BaseShopTest):
     def test_negative_flower_count_is_rejected(self):
-        self.client.post(reverse('custom_bouquet'), {
-            'flowers': 'rose', 'flower_count': '-50', 'wrapping': 'classic'})
+        self.client.post(reverse('custom_bouquet'), {'flowers': 'rose', 'flower_count': '-50', 'wrapping': 'classic'})
         self.assertFalse(CustomBouquet.objects.exists())
 
     def test_custom_bouquet_price_is_worked_out_on_server(self):
-        self.client.post(reverse('custom_bouquet'), {
-            'flowers': 'rose', 'flower_count': '12', 'wrapping': 'luxury', 'message_card': 'Hi', 'price': '1'})
+        self.client.post(
+            reverse('custom_bouquet'),
+            {'flowers': 'rose', 'flower_count': '12', 'wrapping': 'luxury', 'message_card': 'Hi', 'price': '1'},
+        )
         # 150 base + 12 x 20 + 150 luxury wrap + 30 message card
         self.assertEqual(CustomBouquet.objects.get().price, 570)
 
     def test_unknown_wrapping_is_rejected(self):
-        self.client.post(reverse('custom_bouquet'), {
-            'flowers': 'rose', 'flower_count': '12', 'wrapping': 'free'})
+        self.client.post(reverse('custom_bouquet'), {'flowers': 'rose', 'flower_count': '12', 'wrapping': 'free'})
         self.assertFalse(CustomBouquet.objects.exists())
 
     def test_text_in_number_fields_does_not_crash(self):
@@ -179,7 +206,9 @@ class InputValidationTests(BaseShopTest):
         item = CartItem.objects.get()
         r2 = self.client.post(reverse('update_cart'), {'item_id': item.id, 'quantity': 'xyz'})
         r3 = self.client.post(reverse('update_cart'), {'item_id': 'nope', 'quantity': '1'})
-        r4 = self.client.post(reverse('custom_bouquet'), {'flowers': 'rose', 'flower_count': 'many', 'wrapping': 'classic'})
+        r4 = self.client.post(
+            reverse('custom_bouquet'), {'flowers': 'rose', 'flower_count': 'many', 'wrapping': 'classic'}
+        )
         r5 = self.client.post(reverse('submit_review', args=[self.cheap.id]), {'rating': 'ten', 'comment': 'nice'})
         for r in (r1, r2, r3, r4, r5):
             self.assertEqual(r.status_code, 302)

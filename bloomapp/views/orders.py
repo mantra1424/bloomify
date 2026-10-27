@@ -1,4 +1,5 @@
 """Customer order pages: confirmation, tracking and cancellation."""
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -24,11 +25,15 @@ def order_success(request, pk):
 @login_required
 def order_tracking(request, pk):
     order = get_object_or_404(Order, pk=pk, user=request.user)
-    return render(request, 'bloomapp/orders/tracking.html', {
-        'order': order,
-        'items': order.items.select_related('product', 'custom_bouquet'),
-        'steps': TRACKING_STEPS,
-    })
+    return render(
+        request,
+        'bloomapp/orders/tracking.html',
+        {
+            'order': order,
+            'items': order.items.select_related('product', 'custom_bouquet'),
+            'steps': TRACKING_STEPS,
+        },
+    )
 
 
 @login_required

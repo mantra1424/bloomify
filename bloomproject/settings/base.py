@@ -6,6 +6,7 @@ Pick an environment with DJANGO_SETTINGS_MODULE:
   bloomproject.settings.prod  – production (default for wsgi/asgi)
   bloomproject.settings.test  – automated tests
 """
+
 import os
 from pathlib import Path
 
@@ -150,7 +151,7 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_TEMPLATE = 'bloomapp/auth/locked.html'
 
 # ── Razorpay ──────────────────────────────────────────────────────────────────
-RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_SECRET_KEY = os.environ.get('RAZORPAY_SECRET_KEY', '')
 # Set in Razorpay Dashboard → Webhooks; used to check webhook calls really come from Razorpay.
 RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
@@ -161,13 +162,28 @@ PENDING_PAYMENT_TIMEOUT_MINUTES = 30
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
 # ── Email (Gmail SMTP) ────────────────────────────────────────────────────────
-EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = os.environ.get('BLOOMIFY_EMAIL', '')
-EMAIL_HOST_PASSWORD = os.environ.get('BLOOMIFY_EMAIL_PASS', '')  # Gmail App Password
-DEFAULT_FROM_EMAIL  = f'Bloomify 🌸 <{EMAIL_HOST_USER or "noreply@bloomify.local"}>'
+SMTP_USER = os.environ.get('BLOOMIFY_EMAIL', '')
+SMTP_PASSWORD = os.environ.get('BLOOMIFY_EMAIL_PASS', '')  # Gmail App Password
+
+if SMTP_USER:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': os.environ.get('EMAIL_HOST', 'smtp.gmail.com'),
+                'port': int(os.environ.get('EMAIL_PORT', '587')),
+                'username': SMTP_USER,
+                'password': SMTP_PASSWORD,
+                'use_tls': True,
+                'timeout': 10,
+            },
+        },
+    }
+else:
+    # No SMTP account configured: print emails to the log instead of sending them.
+    MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.console.EmailBackend'}}
+
+DEFAULT_FROM_EMAIL = f'Bloomify 🌸 <{SMTP_USER or "noreply@bloomify.local"}>'
 
 # ── Logging: everything to the console (Render/Docker collect stdout) ────────
 LOGGING = {

@@ -1,4 +1,5 @@
 """Checkout page, its AJAX helpers, and placing the order."""
+
 import json
 from datetime import date, datetime, timedelta
 
@@ -9,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from bloomapp.forms import CheckoutForm, first_error
-from bloomapp.models import Coupon, DeliverySlot, DeliveryZone, SavedAddress
+from bloomapp.models import Coupon, DeliverySlot, SavedAddress
 from bloomapp.services import orders as order_service
 from bloomapp.services import pricing
 from bloomapp.utils import parse_float
@@ -33,17 +34,21 @@ def checkout_view(request):
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart')
     today = date.today()
-    return render(request, 'bloomapp/checkout/checkout.html', {
-        'items': items,
-        'subtotal': sum(item.subtotal for item in items),
-        'addresses': SavedAddress.objects.filter(user=request.user),
-        'available_dates': [today + timedelta(days=i) for i in range(BOOKING_WINDOW_DAYS)],
-        'delivery_cities': pricing.DELIVERY_CITIES,
-        'delivery_config': {
-            'cities': pricing.DELIVERY_CITIES,
-            'time_charges': pricing.TIME_CHARGES,
+    return render(
+        request,
+        'bloomapp/checkout/checkout.html',
+        {
+            'items': items,
+            'subtotal': sum(item.subtotal for item in items),
+            'addresses': SavedAddress.objects.filter(user=request.user),
+            'available_dates': [today + timedelta(days=i) for i in range(BOOKING_WINDOW_DAYS)],
+            'delivery_cities': pricing.DELIVERY_CITIES,
+            'delivery_config': {
+                'cities': pricing.DELIVERY_CITIES,
+                'time_charges': pricing.TIME_CHARGES,
+            },
         },
-    })
+    )
 
 
 @require_GET
@@ -58,14 +63,26 @@ def get_slots_ajax(request):
         return JsonResponse({'slots': []})
 
     if not DeliverySlot.objects.filter(date=day).exists():
-        DeliverySlot.objects.bulk_create([
-            DeliverySlot(date=day, slot_label=label, slot_start=start, slot_end=end, max_orders=10)
-            for label, start, end in DEFAULT_SLOTS
-        ])
+        DeliverySlot.objects.bulk_create(
+            [
+                DeliverySlot(date=day, slot_label=label, slot_start=start, slot_end=end, max_orders=10)
+                for label, start, end in DEFAULT_SLOTS
+            ]
+        )
     slots = DeliverySlot.objects.filter(date=day).order_by('slot_start')
-    return JsonResponse({'slots': [{
-        'id': s.id, 'label': s.slot_label, 'available': s.is_available, 'slots_left': s.slots_left,
-    } for s in slots]})
+    return JsonResponse(
+        {
+            'slots': [
+                {
+                    'id': s.id,
+                    'label': s.slot_label,
+                    'available': s.is_available,
+                    'slots_left': s.slots_left,
+                }
+                for s in slots
+            ]
+        }
+    )
 
 
 @require_GET
@@ -105,12 +122,14 @@ def apply_coupon_ajax(request):
     if not coupon.is_valid:
         return JsonResponse({'valid': False, 'message': 'Coupon expired or usage limit reached.'})
     subtotal = sum(item.subtotal for item in cart_items_for(request.user))
-    return JsonResponse({
-        'valid': True,
-        'discount_percent': coupon.discount_percent,
-        'discount_amount': float(pricing.coupon_discount(subtotal, coupon)),
-        'message': f'{coupon.discount_percent}% off applied!',
-    })
+    return JsonResponse(
+        {
+            'valid': True,
+            'discount_percent': coupon.discount_percent,
+            'discount_amount': float(pricing.coupon_discount(subtotal, coupon)),
+            'message': f'{coupon.discount_percent}% off applied!',
+        }
+    )
 
 
 @login_required
@@ -128,8 +147,11 @@ def place_order(request):
 
     for item in items:
         if item.product and item.product.stock_quantity < item.quantity:
-            messages.error(request, f'❌ "{item.product.name}" only has {item.product.stock_quantity} left in stock. '
-                                    'Please update your cart.')
+            messages.error(
+                request,
+                f'❌ "{item.product.name}" only has {item.product.stock_quantity} left in stock. '
+                'Please update your cart.',
+            )
             return redirect('cart')
 
     try:

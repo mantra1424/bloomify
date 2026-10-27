@@ -1,4 +1,5 @@
 """Home page, static pages, contact form, newsletter and health check."""
+
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.db import connection
@@ -14,12 +15,16 @@ from bloomapp.models import Category, NewsletterSubscriber, Product
 
 def home(request):
     available = Product.objects.filter(status='available').select_related('category')
-    return render(request, 'bloomapp/index.html', {
-        'categories': Category.objects.filter(status='available'),
-        'featured': available.filter(is_featured=True)[:8],
-        # Trending = most ordered products.
-        'trending': available.annotate(order_count=Count('orderitem')).order_by('-order_count')[:4],
-    })
+    return render(
+        request,
+        'bloomapp/index.html',
+        {
+            'categories': Category.objects.filter(status='available'),
+            'featured': available.filter(is_featured=True)[:8],
+            # Trending = most ordered products.
+            'trending': available.annotate(order_count=Count('orderitem')).order_by('-order_count')[:4],
+        },
+    )
 
 
 def contact_view(request):

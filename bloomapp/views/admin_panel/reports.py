@@ -1,4 +1,5 @@
 """Sales report: on-screen, CSV download and printable version (admins only)."""
+
 import csv
 from datetime import datetime
 
@@ -60,10 +61,12 @@ def report_context(filters):
         'total_delivery': agg['total_delivery'] or 0,
         'total_orders': total_orders,
         'avg_order_val': round(total_revenue / total_orders, 2) if total_orders else 0,
-        'status_breakdown': orders.values('status').annotate(
-            count=Count('id'), revenue=Sum('total_amount')).order_by('-count'),
-        'payment_breakdown': earning.values('payment_mode').annotate(
-            count=Count('id'), revenue=Sum('total_amount')).order_by('-count'),
+        'status_breakdown': orders.values('status')
+        .annotate(count=Count('id'), revenue=Sum('total_amount'))
+        .order_by('-count'),
+        'payment_breakdown': earning.values('payment_mode')
+        .annotate(count=Count('id'), revenue=Sum('total_amount'))
+        .order_by('-count'),
         'top_products': (
             OrderItem.objects.filter(order__in=earning, product__isnull=False)
             .values('product__name')
@@ -71,8 +74,10 @@ def report_context(filters):
             .order_by('-revenue')[:10]
         ),
         'daily': (
-            earning.annotate(day=TruncDate('created_at')).values('day')
-            .annotate(revenue=Sum('total_amount'), count=Count('id')).order_by('day')
+            earning.annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(revenue=Sum('total_amount'), count=Count('id'))
+            .order_by('day')
         ),
         'order_statuses': [key for key, _ in ORDER_STATUS],
         'payment_modes': [key for key, _ in PAYMENT_MODE],
@@ -99,28 +104,53 @@ def admin_sales_report_print(request):
 def admin_sales_report_csv(request):
     filters = _filters(request)
     orders = report_queryset(filters)
-    filename = f"bloomify_sales_{filters['date_from'] or 'all'}_to_{filters['date_to'] or 'all'}.csv"
+    filename = f'bloomify_sales_{filters["date_from"] or "all"}_to_{filters["date_to"] or "all"}.csv'
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
-    writer.writerow([
-        'Order ID', 'Date', 'Customer Name', 'Email', 'Phone', 'City', 'Pincode',
-        'Payment Mode', 'Status', 'Subtotal (₹)', 'Delivery Charge (₹)', 'Discount (₹)',
-        'Total Amount (₹)', 'Coupon Code', 'Items',
-    ])
+    writer.writerow(
+        [
+            'Order ID',
+            'Date',
+            'Customer Name',
+            'Email',
+            'Phone',
+            'City',
+            'Pincode',
+            'Payment Mode',
+            'Status',
+            'Subtotal (₹)',
+            'Delivery Charge (₹)',
+            'Discount (₹)',
+            'Total Amount (₹)',
+            'Coupon Code',
+            'Items',
+        ]
+    )
     for order in orders:
         items = ' | '.join(
-            f"{item.product.name if item.product else 'Custom Bouquet'} x{item.quantity}"
-            for item in order.items.all()
+            f'{item.product.name if item.product else "Custom Bouquet"} x{item.quantity}' for item in order.items.all()
         )
-        writer.writerow([
-            f'#{order.id}', order.created_at.strftime('%d-%m-%Y %H:%M'),
-            _csv_safe(order.full_name), order.email, order.phone, _csv_safe(order.city), order.pincode,
-            order.get_payment_mode_display(), order.status_display,
-            order.subtotal, order.delivery_charge, order.discount_amount, order.total_amount,
-            order.coupon.code if order.coupon else '—', _csv_safe(items),
-        ])
+        writer.writerow(
+            [
+                f'#{order.id}',
+                order.created_at.strftime('%d-%m-%Y %H:%M'),
+                _csv_safe(order.full_name),
+                order.email,
+                order.phone,
+                _csv_safe(order.city),
+                order.pincode,
+                order.get_payment_mode_display(),
+                order.status_display,
+                order.subtotal,
+                order.delivery_charge,
+                order.discount_amount,
+                order.total_amount,
+                order.coupon.code if order.coupon else '—',
+                _csv_safe(items),
+            ]
+        )
     return response
 
 

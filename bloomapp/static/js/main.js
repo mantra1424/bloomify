@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < 18; i++) {
       const petal = document.createElement('div');
       petal.classList.add('petal');
+      petal.setAttribute('aria-hidden', 'true'); // decorative only
       petal.textContent = petals[Math.floor(Math.random() * petals.length)];
       petal.style.cssText = `
         left: ${Math.random() * 100}%;

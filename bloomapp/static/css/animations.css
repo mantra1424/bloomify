@@ -47,6 +47,9 @@
   90%  { opacity: 0.4; }
   100% { opacity: 0; transform: translateY(110vh) rotate(720deg); }
 }
+@media (prefers-reduced-motion: reduce) {
+  .petal { display: none; }
+}
 
 /* ── Ripple on buttons ───────────────────────────────────────────── */
 .btn { position: relative; overflow: hidden; }

@@ -41,7 +41,7 @@
       <input id="nav-search" type="text" placeholder="🔍 Search bouquets…"
         autocomplete="off"
         style="width:100%;padding:0.55rem 1rem 0.55rem 2.4rem;border-radius:var(--radius-full);
-               border:1.5px solid var(--gray-200);font-size:0.85rem;outline:none;
+               border:1.5px solid var(--gray-200);font-size:var(--text-sm);outline:none;
                background:var(--gray-50);transition:border-color 0.2s,box-shadow 0.2s;"
         onfocus="this.style.borderColor='var(--pink-400)';this.style.boxShadow='0 0 0 3px rgba(232,86,122,0.12)'"
         onblur="setTimeout(()=>{this.style.borderColor='var(--gray-200)';this.style.boxShadow='none';hideAC()},200)"
@@ -64,7 +64,7 @@
             <path stroke-linecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
           </svg>
         </a>
-        <span style="font-size:0.8rem;font-weight:600;color:var(--pink-600);white-space:nowrap;">Welcome! {{ user.full_name|truncatechars:12 }}</span>
+        <span style="font-size:var(--text-xs);font-weight:600;color:var(--pink-600);white-space:nowrap;">Welcome! {{ user.full_name|truncatechars:12 }}</span>
         <a href="{% url 'wishlist' %}" class="nav-icon-btn" aria-label="Wishlist" title="Wishlist">
           <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -173,7 +173,7 @@
         </div>
       </div>
       <div class="footer-col">
-        <h4>Shop</h4>
+        <h2 class="footer-heading">Shop</h2>
         <ul>
           <li><a href="{% url 'products' %}">All Bouquets</a></li>
           <li><a href="{% url 'products' %}?category=birthday">Birthday</a></li>
@@ -184,7 +184,7 @@
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Account</h4>
+        <h2 class="footer-heading">Account</h2>
         <ul>
           <li><a href="{% url 'dashboard' %}">My Orders</a></li>
           <li><a href="{% url 'dashboard' %}?tab=profile">Profile</a></li>
@@ -193,7 +193,7 @@
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Help</h4>
+        <h2 class="footer-heading">Help</h2>
         <ul>
           <li><a href="{% url 'dashboard' %}?tab=orders">Delivery Info</a></li>
           <li><a href="{% url 'returns' %}">Returns Policy</a></li>
@@ -207,14 +207,14 @@
     <div style="border-top:1px solid #2a1520;padding-top:2rem;margin-top:0.5rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;">
         <div>
-          <h4 style="color:white;font-family:var(--font-display);font-size:1.05rem;margin-bottom:0.25rem;">🌸 Stay in Bloom</h4>
-          <p style="color:#a3a3a3;font-size:0.82rem;margin:0;">Get exclusive offers & flower inspiration in your inbox.</p>
+          <h2 class="footer-heading" style="margin-bottom:0.25rem;">🌸 Stay in Bloom</h2>
+          <p style="color:#a3a3a3;font-size:var(--text-sm);margin:0;">Get exclusive offers & flower inspiration in your inbox.</p>
         </div>
         <form id="newsletter-form" style="display:flex;gap:0.5rem;flex:1;max-width:420px;" onsubmit="submitNewsletter(event)">
           {% csrf_token %}
           <input type="email" id="nl-email" placeholder="Your email address" required
-            style="flex:1;padding:0.65rem 1rem;border-radius:var(--radius-full);border:none;font-size:0.87rem;outline:none;background:#1a0a10;color:white;border:1px solid #3a1a28;"/>
-          <button type="submit" class="btn btn-primary" style="padding:0.65rem 1.4rem;font-size:0.83rem;white-space:nowrap;">Subscribe</button>
+            style="flex:1;padding:0.65rem 1rem;border-radius:var(--radius-full);border:none;font-size:var(--text-sm);outline:none;background:#1a0a10;color:white;border:1px solid #3a1a28;"/>
+          <button type="submit" class="btn btn-primary" style="padding:0.65rem 1.4rem;font-size:var(--text-sm);white-space:nowrap;">Subscribe</button>
         </form>
       </div>
     </div>
@@ -265,8 +265,8 @@
             <a href="${p.url}" style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1rem;
               text-decoration:none;transition:background 0.15s;" onmouseover="this.style.background='var(--pink-50)'" onmouseout="this.style.background=''">
               <img src="${p.image}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>
-              <div><div style="font-size:0.83rem;font-weight:600;color:var(--gray-900);">${p.name}</div>
-              <div style="font-size:0.72rem;color:var(--pink-500);">\u20b9${p.price} · ${p.category}</div></div>
+              <div><div style="font-size:var(--text-sm);font-weight:600;color:var(--gray-900);">${p.name}</div>
+              <div style="font-size:var(--text-xs);color:var(--pink-500);">\u20b9${p.price} · ${p.category}</div></div>
             </a>`).join('');
           box.style.display = 'block';
         });
@@ -301,7 +301,7 @@ function submitNewsletter(e) {
     body: 'email=' + encodeURIComponent(email)
   }).then(r => r.json()).then(d => {
     document.getElementById('newsletter-form').innerHTML =
-      '<p style="color:#6ee7a0;font-weight:600;font-size:0.9rem;">🌸 ' + (d.message || 'Subscribed! Thank you.') + '</p>';
+      '<p style="color:#6ee7a0;font-weight:600;font-size:var(--text-sm);">🌸 ' + (d.message || 'Subscribed! Thank you.') + '</p>';
   }).catch(() => {});
 }
 </script>

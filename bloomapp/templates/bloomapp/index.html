@@ -7,6 +7,7 @@
 <style>
 /* ── Hero ── */
 .hero-section {
+  position: relative; /* contain and clip the absolutely positioned falling petals */
   display: grid; grid-template-columns: 1fr 1fr;
   align-items: center; min-height: 92vh;
   background: linear-gradient(135deg, #fff5f7 0%, #fffbf8 60%, #f8f5ff 100%);
@@ -26,20 +27,20 @@
   font-family: var(--font-display);
 }
 .hero-left p {
-  font-size: 1rem; color: var(--gray-500);
+  font-size: var(--text-base); color: var(--gray-500);
   line-height: 1.75; margin-bottom: 2.5rem; max-width: 400px;
 }
 .hero-btns { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
 .btn-hero-primary {
   background: var(--pink-700); color: white;
   padding: 0.85rem 2rem; border-radius: var(--radius-full);
-  font-weight: 600; font-size: 0.95rem;
+  font-weight: 600; font-size: var(--text-base);
   transition: all var(--transition);
   display: inline-flex; align-items: center;
 }
 .btn-hero-primary:hover { background: var(--pink-600); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(180,41,79,0.3); }
 .btn-hero-link {
-  color: var(--gray-700); font-weight: 500; font-size: 0.95rem;
+  color: var(--gray-700); font-weight: 500; font-size: var(--text-base);
   display: inline-flex; align-items: center; gap: 0.4rem;
   transition: color var(--transition);
 }
@@ -78,8 +79,8 @@
 }
 .cat-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--pink-200); }
 .cat-icon { font-size: 2.75rem; margin-bottom: 1rem; }
-.cat-card h3 { font-size: 1.05rem; margin-bottom: 0.3rem; }
-.cat-card p { font-size: 0.78rem; }
+.cat-card h3 { font-size: var(--text-lg); margin-bottom: 0.3rem; }
+.cat-card p { font-size: var(--text-xs); }
 
 /* ── Featured ── */
 .featured-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
@@ -91,17 +92,17 @@
   background: white; border-radius: var(--radius-lg);
   padding: 1.75rem; box-shadow: var(--shadow-sm);
 }
-.testimonial-stars { color: #fbbf24; font-size: 0.9rem; margin-bottom: 0.75rem; }
-.testimonial-text { font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
+.testimonial-stars { color: #fbbf24; font-size: var(--text-sm); margin-bottom: 0.75rem; }
+.testimonial-text { font-size: var(--text-sm); line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
 .testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
 .author-avatar {
   width: 40px; height: 40px; border-radius: 50%;
   background: linear-gradient(135deg, var(--pink-300), var(--pink-500));
-  color: white; font-weight: 700; font-size: 0.9rem;
+  color: white; font-weight: 700; font-size: var(--text-sm);
   display: flex; align-items: center; justify-content: center;
 }
-.author-name { font-weight: 600; font-size: 0.85rem; }
-.author-loc  { font-size: 0.75rem; color: var(--gray-400); }
+.author-name { font-weight: 600; font-size: var(--text-sm); }
+.author-loc  { font-size: var(--text-xs); color: var(--gray-500); }
 
 /* ── Promo Banner ── */
 .promo-banner {
@@ -115,7 +116,7 @@
   opacity: 0.15; letter-spacing: 0.5rem;
 }
 .promo-banner h2 { color: white; font-size: clamp(1.25rem, 2.5vw, 1.75rem); margin-bottom: 0.5rem; }
-.promo-banner p { color: rgba(255,255,255,0.85); }
+.promo-banner p { color: white; }
 .btn-white { background: white; color: var(--pink-600); font-weight: 700; }
 .btn-white:hover { background: var(--pink-50); transform: translateY(-2px); }
 
@@ -237,7 +238,7 @@
       </div>
       {% empty %}
       <div style="grid-column:1/-1;text-align:center;padding:3rem;">
-        <p style="font-size:1.1rem;">🌸 Beautiful bouquets coming soon! <a href="{% url 'admin_login' %}" style="color:var(--pink-500)">Add products</a></p>
+        <p style="font-size:var(--text-lg);">🌸 Beautiful bouquets coming soon! <a href="{% url 'admin_login' %}" style="color:var(--pink-500)">Add products</a></p>
       </div>
       {% endfor %}
     </div>

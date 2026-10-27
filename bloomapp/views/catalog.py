@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from bloomapp.forms import CustomBouquetForm, first_error
 from bloomapp.models import CartItem, Category, CustomBouquet, Product, Review, Wishlist
+from bloomapp.services import pricing
 from bloomapp.utils import back_url, parse_float, parse_int
 
 OCCASIONS = ['birthday', 'anniversary', 'love', 'wedding', 'graduation', 'sympathy']
@@ -153,7 +154,7 @@ def custom_bouquet_view(request):
         CartItem.objects.create(user=request.user, custom_bouquet=bouquet, quantity=1)
         messages.success(request, 'Custom bouquet added to cart! 🌺')
         return redirect('cart')
-    return render(request, 'bloomapp/bouquet/custom.html')
+    return render(request, 'bloomapp/bouquet/custom.html', {'bouquet_pricing': pricing.bouquet_pricing_config()})
 
 
 @login_required

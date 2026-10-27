@@ -197,6 +197,16 @@ class InputValidationTests(BaseShopTest):
         # 150 base + 12 x 20 + 150 luxury wrap + 30 message card
         self.assertEqual(CustomBouquet.objects.get().price, 570)
 
+    def test_custom_bouquet_charges_the_flower_surcharge(self):
+        self.client.post(reverse('custom_bouquet'), {'flowers': 'orchid', 'flower_count': '10', 'wrapping': 'classic'})
+        # 150 base + 10 orchids x (20 + 20 surcharge)
+        self.assertEqual(CustomBouquet.objects.get().price, 550)
+
+    def test_bouquet_page_gets_prices_from_the_server(self):
+        response = self.client.get(reverse('custom_bouquet'))
+        self.assertEqual(response.context['bouquet_pricing']['flower_surcharges']['lily'], 10)
+        self.assertContains(response, 'id="bouquet-pricing"')
+
     def test_unknown_wrapping_is_rejected(self):
         self.client.post(reverse('custom_bouquet'), {'flowers': 'rose', 'flower_count': '12', 'wrapping': 'free'})
         self.assertFalse(CustomBouquet.objects.exists())

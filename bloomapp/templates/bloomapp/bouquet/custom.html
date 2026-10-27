@@ -398,7 +398,7 @@
           </div>
           <div class="p-row">
             <span class="p-label">Base price</span>
-            <span class="p-value">₹150</span>
+            <span class="p-value">₹{{ bouquet_pricing.base }}</span>
           </div>
           <div class="p-row">
             <span class="p-label">Flowers cost</span>
@@ -421,9 +421,12 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ bouquet_pricing|json_script:"bouquet-pricing" }}
 <script>
+// Prices come from the server (bloomapp/services/pricing.py), so the preview always matches the charge.
+const PRICING = JSON.parse(document.getElementById('bouquet-pricing').textContent);
 const flowerEmojis = { rose:'🌹', lily:'🌷', tulip:'🌺', sunflower:'🌻', orchid:'💜' };
-const wrapCosts    = { classic:0, rustic:50, luxury:150, minimal:30 };
+const wrapCosts    = PRICING.wrapping;
 const wrapNames    = { classic:'Classic White', rustic:'Rustic Kraft', luxury:'Luxury Satin', minimal:'Minimal Green' };
 let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
 
@@ -431,7 +434,7 @@ let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
 (function(){
   if (!document.querySelector('[name=flowers]')) {
     const flowers = [
-      {val:'rose', label:'Rose', extra:0, badge:'Popular',
+      {val:'rose', label:'Rose', extra:PRICING.flower_surcharges.rose, badge:'Popular',
        svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
          <circle cx="50" cy="50" r="48" fill="#fff0f3"/>
          <ellipse cx="50" cy="38" rx="18" ry="22" fill="#f43f5e" opacity=".9"/>
@@ -443,7 +446,7 @@ let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
          <rect x="47" y="68" width="6" height="18" rx="3" fill="#16a34a"/>
          <ellipse cx="38" cy="80" rx="9" ry="5" fill="#15803d" transform="rotate(-30 38 80)"/>
        </svg>`},
-      {val:'lily', label:'Lily', extra:10, badge:'Fresh',
+      {val:'lily', label:'Lily', extra:PRICING.flower_surcharges.lily, badge:'Fresh',
        svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
          <circle cx="50" cy="50" r="48" fill="#fdf4ff"/>
          <ellipse cx="50" cy="28" rx="8" ry="24" fill="#e879f9" opacity=".9"/>
@@ -455,7 +458,7 @@ let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
          <circle cx="50" cy="50" r="8" fill="#fbbf24"/>
          <circle cx="50" cy="50" r="4" fill="#f59e0b"/>
        </svg>`},
-      {val:'tulip', label:'Tulip', extra:15, badge:'',
+      {val:'tulip', label:'Tulip', extra:PRICING.flower_surcharges.tulip, badge:'',
        svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
          <circle cx="50" cy="50" r="48" fill="#fff1f2"/>
          <ellipse cx="50" cy="42" rx="14" ry="22" fill="#fb923c" opacity=".95"/>
@@ -466,7 +469,7 @@ let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
          <ellipse cx="38" cy="78" rx="10" ry="5" fill="#15803d" transform="rotate(-25 38 78)"/>
          <ellipse cx="62" cy="78" rx="10" ry="5" fill="#15803d" transform="rotate(25 62 78)"/>
        </svg>`},
-      {val:'sunflower', label:'Sunflower', extra:5, badge:'Bright',
+      {val:'sunflower', label:'Sunflower', extra:PRICING.flower_surcharges.sunflower, badge:'Bright',
        svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
          <circle cx="50" cy="50" r="48" fill="#fffbeb"/>
          <ellipse cx="50" cy="22" rx="7" ry="16" fill="#fbbf24"/>
@@ -481,7 +484,7 @@ let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
          <circle cx="50" cy="50" r="10" fill="#78350f"/>
          <rect x="47" y="66" width="6" height="18" rx="3" fill="#16a34a"/>
        </svg>`},
-      {val:'orchid', label:'Orchid', extra:20, badge:'Premium',
+      {val:'orchid', label:'Orchid', extra:PRICING.flower_surcharges.orchid, badge:'Premium',
        svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
          <circle cx="50" cy="50" r="48" fill="#f5f3ff"/>
          <ellipse cx="50" cy="30" rx="12" ry="20" fill="#a855f7" opacity=".9"/>
@@ -554,16 +557,19 @@ function syncCount() {
 }
 
 function updatePreview() {
-  const flowerCost = state.count * 20;
+  // Same formula as the server: base + stems × (per-stem price + flower surcharge) + wrapping + message card.
+  const perStem    = PRICING.per_stem + (PRICING.flower_surcharges[state.flowers] || 0);
+  const flowerCost = state.count * perStem;
   const wrapCost   = wrapCosts[state.wrapping] || 0;
   state.message    = document.getElementById('msg-card')?.value || '';
-  const msgCost    = state.message ? 30 : 0;
-  const total      = 150 + flowerCost + wrapCost + msgCost;
+  const hasMessage = state.message.trim().length > 0;
+  const msgCost    = hasMessage ? PRICING.message_card : 0;
+  const total      = PRICING.base + flowerCost + wrapCost + msgCost;
   document.getElementById('prev-flower').textContent      = (state.flowers||'rose').replace(/^./,c=>c.toUpperCase());
   document.getElementById('prev-count').textContent       = state.count + ' stems';
   document.getElementById('prev-wrap').textContent        = wrapNames[state.wrapping] || 'Classic White';
-  document.getElementById('prev-msg').textContent         = state.message ? 'Added (+₹30)' : 'Not added';
-  document.getElementById('prev-flower-cost').textContent = `₹${flowerCost}`;
+  document.getElementById('prev-msg').textContent         = hasMessage ? `Added (+₹${PRICING.message_card})` : 'Not added';
+  document.getElementById('prev-flower-cost').textContent = `₹${flowerCost} (₹${perStem}/stem)`;
   document.getElementById('prev-wrap-cost').textContent   = `₹${wrapCost}`;
   document.getElementById('prev-total').textContent       = `₹${total}`;
   // Update preview SVG
@@ -598,5 +604,8 @@ function prevStep(from) {
   if (from<=3) document.getElementById(`conn-${from-1}`)?.classList.remove('done');
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+// Show server-calculated prices as soon as the page loads.
+updatePreview();
 </script>
 {% endblock %}

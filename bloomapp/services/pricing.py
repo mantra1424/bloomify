@@ -20,9 +20,10 @@ FREE_DELIVERY_ABOVE = 1000  # subtotal (₹) at which delivery is free
 DELIVERY_DISCOUNT_ABOVE = 500  # subtotal (₹) at which ₹30 is taken off delivery
 DELIVERY_DISCOUNT = 30
 
-# Custom bouquet: base ₹150 + ₹20 per stem + wrapping + ₹30 for a message card.
+# Custom bouquet: base ₹150 + (₹20 + flower surcharge) per stem + wrapping + ₹30 for a message card.
 BOUQUET_BASE_PRICE = 150
 BOUQUET_PRICE_PER_STEM = 20
+FLOWER_SURCHARGES = {'rose': 0, 'lily': 10, 'tulip': 15, 'sunflower': 5, 'orchid': 20}  # extra ₹ per stem
 BOUQUET_MESSAGE_CARD_PRICE = 30
 BOUQUET_MIN_STEMS = 1
 BOUQUET_MAX_STEMS = 100
@@ -79,8 +80,20 @@ def coupon_discount(subtotal, coupon):
     return amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-def custom_bouquet_price(stem_count, wrapping, has_message):
-    price = BOUQUET_BASE_PRICE + stem_count * BOUQUET_PRICE_PER_STEM + WRAPPING_COSTS[wrapping]
+def custom_bouquet_price(stem_count, wrapping, has_message, flower='rose'):
+    per_stem = BOUQUET_PRICE_PER_STEM + FLOWER_SURCHARGES[flower]
+    price = BOUQUET_BASE_PRICE + stem_count * per_stem + WRAPPING_COSTS[wrapping]
     if has_message:
         price += BOUQUET_MESSAGE_CARD_PRICE
     return price
+
+
+def bouquet_pricing_config():
+    """Prices sent to the bouquet builder page so its preview matches what we charge."""
+    return {
+        'base': BOUQUET_BASE_PRICE,
+        'per_stem': BOUQUET_PRICE_PER_STEM,
+        'message_card': BOUQUET_MESSAGE_CARD_PRICE,
+        'flower_surcharges': FLOWER_SURCHARGES,
+        'wrapping': WRAPPING_COSTS,
+    }

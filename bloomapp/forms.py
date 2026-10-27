@@ -166,7 +166,9 @@ class CustomBouquetForm(forms.Form):
 
     def price(self):
         d = self.cleaned_data
-        return pricing.custom_bouquet_price(d['flower_count'], d['wrapping'], bool(d.get('message_card', '').strip()))
+        return pricing.custom_bouquet_price(
+            d['flower_count'], d['wrapping'], bool(d.get('message_card', '').strip()), flower=d['flowers']
+        )
 
 
 class ContactForm(forms.ModelForm):

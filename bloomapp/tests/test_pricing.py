@@ -58,8 +58,22 @@ def test_coupon_discount_rounds_to_paise():
 
 
 @pytest.mark.parametrize(
-    ('stems', 'wrapping', 'message', 'expected'),
-    [(1, 'classic', False, 170), (12, 'rustic', False, 440), (12, 'luxury', True, 570)],
+    ('stems', 'wrapping', 'message', 'flower', 'expected'),
+    [
+        (1, 'classic', False, 'rose', 170),  # 150 + 1×20
+        (12, 'rustic', False, 'rose', 440),  # 150 + 12×20 + 50
+        (12, 'luxury', True, 'rose', 570),  # 150 + 12×20 + 150 + 30
+        (12, 'classic', False, 'lily', 510),  # 150 + 12×(20+10)
+        (12, 'classic', False, 'tulip', 570),  # 150 + 12×(20+15)
+        (12, 'classic', False, 'sunflower', 450),  # 150 + 12×(20+5)
+        (10, 'minimal', True, 'orchid', 610),  # 150 + 10×(20+20) + 30 + 30
+    ],
 )
-def test_custom_bouquet_price(stems, wrapping, message, expected):
-    assert pricing.custom_bouquet_price(stems, wrapping, message) == expected
+def test_custom_bouquet_price(stems, wrapping, message, flower, expected):
+    assert pricing.custom_bouquet_price(stems, wrapping, message, flower=flower) == expected
+
+
+def test_every_flower_choice_has_a_surcharge():
+    from bloomapp.models import FLOWER_CHOICES
+
+    assert set(pricing.FLOWER_SURCHARGES) == {key for key, _ in FLOWER_CHOICES}

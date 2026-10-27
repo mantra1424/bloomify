@@ -40,7 +40,7 @@ stock alerts, order management, coupons and sales reports.
 - Concurrency-safe stock, coupon and slot booking (conditional updates inside transactions)
 - Security: Django auth with email login, brute-force lockout (django-axes), password strength rules,
   CSRF on every form, open-redirect protection, CSV formula-injection guard, HTTPS/HSTS in production
-- 146 automated tests (86% coverage), Ruff lint/format, GitHub Actions CI on PostgreSQL
+- 153 automated tests (86% coverage), Ruff lint/format, GitHub Actions CI on PostgreSQL
 - Docker image, docker-compose, one-click Render blueprint
 
 ## Tech stack
@@ -132,7 +132,7 @@ To receive webhooks locally, expose your server (e.g. with a tunnel), add
 ## Tests and code quality
 
 ```bash
-pytest                       # 146 tests
+pytest                       # 153 tests
 pytest --cov                 # with coverage report
 ruff check . && ruff format --check .
 pre-commit install           # run lint/format on every commit

@@ -46,7 +46,8 @@ delivery fee = city charge + distance charge + speed charge
                subtotal ≥ ₹1000 → free delivery
 
 order total  = items + delivery fee − coupon discount
-custom bouquet = ₹150 + ₹20 × stems + wrapping (₹0–150) + ₹30 message card
+custom bouquet = ₹150 + (₹20 + flower surcharge) × stems + wrapping (₹0–150) + ₹30 message card
+               flower surcharge per stem: rose ₹0 · sunflower ₹5 · lily ₹10 · tulip ₹15 · orchid ₹20
 ```
 
 ## Placing an order (`services/orders.place_order`)

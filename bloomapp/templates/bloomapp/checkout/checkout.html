@@ -557,13 +557,12 @@
 const DELIVERY_CONFIG = JSON.parse(document.getElementById('delivery-config').textContent);
 (function () {
 const subtotal = parseFloat(document.getElementById('checkout-form').dataset.subtotal) || 0;
-let deliveryCharge = 60;
-let discountAmount = 0;
+let deliveryCharge = 0;   // current delivery fee (already includes any delivery discount)
+let discountAmount = 0;   // coupon discount
 
-function updateTotal(charge, disc) {
-  const c = (charge !== undefined) ? charge : deliveryCharge;
-  const d = (disc   !== undefined) ? disc   : discountAmount;
-  const total = subtotal + c - d;
+function updateTotal() {
+  // Same formula as the server: items + delivery fee − coupon discount.
+  const total = subtotal + deliveryCharge - discountAmount;
   document.getElementById('display-total').textContent = `₹${total.toFixed(0)}`;
 }
 
@@ -643,7 +642,8 @@ function calculateDelivery() {
     const chargeEl = document.getElementById('display-charge');
     chargeEl.innerHTML = '<span style="color:#aaa;font-size:0.75rem;">Select city first</span>';
     document.getElementById('hidden-delivery-charge').value = 0;
-    updateTotal(0, 0);
+    deliveryCharge = 0;
+    updateTotal();
     return;
   }
 
@@ -697,7 +697,8 @@ function calculateDelivery() {
   }
 
   document.getElementById('hidden-delivery-charge').value = gross;
-  updateTotal(gross, disc);
+  deliveryCharge = gross;
+  updateTotal();
 }
 
 // Toggle the delivery breakdown accordion
@@ -768,7 +769,7 @@ window.calculateDelivery       = calculateDelivery;
 window.checkCityAvailability   = checkCityAvailability;
 window.toggleDeliveryBreakdown = toggleDeliveryBreakdown;
 
-updateTotal(0, 0);
+updateTotal();
 calculateDelivery();
 })();
 

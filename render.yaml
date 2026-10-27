@@ -1,0 +1,55 @@
+# Render Blueprint: Dashboard → New → Blueprint → pick this repo.
+# Creates a free PostgreSQL database and a free web service.
+databases:
+  - name: bloomify-db
+    plan: free
+    databaseName: bloomify
+    user: bloomify
+
+services:
+  - type: web
+    name: bloomify
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: >-
+      python manage.py migrate --noinput &&
+      python manage.py seed_data &&
+      gunicorn bloomproject.wsgi:application --bind 0.0.0.0:$PORT --access-logfile -
+    healthCheckPath: /healthz/
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.2
+      - key: DJANGO_SETTINGS_MODULE
+        value: bloomproject.settings.prod
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bloomify-db
+          property: connectionString
+      - key: WEB_CONCURRENCY
+        value: "2"
+      # Free instances have no persistent disk: uploads last until the next deploy.
+      # Set AWS_* variables (S3 / Cloudflare R2) to keep uploaded images permanently.
+      - key: SERVE_MEDIA
+        value: "true"
+      # Razorpay TEST keys (Dashboard → Account & Settings → API Keys) — set these by hand.
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_SECRET_KEY
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+# Optional (paid plans): clean up unpaid online orders every 15 minutes.
+# The app also does this whenever checkout, the cart or the admin orders page is used.
+#  - type: cron
+#    name: bloomify-release-unpaid-orders
+#    runtime: python
+#    schedule: "*/15 * * * *"
+#    buildCommand: pip install -r requirements.txt
+#    startCommand: python manage.py release_unpaid_orders

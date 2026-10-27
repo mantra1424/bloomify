@@ -104,6 +104,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+# Let Django serve uploaded files itself (fine for a demo; use S3 storage for real traffic).
+SERVE_MEDIA = env_bool('SERVE_MEDIA', False)
 
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},

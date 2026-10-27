@@ -5,7 +5,7 @@ import os
 import dj_database_url
 
 from .base import *  # noqa: F401,F403
-from .base import ALLOWED_HOSTS, SECRET_KEY, SMTP_USER, STORAGES, env_list
+from .base import ALLOWED_HOSTS, SECRET_KEY, SMTP_USER, STORAGES, env_bool, env_list
 
 DEBUG = False
 
@@ -38,14 +38,17 @@ if not SMTP_USER:
     SILENCED_SYSTEM_CHECKS = ['mail.E001']
 
 # ── HTTPS hardening ───────────────────────────────────────────────────────────
+# DJANGO_HTTPS=false only for running the production image over plain http on
+# localhost (docker compose). Real deployments keep the default.
+HTTPS = env_bool('DJANGO_HTTPS', True)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = HTTPS
 SECURE_REDIRECT_EXEMPT = [r'^healthz/?$']
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = HTTPS
+CSRF_COOKIE_SECURE = HTTPS
+SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30 if HTTPS else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = HTTPS
+SECURE_HSTS_PRELOAD = HTTPS
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 

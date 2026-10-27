@@ -1,0 +1,43 @@
+# Run the whole app locally like production:  docker compose up --build
+# Then open http://localhost:8000  (demo logins are printed in the web logs).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: bloomify
+      POSTGRES_PASSWORD: bloomify
+      POSTGRES_DB: bloomify
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bloomify"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py seed_data &&
+             gunicorn bloomproject.wsgi:application --bind 0.0.0.0:8000 --workers 2 --access-logfile -"
+    environment:
+      DATABASE_URL: postgres://bloomify:bloomify@db:5432/bloomify
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-docker-only-not-secret-0123456789abcdefghijklmnop}
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_HTTPS: "false"   # plain http on localhost
+      SERVE_MEDIA: "true"
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_SECRET_KEY: ${RAZORPAY_SECRET_KEY:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:

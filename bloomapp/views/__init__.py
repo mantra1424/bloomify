@@ -24,5 +24,5 @@ from .checkout import (
     place_order,
 )
 from .orders import cancel_order, order_success, order_tracking
-from .pages import contact_view, faq_view, healthz, home, newsletter_subscribe, returns_view
+from .pages import contact_view, faq_view, healthz, home, newsletter_subscribe, photo_credits_view, returns_view
 from .payments import confirm_payment, payment_view, razorpay_webhook

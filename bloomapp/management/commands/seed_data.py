@@ -7,6 +7,7 @@ from datetime import date, timedelta
 
 from django.contrib.auth.hashers import make_password
 from django.core.management.base import BaseCommand
+from django.utils.text import slugify
 
 from bloomapp.models import Category, Coupon, DeliveryZone, Product, User
 
@@ -215,6 +216,8 @@ class Command(BaseCommand):
         ]
         count = 0
         for name, cat_slug, desc, orig, price, stock, flowers, occasions, featured in products_data:
+            # Free-licensed demo photo shipped in static/ (credits: bloomapp/data/photo_credits.json).
+            photo = f'bloomapp/demo/products/{slugify(name)}.jpg'
             p, created = Product.objects.get_or_create(
                 name=name,
                 defaults={
@@ -227,10 +230,15 @@ class Command(BaseCommand):
                     'occasion_tags': occasions,
                     'is_featured': featured,
                     'status': 'available',
+                    'image_url': photo,
                 },
             )
             if created:
                 count += 1
+            elif not p.image_main and not p.image_url:
+                # Products seeded before demo photos existed get one now.
+                p.image_url = photo
+                p.save(update_fields=['image_url'])
         self.stdout.write(f'  ✅ {count} products seeded (of {len(products_data)} total)')
 
         # ── Coupons ──────────────────────────────────────────────────

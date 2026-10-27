@@ -1,3 +1,4 @@
+import io
 import json
 from datetime import date, timedelta
 
@@ -80,3 +81,53 @@ def test_calculate_delivery_api(client):
     assert nope.status_code == 422
     bad = client.post(url, 'not json', content_type='application/json')
     assert bad.status_code == 400
+
+
+def test_photo_credits_page_lists_every_demo_photo(client):
+    response = client.get(reverse('photo_credits'))
+    assert response.status_code == 200
+    credits = response.context['credits']
+    assert len(credits) == 12
+    assert all(
+        c['license'] and c['author'] and c['source'].startswith('https://commons.wikimedia.org/') for c in credits
+    )
+
+
+def test_every_credited_photo_file_exists():
+    from django.contrib.staticfiles import finders
+
+    from bloomapp.views.pages import _photo_credits
+
+    assert all(finders.find(c['file']) for c in _photo_credits())
+
+
+@pytest.mark.parametrize(
+    ('image_url', 'expected'),
+    [
+        ('', '/static/bloomapp/img/placeholder-bouquet.svg'),
+        ('bloomapp/demo/products/lavender-love.jpg', '/static/bloomapp/demo/products/lavender-love.jpg'),
+        ('https://example.com/rose.jpg', 'https://example.com/rose.jpg'),
+    ],
+)
+def test_product_image_sources(product, image_url, expected):
+    product.image_url = image_url
+    assert product.get_image == expected
+
+
+def test_seed_data_gives_every_product_a_photo(db):
+    from django.contrib.staticfiles import finders
+    from django.core.management import call_command
+
+    from bloomapp.models import Product
+
+    call_command('seed_data', stdout=io.StringIO())
+    products = list(Product.objects.all())
+    assert len(products) == 12
+    for p in products:
+        assert p.image_url and finders.find(p.image_url), p.name
+
+    # Running it again on an older database fills in missing photos without duplicates.
+    Product.objects.update(image_url='')
+    call_command('seed_data', stdout=io.StringIO())
+    assert Product.objects.count() == 12
+    assert not Product.objects.filter(image_url='').exists()

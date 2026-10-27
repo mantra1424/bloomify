@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.templatetags.static import static
 from django.utils.html import format_html
 
 # ── Choice Constants ────────────────────────────────────────────────────────────
@@ -145,7 +146,9 @@ class Product(models.Model):
     image_main = models.ImageField(upload_to='products/', blank=True, null=True)
     image_2 = models.ImageField(upload_to='products/', blank=True, null=True)
     image_3 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image_url = models.URLField(blank=True, default='')  # URL fallback for seeded demo data
+    # Photo without an upload: a full URL, or a path to a static file shipped with the site
+    # (used by the demo catalogue, e.g. 'bloomapp/demo/products/lavender-love.jpg').
+    image_url = models.CharField(max_length=500, blank=True, default='')
     flowers = models.CharField(max_length=200, blank=True, default='')
     occasion_tags = models.CharField(max_length=200, blank=True, default='')
     is_featured = models.BooleanField(default=False)
@@ -180,12 +183,14 @@ class Product(models.Model):
 
     @property
     def get_image(self):
-        """Returns the best available image URL for this product."""
+        """Best available image URL for this product."""
         if self.image_main:
             return self.image_main.url
         if self.image_url:
-            return self.image_url
-        return 'https://images.unsplash.com/photo-1487530811015-780780169ddc?w=600&q=80'
+            if self.image_url.startswith(('http://', 'https://', '/')):
+                return self.image_url
+            return static(self.image_url)
+        return static('bloomapp/img/placeholder-bouquet.svg')
 
 
 # ── Review ───────────────────────────────────────────────────────────────────────

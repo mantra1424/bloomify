@@ -1,0 +1,49 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Photo Credits – Bloomify{% endblock %}
+
+{% block extra_css %}
+<style>
+.credits-wrap { max-width: 900px; margin: 0 auto; }
+.credits-intro { color: var(--gray-500); margin-bottom: 1.5rem; font-size: 0.92rem; }
+.credit-card {
+  display: flex; gap: 1rem; align-items: center;
+  background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  padding: 0.85rem; margin-bottom: 0.85rem;
+}
+.credit-card img { width: 84px; height: 84px; object-fit: cover; border-radius: var(--radius-md); flex-shrink: 0; }
+.credit-card h3 { font-size: 0.95rem; margin: 0 0 0.25rem; color: var(--gray-900); }
+.credit-card p { font-size: 0.82rem; color: var(--gray-500); margin: 0; overflow-wrap: anywhere; }
+.credit-card a { color: var(--pink-600); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📷 Photo Credits</h1>
+    <p style="color:var(--gray-500);margin-top:0.5rem;">The demo product photos are free-licensed images from Wikimedia Commons.</p>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="credits-wrap">
+      <p class="credits-intro">
+        Each photo is used under the licence shown and was resized for this site. Thank you to the photographers.
+        Photos under a CC BY-SA licence remain available under that same licence.
+      </p>
+      {% for c in credits %}
+      <div class="credit-card">
+        <img src="{% static c.file %}" alt="{{ c.product }}" loading="lazy"/>
+        <div>
+          <h3>{{ c.product }}</h3>
+          <p>“{{ c.title }}” by {{ c.author }} · {{ c.license }} ·
+            <a href="{{ c.source }}" target="_blank" rel="noopener">source</a></p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,5 +1,9 @@
 """Home page, static pages, contact form, newsletter and health check."""
 
+import json
+from functools import cache
+from pathlib import Path
+
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.db import connection
@@ -45,6 +49,17 @@ def faq_view(request):
 
 def returns_view(request):
     return render(request, 'bloomapp/returns.html')
+
+
+@cache
+def _photo_credits():
+    path = Path(__file__).resolve().parent.parent / 'data' / 'photo_credits.json'
+    return json.loads(path.read_text(encoding='utf-8'))
+
+
+def photo_credits_view(request):
+    """Attribution for the free-licensed demo product photos (required by CC BY licences)."""
+    return render(request, 'bloomapp/photo_credits.html', {'credits': _photo_credits()})
 
 
 @require_POST

@@ -3,7 +3,7 @@
 [![CI](https://github.com/mantra1424/bloomify/actions/workflows/ci.yml/badge.svg)](https://github.com/mantra1424/bloomify/actions/workflows/ci.yml)
 ![Python 3.14](https://img.shields.io/badge/python-3.14-blue)
 ![Django 6.1](https://img.shields.io/badge/django-6.1-0C4B33)
-![Coverage 84%](https://img.shields.io/badge/coverage-84%25-brightgreen)
+![Coverage 86%](https://img.shields.io/badge/coverage-86%25-brightgreen)
 
 A full-stack Django e-commerce app for a florist: customers browse and order bouquets
 (or design their own), pay online with Razorpay or cash on delivery, pick a delivery slot
@@ -40,7 +40,7 @@ stock alerts, order management, coupons and sales reports.
 - Concurrency-safe stock, coupon and slot booking (conditional updates inside transactions)
 - Security: Django auth with email login, brute-force lockout (django-axes), password strength rules,
   CSRF on every form, open-redirect protection, CSV formula-injection guard, HTTPS/HSTS in production
-- 140 automated tests (84% coverage), Ruff lint/format, GitHub Actions CI on PostgreSQL
+- 146 automated tests (86% coverage), Ruff lint/format, GitHub Actions CI on PostgreSQL
 - Docker image, docker-compose, one-click Render blueprint
 
 ## Tech stack
@@ -132,7 +132,7 @@ To receive webhooks locally, expose your server (e.g. with a tunnel), add
 ## Tests and code quality
 
 ```bash
-pytest                       # 140 tests
+pytest                       # 146 tests
 pytest --cov                 # with coverage report
 ruff check . && ruff format --check .
 pre-commit install           # run lint/format on every commit
@@ -161,6 +161,9 @@ All settings come from environment variables (or a local `.env`) — see [.env.e
 Settings modules: `bloomproject.settings.dev` (default for `manage.py`), `.prod` (default for
 gunicorn/WSGI) and `.test` (pytest).
 
-## License
+## License and credits
 
 Built as an internship project. Product data in `seed_data` is fictional.
+
+The demo product photos are free-licensed images from Wikimedia Commons (CC0, CC BY and CC BY-SA),
+credited on the site at `/photo-credits/` and in [docs/PHOTO_CREDITS.md](docs/PHOTO_CREDITS.md).

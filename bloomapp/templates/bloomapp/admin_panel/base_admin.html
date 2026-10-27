@@ -83,7 +83,7 @@
       <a href="{% url 'home' %}" class="sidebar-link" target="_blank">
         <span class="icon">🛍️</span> View Store
       </a>
-      <a href="{% url 'admin_logout' %}" class="sidebar-link">
+      <a href="#" onclick="document.getElementById('admin-logout-form').submit(); return false;" class="sidebar-link">
         <span class="icon">🚪</span> Logout
       </a>
     </nav>
@@ -108,7 +108,7 @@
       </div>
       <div class="admin-topbar-actions">
         <span class="badge badge-pink">{{ admin_user.get_role_display }}</span>
-        <a href="{% url 'admin_logout' %}" class="btn btn-ghost btn-sm">Logout</a>
+        <a href="#" onclick="document.getElementById('admin-logout-form').submit(); return false;" class="btn btn-ghost btn-sm">Logout</a>
       </div>
     </div>
 
@@ -122,5 +122,6 @@
 <script src="{% static 'js/main.js' %}"></script>
 <script src="{% static 'js/admin.js' %}"></script>
 {% block extra_js %}{% endblock %}
+<form id="admin-logout-form" method="post" action="{% url 'admin_logout' %}" hidden>{% csrf_token %}</form>
 </body>
 </html>

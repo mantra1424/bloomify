@@ -25,6 +25,10 @@ class Command(BaseCommand):
                 'password': make_password('admin123'),
                 'phone': '9999999999',
                 'role': 'admin',
+                # Panel admin only. The public demo should not get /django-admin/ access;
+                # create a private superuser with `manage.py createsuperuser` for that.
+                'is_staff': False,
+                'is_superuser': False,
             }
         )
         if created:

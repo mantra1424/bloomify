@@ -337,19 +337,16 @@
               <input type="email" name="email" class="form-control" value="{{ user.email }}" required/></div>
             <div class="form-group"><label class="form-label">Street Address</label>
               <input type="text" name="address" id="f-addr" class="form-control" placeholder="House no, Street, Area" required autocomplete="street-address"/>
-              <span class="field-error" id="err-addr">⚠ Only letters and numbers allowed in address</span>
+              <span class="field-error" id="err-addr">⚠ Use letters, numbers and , . / - # ' ( ) &amp; : only</span>
             </div>
             <div class="form-row">
               <div class="form-group"><label class="form-label">City</label>
                 <select name="city" id="f-city" class="form-control" required
                         onchange="calculateDelivery(); validateCity();">
                   <option value="">— Select City —</option>
-                  <option value="Anand">Anand</option>
-                  <option value="Vadodara">Vadodara</option>
-                  <option value="Ahmedabad">Ahmedabad</option>
-                  <option value="Surat">Surat</option>
-                  <option value="Bharuch">Bharuch</option>
-                  <option value="Nadiad">Nadiad</option>
+                  {% for key, city in delivery_cities.items %}
+                  <option value="{{ city.name }}">{{ city.name }}</option>
+                  {% endfor %}
                 </select>
                 <span class="field-error" id="err-city">⚠ Service not available in your city</span>
               </div>
@@ -554,7 +551,10 @@
 </div>
 
 {% block extra_js %}
+{{ delivery_config|json_script:"delivery-config" }}
 <script>
+// Delivery cities and charges come from the server (bloomapp/services/pricing.py).
+const DELIVERY_CONFIG = JSON.parse(document.getElementById('delivery-config').textContent);
 (function () {
 const subtotal = parseFloat(document.getElementById('checkout-form').dataset.subtotal) || 0;
 let deliveryCharge = 60;
@@ -612,16 +612,10 @@ function setPayment(mode, el) {
 }
 
 // ── Delivery Calculation Engine ────────────────────────────
-const ALLOWED_CITIES = ['anand', 'vadodara', 'ahmedabad', 'surat', 'bharuch', 'nadiad'];
-
-// City base charges
-const CITY_CHARGES = { anand:20, vadodara:30, ahmedabad:40, surat:50, bharuch:25, nadiad:30 };
-
-// City ETA display
-const CITY_ETA = {
-  anand:'2–4 hrs', vadodara:'2–4 hrs', ahmedabad:'3–5 hrs',
-  surat:'3–5 hrs', bharuch:'2–4 hrs', nadiad:'2–3 hrs',
-};
+const ALLOWED_CITIES = Object.keys(DELIVERY_CONFIG.cities);
+const CITY_CHARGES = Object.fromEntries(ALLOWED_CITIES.map(k => [k, DELIVERY_CONFIG.cities[k].charge]));
+const CITY_ETA = Object.fromEntries(ALLOWED_CITIES.map(k => [k, DELIVERY_CONFIG.cities[k].eta]));
+const CITY_NAMES = ALLOWED_CITIES.map(k => DELIVERY_CONFIG.cities[k].name);
 
 // Distance-based charge
 function distanceCharge(km) {
@@ -631,7 +625,7 @@ function distanceCharge(km) {
 }
 
 // Time/type charge
-const TIME_CHARGES = { normal:0, sameday:50, midnight:120 };
+const TIME_CHARGES = DELIVERY_CONFIG.time_charges;
 
 function calculateDelivery() {
   const cityVal  = (document.getElementById('f-city')?.value || '').trim();
@@ -732,7 +726,7 @@ function checkCityAvailability(city) {
   } else {
     box.className = 'delivery-check-box unavailable';
     document.getElementById('dbox-title').textContent = '❌ We don\'t deliver to "' + val + '" yet';
-    document.getElementById('dbox-sub').textContent   = 'We serve Anand, Vadodara, Ahmedabad, Surat, Bharuch & Vapi.';
+    document.getElementById('dbox-sub').textContent   = 'We serve ' + CITY_NAMES.join(', ') + '.';
     box.style.display = 'block';
     btn.disabled = true; btn.style.opacity = '0.5';
   }
@@ -786,10 +780,9 @@ calculateDelivery();
   const RULES = {
     name:    { re: /^[a-zA-Z\s]+$/,    msg: 'err-name'    },
     phone:   { re: /^[0-9]{10}$/,      msg: 'err-phone'   },
-    address: { re: /^[a-zA-Z0-9\s]+$/, msg: 'err-addr'    },
+    address: { re: /^[A-Za-z0-9\s,.\/#'()&:-]+$/, msg: 'err-addr' },
     pincode: { re: /^[0-9]{6}$/,       msg: 'err-pincode' },
   };
-  const ALLOWED_CITIES = ['anand', 'vadodara', 'ahmedabad', 'surat', 'bharuch', 'nadiad'];
 
   // ── Field refs ──────────────────────────────
   const fName    = document.getElementById('f-name');

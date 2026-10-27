@@ -1,0 +1,27 @@
+{% extends 'bloomapp/base.html' %}
+{% comment %}Simple centred card used by the password-reset and lockout pages.{% endcomment %}
+{% block extra_css %}
+<style>
+.auth-page { min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:2rem;
+  background: linear-gradient(135deg, var(--pink-50) 0%, var(--warm-white) 50%, var(--green-50) 100%); }
+.auth-card { background: white; border-radius: var(--radius-xl); padding: 2.75rem;
+  box-shadow: var(--shadow-xl); width: 100%; max-width: 440px; }
+.auth-logo { text-align:center; margin-bottom:2rem; }
+.auth-logo div { font-family: var(--font-display); font-size:1.75rem; color:var(--pink-600); font-weight:700; }
+.auth-logo p { font-size:0.9rem; color:var(--gray-500); margin-top:0.5rem; }
+.auth-note { text-align:center; margin-top:1.5rem; font-size:0.85rem; color:var(--gray-500); }
+.auth-note a { color:var(--pink-600); font-weight:600; }
+.field-errors { color:#dc2626; font-size:0.8rem; margin-top:0.35rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div>🌸 Bloomify</div>
+      <p>{% block card_intro %}{% endblock %}</p>
+    </div>
+    {% block card %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

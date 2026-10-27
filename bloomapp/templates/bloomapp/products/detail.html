@@ -215,7 +215,7 @@
           <div class="add-cart-row">
             <button type="submit" class="btn btn-primary btn-lg" style="flex:1;">🛒 Add to Cart</button>
             <a href="{% url 'custom_bouquet' %}" class="btn btn-outline btn-lg">🎨 Customize</a>
-            {% if user %}
+            {% if user.is_authenticated %}
             <button type="button" id="detail-wl-btn"
               class="btn btn-lg {% if in_wishlist %}wl-active{% endif %}"
               data-pk="{{ product.pk }}"
@@ -283,7 +283,7 @@
       {% endfor %}
 
       <!-- Write Review Form -->
-      {% if user %}
+      {% if user.is_authenticated %}
       <div class="write-review">
         <h3>✍️ Write a Review</h3>
         <form method="post" action="{% url 'submit_review' product.pk %}">

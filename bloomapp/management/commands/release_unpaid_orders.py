@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from bloomapp.views import release_expired_online_orders
+from bloomapp.services.orders import release_expired_online_orders
 
 
 class Command(BaseCommand):

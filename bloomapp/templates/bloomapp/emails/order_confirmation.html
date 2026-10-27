@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#fdf4f7;font-family:Inter,sans-serif;">
+  <div style="max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(194,24,91,0.10);">
+    <div style="background:linear-gradient(135deg,#c2185b,#e91e8c);padding:36px 32px;text-align:center;">
+      <div style="font-size:42px;margin-bottom:8px;">🌸</div>
+      <h1 style="color:white;margin:0;font-size:22px;font-weight:700;">Order Confirmed!</h1>
+      <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Thank you for choosing Bloomify</p>
+    </div>
+    <div style="padding:28px 32px;">
+      <p style="font-size:15px;color:#333;margin:0 0 4px;">Hi <strong>{{ order.full_name }}</strong>,</p>
+      <p style="font-size:14px;color:#666;margin:0 0 24px;">Your order <strong style="color:#c2185b;">#{{ order.id }}</strong> has been placed successfully and is being prepared with love! 💐</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+        <thead>
+          <tr style="background:#fdf4f7;">
+            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Item</th>
+            <th style="padding:10px 8px;text-align:center;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Qty</th>
+            <th style="padding:10px 8px;text-align:right;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr style="border-bottom:1px solid #f5e6eb;">
+            <td style="padding:10px 8px;font-size:14px;color:#333;">{% if item.product %}{{ item.product.name }}{% else %}Custom Bouquet{% endif %}</td>
+            <td style="padding:10px 8px;text-align:center;font-size:14px;color:#555;">×{{ item.quantity }}</td>
+            <td style="padding:10px 8px;text-align:right;font-size:14px;font-weight:600;color:#c2185b;">₹{{ item.line_total }}</td>
+          </tr>
+          {% endfor %}
+          <tr style="background:#fdf4f7;">
+            <td colspan="2" style="padding:8px;font-size:13px;color:#555;">Delivery</td>
+            <td style="padding:8px;text-align:right;font-size:13px;font-weight:600;color:#555;">{% if order.delivery_charge == 0 %}FREE 🎉{% else %}₹{{ order.delivery_charge }}{% endif %}</td>
+          </tr>
+          {% if order.discount_amount %}
+          <tr>
+            <td colspan="2" style="padding:6px 8px;font-size:13px;color:#16a34a;">Discount ({{ order.coupon.code }})</td>
+            <td style="padding:6px 8px;text-align:right;font-size:13px;color:#16a34a;font-weight:600;">-₹{{ order.discount_amount }}</td>
+          </tr>
+          {% endif %}
+        </tbody>
+        <tfoot>
+          <tr style="border-top:2px solid #fce4ec;">
+            <td colspan="2" style="padding:12px 8px;font-size:16px;font-weight:700;color:#111;">Total</td>
+            <td style="padding:12px 8px;text-align:right;font-size:18px;font-weight:800;color:#c2185b;">₹{{ order.total_amount }}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style="background:#fdf4f7;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#c2185b;text-transform:uppercase;letter-spacing:1px;">Delivery Details</p>
+        <p style="margin:0;font-size:14px;color:#444;">{{ order.full_name }} · {{ order.phone }}</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#666;">{{ order.address }}, {{ order.city }} – {{ order.pincode }}</p>
+        <p style="margin:8px 0 0;font-size:13px;color:#888;">Payment: <strong style="color:#333;">{{ order.get_payment_mode_display }}</strong></p>
+      </div>
+      <p style="font-size:13px;color:#888;margin:0;">We'll notify you when your order is out for delivery. 🚚<br/>For support, reply to this email or WhatsApp us at <strong>+91 94289 74532</strong>.</p>
+    </div>
+    <div style="background:#fdf4f7;padding:16px 32px;text-align:center;border-top:1px solid #fce4ec;">
+      <p style="margin:0;font-size:12px;color:#aaa;">© Bloomify · Made with 🌸 for flower lovers</p>
+    </div>
+  </div>
+</body>
+</html>

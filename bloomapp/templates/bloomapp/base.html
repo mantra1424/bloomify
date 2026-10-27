@@ -57,14 +57,14 @@
 
     <!-- Right: person icon + cart icon -->
     <div class="nav-actions">
-      {% if request.session.user_id %}
-        <a href="{% url 'dashboard' %}" class="nav-icon-btn" aria-label="Account" title="{{ request.session.user_name }}">
+      {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="nav-icon-btn" aria-label="Account" title="{{ user.full_name }}">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="8" r="4"/>
             <path stroke-linecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
           </svg>
         </a>
-        <span style="font-size:0.8rem;font-weight:600;color:var(--pink-600);white-space:nowrap;">Welcome! {{ request.session.user_name|truncatechars:12 }}</span>
+        <span style="font-size:0.8rem;font-weight:600;color:var(--pink-600);white-space:nowrap;">Welcome! {{ user.full_name|truncatechars:12 }}</span>
         <a href="{% url 'wishlist' %}" class="nav-icon-btn" aria-label="Wishlist" title="Wishlist">
           <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -110,15 +110,19 @@
     <a href="{% url 'products' %}?category=anniversary">💍 Anniversary</a>
     <a href="{% url 'custom_bouquet' %}">🎨 Custom Bouquet</a>
     <a href="{% url 'cart' %}">🛒 Cart ({{ cart_count }})</a>
-    {% if request.session.user_id %}
+    {% if user.is_authenticated %}
       <a href="{% url 'dashboard' %}">👤 My Account</a>
-      <a href="{% url 'logout' %}">🚪 Logout</a>
+      <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">🚪 Logout</a>
     {% else %}
       <a href="{% url 'login' %}">🔑 Login</a>
       <a href="{% url 'signup' %}">✨ Sign Up</a>
     {% endif %}
   </div>
 </nav>
+
+{% if user.is_authenticated %}
+<form id="logout-form" method="post" action="{% url 'logout' %}" hidden>{% csrf_token %}</form>
+{% endif %}
 
 <!-- ── Page Content ── -->
 <main>

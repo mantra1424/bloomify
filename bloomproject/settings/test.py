@@ -11,3 +11,5 @@ STORAGES = {
 }
 RAZORPAY_KEY_ID = 'rzp_test_key'
 RAZORPAY_SECRET_KEY = 'test-razorpay-secret'
+RAZORPAY_WEBHOOK_SECRET = 'test-webhook-secret'
+AXES_ENABLED = False  # turned on per-test where needed

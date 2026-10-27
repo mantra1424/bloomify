@@ -138,7 +138,7 @@
                 <span class="product-card-badge oos">Out of Stock</span>
               {% endif %}
               <!-- Wishlist heart -->
-              {% if user %}
+              {% if user.is_authenticated %}
               <button class="wl-btn {% if product.pk in wishlist_ids %}wl-active{% endif %}"
                 data-pk="{{ product.pk }}"
                 data-url="{% url 'toggle_wishlist' product.pk %}"

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'axes',
     'bloomapp',
 ]
 
@@ -58,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Must be last: blocks logins after repeated failures.
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'bloomproject.urls'
@@ -120,11 +123,37 @@ if AWS_STORAGE_BUCKET_NAME:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = '/login/'
+# ── Authentication ────────────────────────────────────────────────────────────
+AUTH_USER_MODEL = 'bloomapp.User'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# Brute-force protection: 5 failed logins for the same email + IP → locked for 1 hour.
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1  # hours
+AXES_LOCKOUT_PARAMETERS = [['username', 'ip_address']]
+AXES_USERNAME_FORM_FIELD = 'email'
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = 'bloomapp/auth/locked.html'
 
 # ── Razorpay ──────────────────────────────────────────────────────────────────
 RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_SECRET_KEY = os.environ.get('RAZORPAY_SECRET_KEY', '')
+# Set in Razorpay Dashboard → Webhooks; used to check webhook calls really come from Razorpay.
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
 
 # Unpaid online orders older than this are cancelled and their stock released.
 PENDING_PAYMENT_TIMEOUT_MINUTES = 30

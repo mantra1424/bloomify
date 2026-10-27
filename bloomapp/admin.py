@@ -1,15 +1,27 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from .models import (
     User, SavedAddress, Category, Product, Review,
     DeliveryZone, DeliverySlot, Coupon, CustomBouquet,
-    CartItem, Order, OrderItem, Payment
+    CartItem, Order, OrderItem, Payment, ContactMessage, Wishlist, NewsletterSubscriber,
 )
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'email', 'phone', 'role', 'created_at')
-    list_filter = ('role',)
-    search_fields = ('full_name', 'email')
+class UserAdmin(DjangoUserAdmin):
+    """Django's user admin, adapted for email logins and our extra fields."""
+    ordering = ('-created_at',)
+    list_display = ('full_name', 'email', 'phone', 'role', 'is_active', 'created_at')
+    list_filter = ('role', 'is_active', 'is_staff')
+    search_fields = ('full_name', 'email', 'phone')
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Profile', {'fields': ('full_name', 'phone', 'role')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {'classes': ('wide',), 'fields': ('email', 'full_name', 'role', 'password1', 'password2')}),
+    )
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -57,3 +69,6 @@ admin.site.register(SavedAddress)
 admin.site.register(CustomBouquet)
 admin.site.register(CartItem)
 admin.site.register(Payment)
+admin.site.register(ContactMessage)
+admin.site.register(Wishlist)
+admin.site.register(NewsletterSubscriber)

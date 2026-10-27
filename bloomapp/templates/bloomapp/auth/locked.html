@@ -1,0 +1,6 @@
+{% extends 'bloomapp/auth/_card.html' %}
+{% block title %}Too many attempts – Bloomify{% endblock %}
+{% block card_intro %}Too many failed login attempts. For your security, logins for this account are paused for an hour.{% endblock %}
+{% block card %}
+<p class="auth-note">Forgot your password? <a href="{% url 'password_reset' %}">Reset it</a></p>
+{% endblock %}

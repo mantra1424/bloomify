@@ -1,9 +1,12 @@
-from django.urls import path
+from django.contrib.auth import views as auth_views
+from django.urls import path, reverse_lazy
+
 from . import views
 
 urlpatterns = [
     # Home
     path('', views.home, name='home'),
+    path('healthz/', views.healthz, name='healthz'),
     path('contact/', views.contact_view, name='contact'),
     path('faqs/', views.faq_view, name='faqs'),
     path('returns-policy/', views.returns_view, name='returns'),
@@ -12,6 +15,22 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('password-reset/', auth_views.PasswordResetView.as_view(
+        template_name='bloomapp/auth/password_reset_form.html',
+        email_template_name='bloomapp/emails/password_reset_email.txt',
+        subject_template_name='bloomapp/emails/password_reset_subject.txt',
+        success_url=reverse_lazy('password_reset_done'),
+    ), name='password_reset'),
+    path('password-reset/sent/', auth_views.PasswordResetDoneView.as_view(
+        template_name='bloomapp/auth/password_reset_done.html',
+    ), name='password_reset_done'),
+    path('password-reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='bloomapp/auth/password_reset_confirm.html',
+        success_url=reverse_lazy('password_reset_complete'),
+    ), name='password_reset_confirm'),
+    path('password-reset/done/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='bloomapp/auth/password_reset_complete.html',
+    ), name='password_reset_complete'),
 
     # Products
     path('products/', views.products_list, name='products'),
@@ -38,6 +57,7 @@ urlpatterns = [
     path('payment/', views.payment_view, name='payment'),
     path('order/place/', views.place_order, name='place_order'),
     path('order/confirm-payment/', views.confirm_payment, name='confirm_payment'),
+    path('payments/webhook/', views.razorpay_webhook, name='razorpay_webhook'),
     path('orders/<int:pk>/success/', views.order_success, name='order_success'),
     path('orders/<int:pk>/tracking/', views.order_tracking, name='order_tracking'),
 

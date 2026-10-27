@@ -4,8 +4,7 @@ from datetime import timedelta
 from itertools import count
 from unittest.mock import patch
 
-from django.contrib.auth.hashers import make_password
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -13,7 +12,7 @@ from .models import (
     CartItem, Category, Coupon, CustomBouquet, DeliverySlot, Order, Payment,
     Product, User,
 )
-from .views import release_expired_online_orders
+from .services.orders import release_expired_online_orders
 
 TEST_SECRET = 'test-razorpay-secret'
 _rzp_ids = count(1)
@@ -34,15 +33,12 @@ CHECKOUT = {
 }
 
 
-@override_settings(RAZORPAY_KEY_ID='rzp_test_key', RAZORPAY_SECRET_KEY=TEST_SECRET,
-                   EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class BaseShopTest(TestCase):
     def setUp(self):
         rzp_patch = patch('razorpay.resources.order.Order.create', fake_rzp_create)
         rzp_patch.start()
         self.addCleanup(rzp_patch.stop)
-        self.user = User.objects.create(full_name='Buyer', email='buyer@example.com',
-                                        password=make_password('pw'))
+        self.user = User.objects.create_user(email='buyer@example.com', password='pw', full_name='Buyer')
         cat = Category.objects.create(name='Roses', slug='roses')
         self.cheap = Product.objects.create(name='Mini', category=cat, original_price=100,
                                             price=100, stock_quantity=5)
@@ -51,9 +47,7 @@ class BaseShopTest(TestCase):
         self.login()
 
     def login(self):
-        session = self.client.session
-        session['user_id'] = self.user.id
-        session.save()
+        self.client.force_login(self.user)
 
     def buy(self, product, qty=1, **extra):
         CartItem.objects.create(user=self.user, product=product, quantity=qty)
@@ -99,10 +93,8 @@ class PaymentVerificationTests(BaseShopTest):
     def test_cannot_confirm_someone_elses_order(self):
         self.buy(self.pricey, payment_mode='upi')
         order = Order.objects.get()
-        other = User.objects.create(full_name='Other', email='o@example.com', password='x')
-        session = self.client.session
-        session['user_id'] = other.id
-        session.save()
+        other = User.objects.create_user(email='o@example.com', password='x', full_name='Other')
+        self.client.force_login(other)
         self.client.post(reverse('confirm_payment'), {
             'razorpay_order_id': order.razorpay_order_id,
             'razorpay_payment_id': 'pay_x',
@@ -166,12 +158,16 @@ class AbandonedOrderTests(BaseShopTest):
 
 
 class InputValidationTests(BaseShopTest):
-    def test_negative_flower_count_cannot_lower_price(self):
+    def test_negative_flower_count_is_rejected(self):
         self.client.post(reverse('custom_bouquet'), {
             'flowers': 'rose', 'flower_count': '-50', 'wrapping': 'classic'})
-        bouquet = CustomBouquet.objects.get()
-        self.assertEqual(bouquet.flower_count, 1)
-        self.assertGreater(bouquet.price, 0)
+        self.assertFalse(CustomBouquet.objects.exists())
+
+    def test_custom_bouquet_price_is_worked_out_on_server(self):
+        self.client.post(reverse('custom_bouquet'), {
+            'flowers': 'rose', 'flower_count': '12', 'wrapping': 'luxury', 'message_card': 'Hi', 'price': '1'})
+        # 150 base + 12 x 20 + 150 luxury wrap + 30 message card
+        self.assertEqual(CustomBouquet.objects.get().price, 570)
 
     def test_unknown_wrapping_is_rejected(self):
         self.client.post(reverse('custom_bouquet'), {
@@ -213,10 +209,8 @@ class PostOnlyDeleteTests(BaseShopTest):
         self.assertFalse(CartItem.objects.filter(pk=item.pk).exists())
 
     def test_admin_product_delete_needs_post(self):
-        admin = User.objects.create(full_name='Admin', email='a@example.com', password='x', role='admin')
-        session = self.client.session
-        session['admin_id'] = admin.id
-        session.save()
+        admin = User.objects.create_user(email='a@example.com', password='x', full_name='Admin', role='admin')
+        self.client.force_login(admin)
         url = reverse('admin_product_delete', args=[self.cheap.id])
         self.assertEqual(self.client.get(url).status_code, 405)
         self.assertTrue(Product.objects.filter(pk=self.cheap.pk).exists())

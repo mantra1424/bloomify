@@ -1,6 +1,6 @@
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django.utils.safestring import mark_safe
-import json
+from django.utils.html import format_html
 
 # ── Choice Constants ────────────────────────────────────────────────────────────
 ROLE_CHOICES = [('user', 'User'), ('admin', 'Admin'), ('staff', 'Staff')]
@@ -18,16 +18,62 @@ WRAPPING_CHOICES = [('classic', 'Classic White'), ('rustic', 'Rustic Kraft'), ('
 
 
 # ── User ────────────────────────────────────────────────────────────────────────
-class User(models.Model):
+class UserManager(BaseUserManager):
+    """Users log in with their email address instead of a username."""
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError('An email address is required.')
+        user = self.model(email=self.normalize_email(email).lower(), **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('role', 'user')
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(email, password, **extra_fields)
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('role', 'admin')
+        extra_fields['is_staff'] = True
+        extra_fields['is_superuser'] = True
+        return self._create_user(email, password, **extra_fields)
+
+
+class User(AbstractUser):
+    """
+    Customer, staff member or admin.
+
+    `role` controls access to the Bloomify admin panel (staff = orders only,
+    admin = everything). `is_staff`/`is_superuser` control the built-in
+    Django admin at /django-admin/.
+    """
+    username   = None
+    first_name = None
+    last_name  = None
+
     full_name  = models.CharField(max_length=100)
     email      = models.EmailField(unique=True)
-    password   = models.CharField(max_length=255)
     phone      = models.CharField(max_length=15, blank=True, default='')
     role       = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['full_name']
+
+    objects = UserManager()
+
     def __str__(self):
+        return self.full_name or self.email
+
+    def get_full_name(self):
         return self.full_name
+
+    def get_short_name(self):
+        return self.full_name.split(' ')[0] if self.full_name else self.email
 
     def is_admin(self):
         return self.role == 'admin'
@@ -115,10 +161,8 @@ class Product(models.Model):
         return 0
 
     def photo_tag(self):
-        if self.image_main:
-            return mark_safe(f'<img src="{self.image_main.url}" width="80"/>')
-        if self.image_url:
-            return mark_safe(f'<img src="{self.image_url}" width="80"/>')
+        if self.image_main or self.image_url:
+            return format_html('<img src="{}" width="80"/>', self.get_image)
         return '—'
 
     @property

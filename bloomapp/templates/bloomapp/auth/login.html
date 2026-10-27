@@ -33,6 +33,7 @@
 
     <form method="post" id="login-form">
       {% csrf_token %}
+      {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}"/>{% endif %}
       <div class="form-group">
         <label class="form-label" for="email">Email Address</label>
         <div class="input-icon">
@@ -47,6 +48,9 @@
           <span class="password-toggle" onclick="togglePwd('password')">👁️</span>
         </div>
       </div>
+      <p style="text-align:right;margin:-0.5rem 0 1rem;font-size:0.8rem;">
+        <a href="{% url 'password_reset' %}" style="color:var(--pink-600);">Forgot password?</a>
+      </p>
       <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In 🌸</button>
     </form>
 

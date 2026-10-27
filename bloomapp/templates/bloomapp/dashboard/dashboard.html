@@ -55,7 +55,7 @@
           <a href="?tab=profile" class="{% if tab == 'profile' %}active{% endif %}">👤 Profile</a>
           <a href="?tab=addresses" class="{% if tab == 'addresses' %}active{% endif %}">📍 Saved Addresses</a>
           <a href="{% url 'products' %}">🌷 Shop</a>
-          <a href="{% url 'logout' %}">🚪 Logout</a>
+          <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">🚪 Logout</a>
         </nav>
       </aside>
 

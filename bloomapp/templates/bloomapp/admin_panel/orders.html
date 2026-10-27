@@ -1,0 +1,237 @@
+{% extends 'bloomapp/admin_panel/base_admin.html' %}
+{% block title %}Orders – Bloomify Admin{% endblock %}
+{% block page_title %}Order Management{% endblock %}
+
+{% block extra_css %}
+<style>
+.order-detail-row { display:none; background:#fafafa; }
+.order-detail-row.open { display:table-row; }
+.order-detail-inner {
+  padding:1.25rem 1.5rem;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem;
+}
+.detail-block { font-size:0.85rem; }
+.detail-block label { font-size:0.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gray-400); display:block; margin-bottom:0.2rem; }
+.detail-block span { font-weight:600; color:var(--gray-800); }
+.expand-btn { background:none; border:none; cursor:pointer; font-size:1rem; color:var(--gray-500); transition:transform 0.2s; padding:0.25rem 0.5rem; }
+.expand-btn.open { transform:rotate(90deg); color:var(--pink-600); }
+.status-pipeline { display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap; margin-top:0.5rem; }
+.status-step {
+  font-size:0.7rem; padding:0.25rem 0.6rem; border-radius:var(--radius-full);
+  background:var(--gray-100); color:var(--gray-400); font-weight:600; white-space:nowrap;
+}
+.status-step.done { background:var(--green-50,#f0fdf4); color:#16a34a; }
+.status-step.current { background:var(--pink-100); color:var(--pink-700); outline:2px solid var(--pink-300); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-filters">
+  <div class="search-wrap">
+    <input class="admin-search" id="admin-search" type="text" placeholder="Search by name, order ID, phone..."/>
+  </div>
+  <form method="get" style="display:flex;gap:0.75rem;align-items:center;">
+    <select name="status" class="form-control" style="min-width:160px;" onchange="this.form.submit()">
+      <option value="">All Statuses</option>
+      {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    {% if status_filter %}<a href="{% url 'admin_orders' %}" class="btn btn-ghost btn-sm">Clear ✕</a>{% endif %}
+  </form>
+</div>
+
+<!-- Status pipeline bar -->
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  {% for val, label in status_choices %}
+  <a href="?status={{ val }}" style="text-decoration:none;">
+    <div style="background:white;border:2px solid {% if status_filter == val %}var(--pink-400){% else %}var(--gray-100){% endif %};border-radius:var(--radius-md);padding:0.6rem 1.1rem;display:flex;flex-direction:column;align-items:center;min-width:110px;cursor:pointer;transition:all 0.2s;">
+      <span style="font-size:1.3rem;">{% if val == 'placed' %}📋{% elif val == 'packed' %}📦{% elif val == 'out_for_delivery' %}🚚{% elif val == 'delivered' %}✅{% else %}❌{% endif %}</span>
+      <span style="font-size:0.7rem;font-weight:700;color:var(--gray-700);margin-top:0.2rem;">{{ label }}</span>
+    </div>
+  </a>
+  {% endfor %}
+  <a href="{% url 'admin_orders' %}" style="text-decoration:none;">
+    <div style="background:var(--gray-50);border:2px solid var(--gray-200);border-radius:var(--radius-md);padding:0.6rem 1.1rem;display:flex;flex-direction:column;align-items:center;min-width:80px;cursor:pointer;">
+      <span style="font-size:1.3rem;">📄</span>
+      <span style="font-size:0.7rem;font-weight:700;color:var(--gray-500);margin-top:0.2rem;">All</span>
+    </div>
+  </a>
+</div>
+
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h3>Orders ({{ orders|length }})</h3>
+    <span style="font-size:0.8rem;color:var(--gray-400);">👆 Click any row to see full customer &amp; delivery details</span>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table" id="orders-table">
+      <thead>
+        <tr>
+          <th style="width:30px;"></th>
+          <th>#ID</th><th>Customer</th><th>Phone</th><th>Items</th>
+          <th>{% if not is_staff %}Total{% endif %}</th>
+          <th>Payment</th><th>Slot</th><th>Date</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <!-- Main row -->
+        <tr class="order-main-row" style="cursor:pointer;" onclick="toggleDetail({{ order.id }})">
+          <td><button class="expand-btn" id="btn-{{ order.id }}">▶</button></td>
+          <td><strong>#{{ order.id }}</strong></td>
+          <td>
+            <div style="font-weight:600;">{{ order.full_name }}</div>
+            <div style="font-size:0.75rem;color:var(--gray-400);">{{ order.city }}</div>
+          </td>
+          <td>{{ order.phone }}</td>
+          <td>{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+          <td>{% if not is_staff %}<strong style="color:var(--pink-600);">₹{{ order.total_amount }}</strong>{% else %}—{% endif %}</td>
+          <td><span class="badge badge-gray">{{ order.payment_mode|upper }}</span></td>
+          <td style="font-size:0.75rem;">
+            {% if order.delivery_slot %}{{ order.delivery_slot.slot_label }}<br/>
+            <span style="color:var(--gray-400);">{{ order.delivery_slot.date }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="font-size:0.78rem;color:var(--gray-400);">{{ order.created_at|date:"d M, g:i A" }}</td>
+          <td>
+            <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}">
+              {{ order.status_display }}
+            </span>
+          </td>
+        </tr>
+
+        <!-- Expandable detail row -->
+        <tr class="order-detail-row" id="detail-{{ order.id }}">
+          <td colspan="10" style="padding:0;border-bottom:2px solid var(--pink-100);">
+            <div class="order-detail-inner">
+
+              <!-- Customer & Delivery Address -->
+              <div>
+                <div style="font-weight:700;margin-bottom:0.75rem;color:var(--gray-700);">📍 Delivery Address</div>
+                <div class="detail-block" style="margin-bottom:0.5rem;"><label>Full Name</label><span>{{ order.full_name }}</span></div>
+                <div class="detail-block" style="margin-bottom:0.5rem;"><label>Phone</label><span>{{ order.phone }}</span></div>
+                <div class="detail-block" style="margin-bottom:0.5rem;"><label>Email</label><span>{{ order.email }}</span></div>
+                <div class="detail-block" style="margin-bottom:0.5rem;">
+                  <label>Address</label>
+                  <span>{{ order.address }},<br/>{{ order.city }}, {{ order.state }} – {{ order.pincode }}</span>
+                </div>
+                {% if order.special_note %}
+                <div class="detail-block" style="margin-top:0.5rem;background:var(--pink-50);padding:0.5rem 0.75rem;border-radius:var(--radius-md);">
+                  <label>Special Note</label><span>{{ order.special_note }}</span>
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Items ordered -->
+              <div>
+                <div style="font-weight:700;margin-bottom:0.75rem;color:var(--gray-700);">🌸 Items Ordered</div>
+                {% for item in order.items.all %}
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid var(--gray-100);font-size:0.85rem;">
+                  <div>
+                    <div style="font-weight:600;">{{ item.product.name|default:"Custom Bouquet" }}</div>
+                    <div style="color:var(--gray-400);font-size:0.75rem;">Qty: {{ item.quantity }}</div>
+                  </div>
+                  {% if not is_staff %}
+                  <div style="font-weight:700;color:var(--pink-600);">₹{{ item.line_total }}</div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+                {% if not is_staff %}
+                <div style="display:flex;justify-content:space-between;margin-top:0.5rem;font-size:0.85rem;">
+                  <span>Delivery Charge</span><span>₹{{ order.delivery_charge }}</span>
+                </div>
+                {% if order.discount_amount %}
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:#16a34a;">
+                  <span>Discount</span><span>-₹{{ order.discount_amount }}</span>
+                </div>
+                {% endif %}
+                <div style="display:flex;justify-content:space-between;margin-top:0.5rem;font-weight:700;border-top:2px solid var(--gray-100);padding-top:0.5rem;">
+                  <span>Total</span><span style="color:var(--pink-600);">₹{{ order.total_amount }}</span>
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Status updater -->
+              <div>
+                <div style="font-weight:700;margin-bottom:0.75rem;color:var(--gray-700);">🚦 Update Status</div>
+
+                <!-- Payment info — admin only -->
+                {% if not is_staff %}
+                {% with payment=order.payment %}
+                {% if payment %}
+                <div style="background:{% if payment.status == 'completed' %}#f0fdf4{% elif payment.status == 'cod_pending' %}#fffbeb{% else %}#fef2f2{% endif %};border:1px solid {% if payment.status == 'completed' %}#bbf7d0{% elif payment.status == 'cod_pending' %}#fde68a{% else %}#fecaca{% endif %};border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.82rem;">
+                  <div style="font-weight:700;margin-bottom:0.4rem;">
+                    {% if payment.status == 'completed' %}✅ Payment Received{% elif payment.status == 'cod_pending' %}🕐 COD – Pay on Delivery{% else %}⚠️ Payment Pending{% endif %}
+                  </div>
+                  <div style="color:var(--gray-600);">Mode: <strong>{{ payment.mode|upper }}</strong></div>
+                  {% if payment.transaction_id %}
+                  <div style="margin-top:0.35rem;color:var(--gray-600);">
+                    Trans. ID: <strong style="font-family:monospace;font-size:0.78rem;color:#1a1a1a;">{{ payment.transaction_id }}</strong>
+                  </div>
+                  {% endif %}
+                  <div style="margin-top:0.35rem;color:var(--gray-600);">Amount: <strong style="color:var(--pink-600);">₹{{ payment.amount|floatformat:0 }}</strong></div>
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% endif %}
+
+                <!-- Visual pipeline -->
+                <div class="status-pipeline">
+                  {% for val, label in status_choices %}
+                    {% if val != 'cancelled' %}
+                    <span class="status-step {% if order.status == val %}current{% elif order.status_step > forloop.counter0 %}done{% endif %}">
+                      {% if val == 'placed' %}📋{% elif val == 'packed' %}📦{% elif val == 'out_for_delivery' %}🚚{% elif val == 'delivered' %}✅{% endif %}
+                      {{ label }}
+                    </span>
+                    {% if not forloop.last and val != 'cancelled' %}<span style="color:var(--gray-300);">›</span>{% endif %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+                <!-- Update form -->
+                <form method="post" action="{% url 'admin_order_update' order.pk %}" style="margin-top:1rem;display:flex;gap:0.5rem;align-items:center;" onclick="event.stopPropagation()">
+                  {% csrf_token %}
+                  <select name="status" class="form-control" style="padding:0.4rem 0.6rem;font-size:0.85rem;">
+                    {% for val, label in status_choices %}
+                      <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">Update ✓</button>
+                </form>
+
+                {% if order.delivery_slot %}
+                <div style="margin-top:1rem;padding:0.5rem 0.75rem;background:var(--pink-50);border-radius:var(--radius-md);font-size:0.82rem;">
+                  🕐 <strong>Slot:</strong> {{ order.delivery_slot.slot_label }}<br/>
+                  📅 {{ order.delivery_slot.date }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="10" style="text-align:center;padding:3rem;color:var(--gray-400);">No orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDetail(id) {
+  const row = document.getElementById('detail-' + id);
+  const btn = document.getElementById('btn-' + id);
+  const isOpen = row.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.order-detail-row').forEach(r => r.classList.remove('open'));
+  document.querySelectorAll('.expand-btn').forEach(b => b.classList.remove('open'));
+  if (!isOpen) {
+    row.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+</script>
+{% endblock %}

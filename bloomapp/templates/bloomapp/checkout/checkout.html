@@ -1,0 +1,924 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Checkout – Bloomify{% endblock %}
+{% block extra_css %}
+<style>
+.checkout-layout { display:grid; grid-template-columns:1fr 380px; gap:2rem; align-items:start; }
+.checkout-card { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:2rem; margin-bottom:1.5rem; }
+.checkout-card h3 { font-size:1rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.6rem; }
+.checkout-card h3 .step-num { width:26px; height:26px; border-radius:50%; background:var(--pink-500); color:white;
+  font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.section-divider { border:none; border-top:1px solid var(--gray-100); margin:1.5rem 0; }
+.date-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0.5rem; margin-bottom:1.25rem; }
+.date-chip { border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:0.6rem 0.3rem;
+  text-align:center; cursor:pointer; transition:all var(--transition); }
+.date-chip:hover, .date-chip.selected { border-color:var(--pink-500); background:var(--pink-50); }
+.date-chip .day  { font-size:0.65rem; color:var(--gray-400); text-transform:uppercase; }
+.date-chip .num  { font-size:1rem; font-weight:700; color:var(--gray-900); }
+.summary-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 0; border-bottom:1px solid var(--gray-100); }
+.summary-item:last-child { border-bottom:none; }
+.summary-item img { width:50px; height:50px; border-radius:var(--radius-sm); object-fit:cover; background:var(--pink-50); }
+.summary-item-info { flex:1; }
+.summary-item-name { font-size:0.85rem; font-weight:600; }
+.summary-item-cat  { font-size:0.72rem; color:var(--gray-400); }
+.coupon-row { display:flex; gap:0.75rem; }
+.coupon-row .form-control { border-radius:var(--radius-full); text-transform:uppercase; }
+.delivery-check-box {
+  display: none;
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  border-left: 4px solid;
+  animation: fadeIn 0.25s ease;
+}
+.delivery-check-box.available { background:#f0fdf4; border-color:#16a34a; color:#15803d; }
+.delivery-check-box.unavailable { background:#fef2f2; border-color:#ef4444; color:#dc2626; }
+.delivery-check-box .dbox-title { font-weight:700; font-size:0.88rem; margin-bottom:0.2rem; }
+.delivery-check-box .dbox-sub { font-size:0.78rem; opacity:0.85; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.charge-info { background:var(--green-50); border-radius:var(--radius-md); padding:0.75rem 1rem;
+  font-size:0.82rem; color:var(--green-600); margin-top:0.75rem; display:none; }
+.payment-method-tabs { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; }
+.payment-tab { border:2px solid var(--gray-200); border-radius:var(--radius-md); padding:0.75rem 1.25rem;
+  cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--gray-600); transition:all var(--transition); }
+.payment-tab.active { border-color:var(--pink-500); background:var(--pink-50); color:var(--pink-600); }
+.total-line { display:flex; justify-content:space-between; padding:0.5rem 0; font-size:0.875rem; }
+.total-final { display:flex; justify-content:space-between; padding:1rem 0; border-top:2px solid var(--pink-100);
+  font-weight:700; font-size:1.1rem; }
+
+@media(max-width:768px) {
+  .checkout-layout { grid-template-columns:1fr; }
+  .date-grid { grid-template-columns:repeat(4,1fr); }
+}
+
+/* ═══════════════════════════════════════════════
+   Swiggy/Zomato-style Bill Details
+   ═══════════════════════════════════════════════ */
+.bill-card {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 0;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+.bill-header {
+  background: #fff8f8;
+  border-bottom: 1px dashed #ffd6d6;
+  padding: 0.65rem 1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--gray-800);
+  letter-spacing: 0.3px;
+}
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 0.84rem;
+}
+.bill-row:last-of-type { border-bottom: none; }
+.bill-label { color: #555; }
+.bill-val { font-weight: 600; color: #222; }
+
+/* Delivery row — clickable */
+.bill-row-delivery {
+  cursor: pointer;
+  background: #fffbf0;
+  transition: background 0.15s;
+}
+.bill-row-delivery:hover { background: #fff3d6; }
+.bill-info-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: #e0e0e0; color: #555;
+  font-size: 0.6rem; font-weight: 700;
+  margin-left: 5px; cursor: pointer;
+  font-style: normal;
+}
+
+/* Expandable delivery breakdown */
+.bill-breakdown {
+  background: #f9f9f9;
+  border-top: 1px dashed #e0e0e0;
+  border-bottom: 1px dashed #e0e0e0;
+  padding: 0.4rem 1rem 0.2rem;
+  animation: slideDown 0.2s ease;
+}
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.bk-sub-row {
+  display: flex; justify-content: space-between;
+  padding: 0.3rem 0;
+  font-size: 0.76rem;
+  color: #777;
+  border-bottom: 1px dotted #eee;
+}
+.bk-sub-row:last-child { border-bottom: none; }
+.bk-sub-row span:last-child { font-weight: 600; color: #444; }
+
+/* Coupon saving row */
+.bill-row-saving .bill-label { color: #16a34a; font-weight: 600; }
+
+/* Dotted separator */
+.bill-dotted-line {
+  border: none;
+  border-top: 1.5px dashed #ddd;
+  margin: 0.25rem 0;
+}
+
+/* To Pay row */
+.bill-topay {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.75rem 1rem 0.5rem;
+  font-size: 1rem; font-weight: 800;
+  color: #111;
+}
+.bill-note {
+  font-size: 0.68rem; color: #aaa;
+  padding: 0 1rem 0.6rem;
+  margin: 0;
+}
+
+/* Place order button */
+.btn-place-order {
+  width: 100%; padding: 0.9rem;
+  background: linear-gradient(135deg, var(--pink-600), var(--pink-500));
+  color: white; border: none; border-radius: var(--radius-full);
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  margin-top: 1.1rem;
+  box-shadow: 0 4px 16px rgba(236,72,153,0.35);
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.btn-place-order:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236,72,153,0.4); }
+.btn-place-order:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+/* ── Delivery Type selector ── */
+.dtype-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-top:0.5rem; }
+.dtype-option {
+  border:2px solid var(--gray-200); border-radius:var(--radius-lg);
+  padding:1rem 0.75rem; text-align:center; cursor:pointer;
+  transition:all 0.2s; background:white; display:block; position:relative;
+}
+.dtype-option:hover { border-color:var(--pink-300); background:var(--pink-50); }
+.dtype-option input[type=radio] { display:none; }
+.dtype-option:has(input:checked) {
+  border-color:var(--pink-500); background:#fdf2f8;
+  box-shadow:0 0 0 4px rgba(236,72,153,0.1);
+}
+.dtype-option:has(input:checked)::after {
+  content:'✓'; position:absolute; top:-9px; right:-9px;
+  width:20px; height:20px; background:var(--pink-500); color:white;
+  border-radius:50%; font-size:0.65rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.dtype-icon  { font-size:1.6rem; margin-bottom:0.35rem; }
+.dtype-name  { font-weight:700; font-size:0.82rem; color:var(--gray-900); }
+.dtype-price { font-size:0.72rem; font-weight:700; color:var(--pink-600); margin-top:0.15rem; }
+.dtype-desc  { font-size:0.68rem; color:var(--gray-400); margin-top:0.1rem; }
+/* ── Delivery breakdown ── */
+.bk-row { display:flex; justify-content:space-between;
+  padding:0.3rem 0; border-bottom:1px solid var(--gray-200); font-size:0.8rem; }
+.bk-row:last-child { border-bottom:none; }
+.bk-row span:first-child { color:var(--gray-500); }
+.bk-row span:last-child  { font-weight:600; color:var(--gray-800); }
+/* Free delivery */
+.free-delivery-banner {
+  background:linear-gradient(135deg,#dcfce7,#bbf7d0);
+  border:1.5px solid #86efac; border-radius:var(--radius-md);
+  padding:0.6rem 1rem; text-align:center;
+  font-weight:700; font-size:0.85rem; color:#15803d;
+  animation:freePop 0.4s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes freePop { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes chargeFlash { 0%{background:#fce7f3} 100%{background:transparent} }
+.charge-flash { animation:chargeFlash 0.5s ease; }
+
+/* ═══════════════════════════════════════════════
+   Form Validation Styles
+   ═══════════════════════════════════════════════ */
+.form-control.is-valid {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2316a34a'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.1rem;
+  padding-right: 2.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-control.is-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23ef4444'%3E%3Cpath fill-rule='evenodd' d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.1rem;
+  padding-right: 2.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field-error {
+  display: none;
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.3rem;
+  font-weight: 500;
+  animation: errShake 0.3s ease;
+}
+.field-error.visible { display: block; }
+@keyframes errShake {
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-4px)}
+  75%{transform:translateX(4px)}
+}
+
+/* Loading state */
+.btn-place-order.loading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+.btn-spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* Success overlay */
+.order-success-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.order-success-overlay.show { display: flex; }
+.order-success-box {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+}
+@keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+.order-success-icon { font-size: 3.5rem; margin-bottom: 0.75rem; }
+.order-success-title { font-size: 1.3rem; font-weight: 800; color: #111; margin-bottom: 0.4rem; }
+.order-success-sub { font-size: 0.85rem; color: #666; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🏠 Checkout</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'cart' %}">Cart</a><span>›</span><span class="current">Checkout</span>
+    </div>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <form method="post" action="{% url 'place_order' %}" id="checkout-form" data-subtotal="{{ subtotal }}">
+      {% csrf_token %}
+      <input type="hidden" name="slot_id" value=""/>
+      <input type="hidden" name="coupon_code" id="active-coupon"/>
+      <input type="hidden" name="payment_mode" id="payment-mode-val" value="cod"/>
+      <input type="hidden" name="delivery_charge" id="hidden-delivery-charge" value="0"/>
+      <input type="hidden" name="distance_km" id="hidden-distance" value="3"/>
+
+      <div class="checkout-layout">
+        <div>
+          <!-- Delivery Address -->
+          <div class="checkout-card">
+            <h3><span class="step-num">1</span> Delivery Address</h3>
+
+            {% if addresses %}
+            <div class="form-group">
+              <label class="form-label">Use Saved Address</label>
+              <select class="form-control" id="saved-addr-select" onchange="fillAddress(this)">
+                <option value="">— Select a saved address —</option>
+                {% for addr in addresses %}
+                <option value="{{ addr.id }}"
+                  data-name="{{ addr.full_name }}" data-phone="{{ addr.phone }}"
+                  data-address="{{ addr.address }}" data-city="{{ addr.city }}"
+                  data-state="{{ addr.state }}" data-pincode="{{ addr.pincode }}">
+                  {{ addr.label }}: {{ addr.address|truncatechars:40 }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <hr class="section-divider"/>
+            {% endif %}
+
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Full Name</label>
+                <input type="text" name="full_name" id="f-name" class="form-control" value="{{ user.full_name }}" required autocomplete="name"/>
+              <span class="field-error" id="err-name">⚠ Enter valid name (letters &amp; spaces only)</span>
+              </div>
+              <div class="form-group"><label class="form-label">Phone</label>
+                <input type="tel" name="phone" id="f-phone" class="form-control" value="{{ user.phone }}" required maxlength="10" autocomplete="tel"/>
+                <span class="field-error" id="err-phone">⚠ Phone must be exactly 10 digits</span>
+              </div>
+            </div>
+            <div class="form-group"><label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="{{ user.email }}" required/></div>
+            <div class="form-group"><label class="form-label">Street Address</label>
+              <input type="text" name="address" id="f-addr" class="form-control" placeholder="House no, Street, Area" required autocomplete="street-address"/>
+              <span class="field-error" id="err-addr">⚠ Only letters and numbers allowed in address</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">City</label>
+                <select name="city" id="f-city" class="form-control" required
+                        onchange="calculateDelivery(); validateCity();">
+                  <option value="">— Select City —</option>
+                  <option value="Anand">Anand</option>
+                  <option value="Vadodara">Vadodara</option>
+                  <option value="Ahmedabad">Ahmedabad</option>
+                  <option value="Surat">Surat</option>
+                  <option value="Bharuch">Bharuch</option>
+                  <option value="Nadiad">Nadiad</option>
+                </select>
+                <span class="field-error" id="err-city">⚠ Service not available in your city</span>
+              </div>
+              <div class="form-group"><label class="form-label">State</label>
+                <input type="text" name="state" id="f-state" class="form-control" value="Gujarat" required/></div>
+            </div>
+            <!-- Delivery availability box -->
+            <div class="delivery-check-box" id="delivery-avail-box">
+              <div class="dbox-title" id="dbox-title"></div>
+              <div class="dbox-sub" id="dbox-sub"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pincode</label>
+              <input type="text" name="pincode" id="f-pincode" class="form-control"
+                placeholder="6-digit pincode" maxlength="6" required
+                oninput="lookupPincode(this.value); validatePincode(this.value)"/>
+              <span class="field-error" id="err-pincode">⚠ Pincode must be exactly 6 digits</span>
+              <div class="charge-info" id="delivery-charge-info">📍 Delivery zone detected</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Special Note (optional)</label>
+              <textarea name="special_note" class="form-control" rows="2" placeholder="e.g. Leave at door, fragile item..."></textarea>
+            </div>
+          </div>
+
+
+          <!-- Delivery Schedule -->
+          <div class="checkout-card">
+            <h3><span class="step-num">2</span> Delivery Schedule</h3>
+
+            <!-- Date picker -->
+            <label class="form-label">Select Delivery Date</label>
+            <div class="date-grid">
+              {% for d in available_dates %}
+              <div class="date-chip" data-date="{{ d|date:'Y-m-d' }}" onclick="selectDate(this.dataset.date, this)">
+                <div class="day">{{ d|date:"D" }}</div>
+                <div class="num">{{ d|date:"d" }}</div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top:1.5px dashed var(--gray-200);margin:1.25rem 0;"></div>
+
+            <!-- Delivery Type -->
+            <label class="form-label">
+              Delivery Type
+              <span style="font-weight:400;color:var(--gray-400);font-size:0.75rem;margin-left:6px;">affects charge</span>
+            </label>
+            <div class="dtype-grid">
+              <label class="dtype-option" id="dtype-normal">
+                <input type="radio" name="delivery_type" value="normal" checked onchange="calculateDelivery()"/>
+                <div class="dtype-icon">🚚</div>
+                <div class="dtype-name">Normal</div>
+                <div class="dtype-price">+₹0</div>
+                <div class="dtype-desc">2–4 hrs</div>
+              </label>
+              <label class="dtype-option" id="dtype-sameday">
+                <input type="radio" name="delivery_type" value="sameday" onchange="calculateDelivery()"/>
+                <div class="dtype-icon">⚡</div>
+                <div class="dtype-name">Same-Day</div>
+                <div class="dtype-price">+₹50</div>
+                <div class="dtype-desc">Within today</div>
+              </label>
+              <label class="dtype-option" id="dtype-midnight">
+                <input type="radio" name="delivery_type" value="midnight" onchange="calculateDelivery()"/>
+                <div class="dtype-icon">🌙</div>
+                <div class="dtype-name">Midnight</div>
+                <div class="dtype-price">+₹120</div>
+                <div class="dtype-desc">11 PM – 1 AM</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Coupon -->
+          <div class="checkout-card">
+            <h3><span class="step-num">3</span> Coupon &amp; Promo</h3>
+
+            <div class="coupon-row">
+              <input type="text" id="coupon-input" class="form-control" placeholder="Enter coupon code"/>
+              <button type="button" class="btn btn-pink" onclick="applyCoupon()" style="background:var(--pink-500);color:white;padding:0.7rem 1.5rem;border-radius:var(--radius-full);font-weight:600;">Apply</button>
+            </div>
+            <div id="coupon-result" style="margin-top:0.75rem;font-size:0.82rem;"></div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="checkout-card">
+            <h3><span class="step-num">4</span> Payment Method</h3>
+            <div class="payment-method-tabs">
+              <div class="payment-tab active" id="tab-cod" onclick="setPayment('cod', this)">
+                <span style="font-size:1.4rem;">💵</span>
+                <div style="font-weight:700;margin-top:0.3rem;">Cash on Delivery</div>
+                <div style="font-size:0.72rem;color:var(--gray-400);">Pay when delivered</div>
+              </div>
+              <div class="payment-tab" id="tab-online" onclick="setPayment('online', this)">
+                <span style="font-size:1.4rem;">⚡</span>
+                <div style="font-weight:700;margin-top:0.3rem;">Pay Online</div>
+                <div style="font-size:0.72rem;color:var(--gray-400);">UPI · Card · Net Banking</div>
+              </div>
+            </div>
+            <p id="payment-hint" style="font-size:0.82rem;color:var(--gray-400);margin-top:0.5rem;">Pay in cash when your order is delivered.</p>
+
+          </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div>
+          <div class="checkout-card" style="position:sticky;top:90px;">
+            <h3>Your Order</h3>
+            {% for item in items %}
+            <div class="summary-item">
+              {% if item.product %}
+                <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}"/>
+              {% else %}
+                <div style="width:50px;height:50px;background:var(--pink-50);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🌸</div>
+              {% endif %}
+              <div class="summary-item-info">
+                <div class="summary-item-name">{% if item.product %}{{ item.product.name|truncatechars:28 }}{% else %}Custom Bouquet{% endif %}</div>
+                <div class="summary-item-cat">Qty: {{ item.quantity }}</div>
+              </div>
+              <span style="font-weight:700;font-size:0.9rem;">₹{{ item.subtotal }}</span>
+            </div>
+            {% endfor %}
+
+            <hr class="section-divider"/>
+
+            <!-- ── Swiggy-style Bill Details ── -->
+            <div class="bill-card">
+              <div class="bill-header">
+                <span>🧭 Bill Details</span>
+              </div>
+
+              <!-- Item total -->
+              <div class="bill-row">
+                <span class="bill-label">Item Total</span>
+                <span class="bill-val" id="bill-subtotal">₹{{ subtotal }}</span>
+              </div>
+
+              <!-- Delivery fee row (clickable to expand) -->
+              <div class="bill-row bill-row-delivery" onclick="toggleDeliveryBreakdown()" id="delivery-fee-row">
+                <span class="bill-label">
+                  Delivery Fee
+                  <span class="bill-info-icon" title="Click to see breakdown">ⓘ</span>
+                </span>
+                <span class="bill-val" id="display-charge">—</span>
+              </div>
+
+              <!-- Expandable breakdown (hidden by default) -->
+              <div id="delivery-breakdown" class="bill-breakdown" style="display:none;">
+                <div class="bk-sub-row"><span>City base</span><span id="bk-city">—</span></div>
+                <div class="bk-sub-row"><span>Distance charge</span><span id="bk-dist">—</span></div>
+                <div class="bk-sub-row"><span>Delivery type</span><span id="bk-time">—</span></div>
+                <div class="bk-sub-row" id="bk-disc-row" style="display:none;color:#16a34a;">
+                  <span>Order discount</span><span id="bk-disc">—</span>
+                </div>
+              </div>
+
+              <!-- Coupon savings -->
+              <div class="bill-row bill-row-saving" id="discount-line" style="display:none;">
+                <span class="bill-label">🎉 Coupon Savings</span>
+                <span class="bill-val" id="display-discount" style="color:#16a34a;">—</span>
+              </div>
+
+              <!-- Free delivery banner -->
+              <div id="free-delivery-banner" style="display:none;" class="free-delivery-banner">
+                🎉 Yay! You get FREE delivery on this order!
+              </div>
+
+              <!-- Dotted separator -->
+              <div class="bill-dotted-line"></div>
+
+              <!-- To Pay -->
+              <div class="bill-topay">
+                <span>To Pay</span>
+                <span id="display-total">₹{{ subtotal }}</span>
+              </div>
+
+              <p class="bill-note">ℹ️ Inclusive of all applicable charges</p>
+            </div>
+
+            <button type="submit" class="btn-place-order" id="place-btn">
+              Place Order 🌸
+            </button>
+            <p style="font-size:0.72rem;color:var(--gray-400);text-align:center;margin-top:0.75rem;">
+              🔒 100% secure &amp; encrypted
+            </p>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+<!-- Success overlay -->
+<div class="order-success-overlay" id="order-success-overlay">
+  <div class="order-success-box">
+    <div class="order-success-icon">🌸</div>
+    <div class="order-success-title">Order Placed!</div>
+    <p class="order-success-sub">Your bouquet is on its way. You'll receive a confirmation shortly.</p>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+(function () {
+const subtotal = parseFloat(document.getElementById('checkout-form').dataset.subtotal) || 0;
+let deliveryCharge = 60;
+let discountAmount = 0;
+
+function updateTotal(charge, disc) {
+  const c = (charge !== undefined) ? charge : deliveryCharge;
+  const d = (disc   !== undefined) ? disc   : discountAmount;
+  const total = subtotal + c - d;
+  document.getElementById('display-total').textContent = `₹${total.toFixed(0)}`;
+}
+
+async function lookupPincode(pin) {
+  if (pin.length === 6) {
+    const el = document.getElementById('delivery-charge-info');
+    el.style.display = 'block';
+    el.textContent = '📍 Pincode recognised — delivery zone applied';
+    // Recalculate full charge (city + distance + type)
+    calculateDelivery();
+  }
+}
+
+function selectDate(dateStr, chip) {
+  document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.add('selected');
+}
+
+async function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.trim();
+  if (!code) return;
+  const r = await fetch(`/checkout/apply-coupon/?code=${code}`);
+  const d = await r.json();
+  const result = document.getElementById('coupon-result');
+  if (d.valid) {
+    discountAmount = d.discount_amount;
+    document.getElementById('active-coupon').value = code;
+    document.getElementById('discount-line').style.display = 'flex';
+    document.getElementById('display-discount').textContent = `-₹${d.discount_amount.toFixed(0)}`;
+    result.innerHTML = `<span style="color:var(--green-500);">✅ ${d.message}</span>`;
+    updateTotal();
+  } else {
+    result.innerHTML = `<span style="color:#ef4444;">❌ ${d.message}</span>`;
+  }
+}
+
+function setPayment(mode, el) {
+  document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('payment-mode-val').value = mode;
+  const hints = {
+    online: 'You will be redirected to Razorpay to complete the payment securely.',
+    cod:    'Pay in cash when your order is delivered.'
+  };
+  document.getElementById('payment-hint').textContent = hints[mode] || '';
+}
+
+// ── Delivery Calculation Engine ────────────────────────────
+const ALLOWED_CITIES = ['anand', 'vadodara', 'ahmedabad', 'surat', 'bharuch', 'nadiad'];
+
+// City base charges
+const CITY_CHARGES = { anand:20, vadodara:30, ahmedabad:40, surat:50, bharuch:25, nadiad:30 };
+
+// City ETA display
+const CITY_ETA = {
+  anand:'2–4 hrs', vadodara:'2–4 hrs', ahmedabad:'3–5 hrs',
+  surat:'3–5 hrs', bharuch:'2–4 hrs', nadiad:'2–3 hrs',
+};
+
+// Distance-based charge
+function distanceCharge(km) {
+  if (km <= 5)  return 30;
+  if (km <= 10) return 60;
+  return 100;
+}
+
+// Time/type charge
+const TIME_CHARGES = { normal:0, sameday:50, midnight:120 };
+
+function calculateDelivery() {
+  const cityVal  = (document.getElementById('f-city')?.value || '').trim();
+  const cityKey  = cityVal.toLowerCase();
+  const km       = parseFloat(document.getElementById('hidden-distance')?.value || '3');
+  const typeEl   = document.querySelector('input[name="delivery_type"]:checked');
+  const dtype    = typeEl ? typeEl.value : 'normal';
+
+  // Validate city
+  checkCityAvailability(cityVal);
+
+  if (!ALLOWED_CITIES.includes(cityKey)) {
+    // No valid city — show a hint in the delivery fee row
+    document.getElementById('delivery-breakdown').style.display = 'none';
+    const chargeEl = document.getElementById('display-charge');
+    chargeEl.innerHTML = '<span style="color:#aaa;font-size:0.75rem;">Select city first</span>';
+    document.getElementById('hidden-delivery-charge').value = 0;
+    updateTotal(0, 0);
+    return;
+  }
+
+  const cityC = CITY_CHARGES[cityKey] || 0;
+  const distC = distanceCharge(km);
+  const timeC = TIME_CHARGES[dtype]   || 0;
+  let   gross = cityC + distC + timeC;
+
+  // Order-value discount
+  let disc = 0;
+  const isFree = subtotal >= 1000;
+  if (isFree) {
+    disc  = gross;
+    gross = 0;
+  } else if (subtotal >= 500) {
+    disc  = Math.min(30, gross);
+    gross = Math.max(0, gross - disc);
+  }
+
+  // Populate and AUTO-OPEN breakdown rows
+  document.getElementById('bk-city').textContent = `₹${cityC} (${cityVal})`;
+  document.getElementById('bk-dist').textContent = `₹${distC} (${km} km)`;
+  document.getElementById('bk-time').textContent = dtype === 'normal' ? 'Free (+₹0)' : `₹${timeC}`;
+  const discRow = document.getElementById('bk-disc-row');
+  if (disc > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('bk-disc').textContent = isFree ? 'FREE 🎉' : `-₹${disc}`;
+  } else {
+    discRow.style.display = 'none';
+  }
+
+  // Auto-open breakdown so user can see the detail
+  const bkPanel = document.getElementById('delivery-breakdown');
+  bkPanel.style.display = 'block';
+  const infoIcon = document.querySelector('.bill-info-icon');
+  if (infoIcon) infoIcon.textContent = '▲';
+
+  // Free delivery banner
+  const freeBanner = document.getElementById('free-delivery-banner');
+  if (freeBanner) freeBanner.style.display = isFree ? 'block' : 'none';
+
+  // Animate delivery fee display
+  const chargeEl = document.getElementById('display-charge');
+  chargeEl.classList.remove('charge-flash');
+  void chargeEl.offsetWidth;
+  chargeEl.classList.add('charge-flash');
+  if (isFree) {
+    chargeEl.innerHTML = '<span style="color:#16a34a;font-weight:700;">FREE 🎉</span>';
+  } else {
+    chargeEl.textContent = `₹${gross}`;
+  }
+
+  document.getElementById('hidden-delivery-charge').value = gross;
+  updateTotal(gross, disc);
+}
+
+// Toggle the delivery breakdown accordion
+function toggleDeliveryBreakdown() {
+  const panel = document.getElementById('delivery-breakdown');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  const infoIcon = document.querySelector('.bill-info-icon');
+  if (infoIcon) infoIcon.textContent = isOpen ? 'ⓘ' : '▲';
+}
+
+function checkCityAvailability(city) {
+  const val  = city.trim();
+  const key  = val.toLowerCase();
+  const box  = document.getElementById('delivery-avail-box');
+  const btn  = document.getElementById('place-btn');
+  if (!val) { box.style.display = 'none'; btn.disabled = false; return; }
+  // Don't show error while still typing (wait for at least 4 chars)
+  if (val.length < 4) { box.style.display = 'none'; btn.disabled = false; return; }
+  if (ALLOWED_CITIES.includes(key)) {
+    box.className = 'delivery-check-box available';
+    document.getElementById('dbox-title').textContent = '✅ Delivery available in ' + val;
+    document.getElementById('dbox-sub').textContent   = '🚚 Est. delivery: ' + (CITY_ETA[key] || '');
+    box.style.display = 'block';
+    btn.disabled = false; btn.style.opacity = '1';
+  } else {
+    box.className = 'delivery-check-box unavailable';
+    document.getElementById('dbox-title').textContent = '❌ We don\'t deliver to "' + val + '" yet';
+    document.getElementById('dbox-sub').textContent   = 'We serve Anand, Vadodara, Ahmedabad, Surat, Bharuch & Vapi.';
+    box.style.display = 'block';
+    btn.disabled = true; btn.style.opacity = '0.5';
+  }
+}
+
+// Dropdown fires calculateDelivery directly via onchange attribute
+// (no debounce needed for a select element)
+
+function selectCity(city, tile) {
+  document.getElementById('f-city').value = city;
+  calculateDelivery();
+}
+
+function fillAddress(sel) {
+  const o = sel.options[sel.selectedIndex];
+  if (!o.value) return;
+  document.getElementById('f-name').value    = o.dataset.name;
+  document.getElementById('f-phone').value   = o.dataset.phone;
+  document.getElementById('f-addr').value    = o.dataset.address;
+  // Match city in the select dropdown
+  const citySelect = document.getElementById('f-city');
+  const savedCity  = (o.dataset.city || '').toLowerCase();
+  for (let opt of citySelect.options) {
+    if (opt.value.toLowerCase() === savedCity) { citySelect.value = opt.value; break; }
+  }
+  document.getElementById('f-state').value   = o.dataset.state;
+  document.getElementById('f-pincode').value = o.dataset.pincode;
+  lookupPincode(o.dataset.pincode);
+  calculateDelivery();
+}
+
+// Expose
+window.selectDate              = selectDate;
+window.applyCoupon             = applyCoupon;
+window.setPayment              = setPayment;
+window.fillAddress             = fillAddress;
+window.lookupPincode           = lookupPincode;
+window.calculateDelivery       = calculateDelivery;
+window.checkCityAvailability   = checkCityAvailability;
+window.toggleDeliveryBreakdown = toggleDeliveryBreakdown;
+
+updateTotal(0, 0);
+calculateDelivery();
+})();
+
+/* ═══════════════════════════════════════════════
+   Checkout Form Validation System
+   ═══════════════════════════════════════════════ */
+(function () {
+  // ── Regex rules ─────────────────────────────
+  const RULES = {
+    name:    { re: /^[a-zA-Z\s]+$/,    msg: 'err-name'    },
+    phone:   { re: /^[0-9]{10}$/,      msg: 'err-phone'   },
+    address: { re: /^[a-zA-Z0-9\s]+$/, msg: 'err-addr'    },
+    pincode: { re: /^[0-9]{6}$/,       msg: 'err-pincode' },
+  };
+  const ALLOWED_CITIES = ['anand', 'vadodara', 'ahmedabad', 'surat', 'bharuch', 'nadiad'];
+
+  // ── Field refs ──────────────────────────────
+  const fName    = document.getElementById('f-name');
+  const fPhone   = document.getElementById('f-phone');
+  const fAddr    = document.getElementById('f-addr');
+  const fPincode = document.getElementById('f-pincode');
+  const fCity    = document.getElementById('f-city');
+  const placeBtn = document.getElementById('place-btn');
+
+  // ── Helpers ─────────────────────────────────
+  function setValid(el) {
+    el.classList.remove('is-invalid');
+    el.classList.add('is-valid');
+  }
+  function setInvalid(el) {
+    el.classList.remove('is-valid');
+    el.classList.add('is-invalid');
+  }
+  function clearState(el) {
+    el.classList.remove('is-valid', 'is-invalid');
+  }
+  function showErr(id) {
+    const e = document.getElementById(id);
+    if (e) { e.classList.add('visible'); }
+  }
+  function hideErr(id) {
+    const e = document.getElementById(id);
+    if (e) { e.classList.remove('visible'); }
+  }
+
+  // ── Individual validators ────────────────────
+  function validateField(el, ruleKey) {
+    const val = el.value.trim();
+    const { re, msg } = RULES[ruleKey];
+    if (!val) { clearState(el); hideErr(msg); return null; }
+    if (re.test(val)) { setValid(el); hideErr(msg); return true; }
+    setInvalid(el); showErr(msg); return false;
+  }
+
+  window.validatePincode = function(val) {
+    validateField(fPincode, 'pincode');
+    syncButton();
+  };
+
+  window.validateCity = function() {
+    const val = fCity.value.trim();
+    if (!val) { clearState(fCity); hideErr('err-city'); syncButton(); return; }
+    if (ALLOWED_CITIES.includes(val.toLowerCase())) {
+      setValid(fCity); hideErr('err-city');
+    } else {
+      setInvalid(fCity); showErr('err-city');
+    }
+    syncButton();
+  };
+
+  // ── Button enable/disable ────────────────────
+  function syncButton() {
+    const nameOk    = RULES.name.re.test(fName.value.trim());
+    const phoneOk   = RULES.phone.re.test(fPhone.value.trim());
+    const addrOk    = RULES.address.re.test(fAddr.value.trim());
+    const pincodeOk = RULES.pincode.re.test(fPincode.value.trim());
+    const cityOk    = ALLOWED_CITIES.includes((fCity.value || '').toLowerCase());
+    const allOk = nameOk && phoneOk && addrOk && pincodeOk && cityOk;
+    placeBtn.disabled = !allOk;
+    placeBtn.style.opacity = allOk ? '1' : '0.5';
+    placeBtn.style.cursor  = allOk ? 'pointer' : 'not-allowed';
+  }
+
+  // ── Attach real-time listeners ───────────────
+  fName.addEventListener('input', function () {
+    validateField(this, 'name'); syncButton();
+  });
+  fPhone.addEventListener('input', function () {
+    // Strip non-digits while typing
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    validateField(this, 'phone'); syncButton();
+  });
+  fAddr.addEventListener('input', function () {
+    validateField(this, 'address'); syncButton();
+  });
+  fPincode.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    validateField(this, 'pincode'); syncButton();
+  });
+  fCity.addEventListener('change', function () {
+    window.validateCity(); syncButton();
+  });
+
+  // ── Submit guard + loading state ────────────
+  const form = document.getElementById('checkout-form');
+  form.addEventListener('submit', function (e) {
+    // Final validation pass
+    const nameOk    = validateField(fName, 'name');
+    const phoneOk   = validateField(fPhone, 'phone');
+    const addrOk    = validateField(fAddr, 'address');
+    const pincodeOk = validateField(fPincode, 'pincode');
+    window.validateCity();
+    const cityOk = ALLOWED_CITIES.includes((fCity.value || '').toLowerCase());
+
+    if (!nameOk || !phoneOk || !addrOk || !pincodeOk || !cityOk) {
+      e.preventDefault();
+      syncButton();
+      // Scroll to first error
+      const firstErr = document.querySelector('.is-invalid');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // Show loading state on button
+    placeBtn.innerHTML = '<span class="btn-spinner"></span> Placing Order…';
+    placeBtn.classList.add('loading');
+  });
+
+  // ── Re-validate after fillAddress ───────────
+  const origFill = window.fillAddress;
+  window.fillAddress = function(sel) {
+    origFill(sel);
+    setTimeout(function () {
+      validateField(fName, 'name');
+      validateField(fPhone, 'phone');
+      validateField(fAddr, 'address');
+      validateField(fPincode, 'pincode');
+      window.validateCity();
+      syncButton();
+    }, 50);
+  };
+
+  // ── Initial sync (pre-filled user data) ─────
+  setTimeout(syncButton, 100);
+})();
+</script>
+{% endblock %}

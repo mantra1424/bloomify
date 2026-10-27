@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login – Bloomify</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap"/>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/animations.css' %}"/>
+</head>
+<body style="background:linear-gradient(135deg,#1a0a10,#2d1220);min-height:100vh;display:flex;align-items:center;justify-content:center;">
+{% if messages %}{% for m in messages %}<div class="django-message" data-type="{{ m.tags }}" style="display:none">{{ m }}</div>{% endfor %}{% endif %}
+<div style="width:100%;max-width:420px;padding:1.5rem;">
+  <div style="text-align:center;margin-bottom:2rem;">
+    <div style="display:inline-flex;align-items:center;gap:0.65rem;margin-bottom:0.75rem;">
+      <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--pink-400),var(--pink-700));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(232,86,122,0.5);">
+        <svg viewBox="0 0 32 32" fill="white" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;">
+          <!-- 5-petal flower -->
+          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(0   16 16)"/>
+          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(72  16 16)"/>
+          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(144 16 16)"/>
+          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(216 16 16)"/>
+          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(288 16 16)"/>
+          <circle cx="16" cy="16" r="4" fill="rgba(255,220,210,0.9)"/>
+        </svg>
+      </div>
+      <div style="font-family:var(--font-display);font-size:2rem;color:var(--pink-300);font-weight:700;line-height:1;">Bloom<span style="color:#6ee7a0;">ify</span></div>
+    </div>
+    <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;letter-spacing:2px;text-transform:uppercase;">Admin Panel</p>
+  </div>
+  <div style="background:white;border-radius:var(--radius-xl);padding:2.5rem;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+    <h2 style="margin-bottom:0.25rem;">Welcome Back</h2>
+    <p style="color:var(--gray-400);font-size:0.85rem;margin-bottom:2rem;">Sign in to manage Bloomify</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-icon">
+          <span class="icon">📧</span>
+          <input type="email" name="email" class="form-control" placeholder="admin@bloomify.com" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div style="position:relative;">
+          <input type="password" name="password" id="admin-pwd" class="form-control" placeholder="Enter password" required/>
+          <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--gray-400);"
+            onclick="const i=document.getElementById('admin-pwd');i.type=i.type==='password'?'text':'password';">👁️</span>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">Sign In →</button>
+    </form>
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.8rem;color:var(--gray-400);">
+      <a href="{% url 'home' %}" style="color:var(--pink-500);">← Back to Store</a>
+    </p>
+  </div>
+</div>
+<div class="toast-container"></div>
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Returns & Refund Policy – Bloomify{% endblock %}
+
+{% block extra_css %}
+<style>
+.policy-wrap { max-width: 780px; margin: 0 auto; }
+.policy-card {
+  background: white; border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm); padding: 2.5rem;
+}
+.policy-card h2 { font-family: var(--font-display); font-size: 1.3rem; color: var(--pink-600); margin: 2rem 0 0.6rem; }
+.policy-card h2:first-child { margin-top: 0; }
+.policy-card p, .policy-card li { font-size: 0.9rem; color: var(--gray-600); line-height: 1.8; }
+.policy-card ul { padding-left: 1.25rem; margin: 0.5rem 0; }
+.policy-card li { margin-bottom: 0.4rem; }
+.highlight-box {
+  background: var(--pink-50); border-left: 4px solid var(--pink-400);
+  border-radius: var(--radius-md); padding: 1rem 1.25rem;
+  margin: 1rem 0; font-size: 0.875rem; color: var(--gray-700);
+}
+.badge-updated { background:var(--pink-100); color:var(--pink-700);
+  font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:20px;
+  text-transform:uppercase; letter-spacing:0.5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>↩️ Returns & Refund Policy</h1>
+    <p style="color:var(--gray-500);margin-top:0.5rem;">
+      Last updated: April 2025 &nbsp;<span class="badge-updated">Updated</span>
+    </p>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="policy-wrap">
+      <div class="policy-card">
+
+        <div class="highlight-box">
+          🌸 At Bloomify, we take great care in handcrafting every bouquet. As flowers are perishable items, returns are handled on a case-by-case basis with your satisfaction as our top priority.
+        </div>
+
+        <h2>1. Eligibility for Refund</h2>
+        <p>You may be eligible for a refund or replacement in the following cases:</p>
+        <ul>
+          <li>The bouquet arrived in a damaged or wilted condition</li>
+          <li>The wrong bouquet was delivered</li>
+          <li>Your order was not delivered within the promised time slot</li>
+          <li>You received an incomplete order (missing items)</li>
+        </ul>
+
+        <h2>2. Non-Refundable Cases</h2>
+        <p>Refunds will <strong>not</strong> be issued in the following situations:</p>
+        <ul>
+          <li>Change of mind after the order has been dispatched</li>
+          <li>Flowers that wilted due to improper care after delivery</li>
+          <li>Delivery delays caused by incorrect address provided by the customer</li>
+          <li>Orders placed during peak seasons (Valentine's Day, Mother's Day) where slight delays may occur</li>
+        </ul>
+
+        <h2>3. How to Request a Refund</h2>
+        <p>To raise a refund request:</p>
+        <ul>
+          <li>Contact us within <strong>24 hours</strong> of delivery</li>
+          <li>WhatsApp us at <a href="https://wa.me/919428974532" target="_blank" style="color:var(--pink-600);">+91 94289 74532</a> with your Order ID and photos</li>
+          <li>Or email us at <a href="mailto:bloomify.help@gmail.com" style="color:var(--pink-600);">bloomify.help@gmail.com</a></li>
+        </ul>
+
+        <h2>4. Refund Processing</h2>
+        <ul>
+          <li>Approved refunds are processed within <strong>3–5 business days</strong></li>
+          <li>Online payments are refunded to the original payment method</li>
+          <li>COD orders are refunded via bank transfer or UPI</li>
+        </ul>
+
+        <h2>5. Cancellations</h2>
+        <p>You can cancel your order <strong>before it is packed</strong>. Once an order is marked "Packed" or "Out for Delivery", it cannot be cancelled.</p>
+        <p>To cancel, contact us immediately via WhatsApp or the Contact Us page.</p>
+
+        <h2>6. Contact Us</h2>
+        <p>For any queries regarding returns and refunds, please reach out:</p>
+        <ul>
+          <li>📱 WhatsApp: <a href="https://wa.me/919428974532" target="_blank" style="color:var(--pink-600);">+91 94289 74532</a></li>
+          <li>📧 Email: <a href="mailto:bloomify.help@gmail.com" style="color:var(--pink-600);">bloomify.help@gmail.com</a></li>
+        </ul>
+
+        <div style="text-align:center;margin-top:2rem;">
+          <a href="{% url 'contact' %}" class="btn btn-primary">Contact Support 🌸</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

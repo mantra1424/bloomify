@@ -1,0 +1,7 @@
+# Development + CI tools. Install with: pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
+pytest-django==4.14.0
+pytest-cov==7.1.0
+ruff==0.17.3
+pre-commit==4.7.0

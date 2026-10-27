@@ -1,0 +1,152 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Complete Payment – Bloomify{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+.payment-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  padding: 3rem 2.5rem;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+.payment-card .bloom-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--pink-400), var(--pink-700));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; margin: 0 auto 1.25rem;
+  box-shadow: 0 8px 24px rgba(180,40,100,0.25);
+}
+.order-summary-box {
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+.summary-row { display:flex; justify-content:space-between; font-size:0.875rem; padding:0.3rem 0; }
+.summary-row.total { font-weight:700; font-size:1rem; border-top:1px solid var(--gray-200); margin-top:0.5rem; padding-top:0.75rem; }
+.rzp-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+}
+.rzp-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,58,237,0.45); }
+.rzp-btn img { width:20px; height:20px; border-radius:3px; }
+.secure-note { font-size:0.78rem; color:var(--gray-400); margin-top:1rem; }
+.loading-spinner { display:none; width:20px; height:20px; border:3px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+  <div class="payment-card">
+    <div class="bloom-icon">🌸</div>
+    <h2 style="font-family:var(--font-display);font-size:1.6rem;margin-bottom:0.25rem;">Complete Your Payment</h2>
+    <p style="color:var(--gray-400);font-size:0.875rem;">Secure checkout powered by Razorpay</p>
+
+    <!-- Order Summary -->
+    <div class="order-summary-box">
+      <div class="summary-row"><span>Order #</span><span style="font-weight:600;">#{{ order.id }}</span></div>
+      <div class="summary-row"><span>Customer</span><span>{{ order.full_name }}</span></div>
+      <div class="summary-row"><span>Items</span><span>{{ order.items.count }} item{{ order.items.count|pluralize }}</span></div>
+      <div class="summary-row"><span>Delivery</span><span>₹{{ order.delivery_charge }}</span></div>
+      {% if order.discount_amount %}
+      <div class="summary-row" style="color:#16a34a;"><span>Discount</span><span>-₹{{ order.discount_amount|floatformat:0 }}</span></div>
+      {% endif %}
+      <div class="summary-row total"><span>Total</span><span style="color:var(--pink-600);">₹{{ order.total_amount|floatformat:0 }}</span></div>
+    </div>
+
+    <!-- Hidden form to submit to confirm_payment -->
+    <form id="rzp-confirm-form" method="POST" action="{% url 'confirm_payment' %}">
+      {% csrf_token %}
+      <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id"/>
+      <input type="hidden" name="razorpay_order_id"   id="rzp_order_id"/>
+      <input type="hidden" name="razorpay_signature"  id="rzp_signature"/>
+    </form>
+
+    <button class="rzp-btn" id="rzp-pay-btn" onclick="openRazorpay()">
+      <img src="https://razorpay.com/favicon.png" alt=""/> Pay ₹{{ order.total_amount|floatformat:0 }} Securely
+      <span class="loading-spinner" id="rzp-spinner"></span>
+    </button>
+
+    <p class="secure-note">🔒 Your payment is encrypted and secured by Razorpay</p>
+
+    <div style="display:flex;justify-content:center;gap:1rem;margin-top:1rem;flex-wrap:wrap;">
+      <img src="https://cdn.razorpay.com/static/assets/pay-methods-block/upi.svg" height="20" alt="UPI" onerror="this.style.display='none'"/>
+      <img src="https://cdn.razorpay.com/static/assets/pay-methods-block/visa.svg" height="20" alt="Visa" onerror="this.style.display='none'"/>
+      <img src="https://cdn.razorpay.com/static/assets/pay-methods-block/mastercard.svg" height="20" alt="Mastercard" onerror="this.style.display='none'"/>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function openRazorpay() {
+  const btn = document.getElementById('rzp-pay-btn');
+  const spinner = document.getElementById('rzp-spinner');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  var options = {
+    "key":       "{{ key }}",
+    "amount":    "{{ amount }}",
+    "currency":  "{{ currency }}",
+    "order_id":  "{{ razorpay_order_id }}",
+    "name":      "Bloomify",
+    "description": "Order #{{ order.id }}",
+    "image":     "https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?w=64",
+    "prefill": {
+      "name":    "{{ order.full_name }}",
+      "email":   "{{ order.email }}",
+      "contact": "{{ order.phone }}"
+    },
+    "theme": { "color": "#8B2252" },
+    "handler": function(response) {
+      // On success — populate hidden form and submit
+      document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+      document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+      document.getElementById('rzp_signature').value  = response.razorpay_signature;
+      document.getElementById('rzp-confirm-form').submit();
+    },
+    "modal": {
+      "ondismiss": function() {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+      }
+    }
+  };
+
+  var rzp = new Razorpay(options);
+  rzp.on('payment.failed', function(response) {
+    alert('Payment failed: ' + response.error.description + '. Please try again.');
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  });
+  rzp.open();
+}
+</script>
+{% endblock %}

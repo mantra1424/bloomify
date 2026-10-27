@@ -1,0 +1,206 @@
+{% extends 'bloomapp/admin_panel/base_admin.html' %}
+{% block title %}Messages – Bloomify Admin{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Header ── */
+.msg-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+}
+.msg-header-left h2 { font-size:1.4rem; font-weight:700; margin:0; color:var(--gray-900); }
+.msg-header-left p  { font-size:0.82rem; color:var(--gray-400); margin-top:0.2rem; }
+.unread-pill {
+  background: linear-gradient(135deg, var(--pink-500), var(--pink-700));
+  color: white; font-weight: 700; font-size: 0.82rem;
+  padding: 6px 18px; border-radius: var(--radius-full);
+  box-shadow: 0 4px 12px rgba(180,40,100,0.3);
+  white-space: nowrap;
+}
+
+/* ── Tabs ── */
+.msg-tabs { display:flex; gap:0.5rem; margin-bottom:1.25rem; }
+.msg-tab {
+  padding:0.45rem 1.1rem; border-radius:var(--radius-full);
+  font-size:0.82rem; font-weight:600; cursor:pointer;
+  border:1.5px solid var(--gray-200); background:white;
+  color:var(--gray-500); transition:all 0.2s;
+}
+.msg-tab.active { background:var(--pink-500); color:white; border-color:var(--pink-500); }
+.msg-tab:hover:not(.active) { border-color:var(--pink-300); color:var(--pink-600); }
+
+/* ── Inbox cards ── */
+.msg-list { display:flex; flex-direction:column; gap:0.6rem; }
+.msg-card {
+  background: white; border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 1rem; align-items: center;
+  cursor: pointer; transition: all 0.2s;
+  position: relative;
+}
+.msg-card:hover { border-color:var(--pink-300); box-shadow:0 4px 16px rgba(180,40,100,0.08); transform:translateY(-1px); }
+.msg-card.unread { border-left: 4px solid var(--pink-500); background:#fdf8ff; }
+.msg-card.read   { border-left: 4px solid transparent; }
+
+/* Avatar */
+.msg-avatar {
+  width:42px; height:42px; border-radius:50%;
+  background: linear-gradient(135deg, var(--pink-400), var(--pink-700));
+  color:white; font-weight:700; font-size:1rem;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+
+/* Body */
+.msg-body-top   { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+.msg-sender     { font-weight:700; font-size:0.9rem; color:var(--gray-900); }
+.msg-subject-tag {
+  background:var(--pink-100); color:var(--pink-700);
+  font-size:0.68rem; font-weight:700; padding:2px 9px;
+  border-radius:var(--radius-full); text-transform:uppercase; letter-spacing:0.4px;
+}
+.msg-new-tag {
+  background:#ef4444; color:white;
+  font-size:0.65rem; font-weight:700; padding:2px 7px;
+  border-radius:var(--radius-full);
+}
+.msg-preview   { font-size:0.82rem; color:var(--gray-500); margin-top:0.2rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:520px; }
+.msg-contact   { font-size:0.76rem; color:var(--gray-400); margin-top:0.2rem; }
+.msg-contact a { color:var(--pink-500); text-decoration:none; }
+
+/* Right column */
+.msg-meta { text-align:right; flex-shrink:0; min-width:80px; }
+.msg-time  { font-size:0.75rem; color:var(--gray-400); }
+.msg-mark-btn {
+  margin-top:0.5rem; display:inline-block;
+  background:none; border:1.5px solid var(--gray-200);
+  border-radius:var(--radius-full); padding:3px 12px;
+  font-size:0.72rem; cursor:pointer; color:var(--gray-500);
+  transition:all 0.2s; white-space:nowrap;
+}
+.msg-mark-btn:hover { background:var(--pink-50); border-color:var(--pink-400); color:var(--pink-600); }
+
+/* Expanded detail panel */
+.msg-detail {
+  display:none; padding:1rem 1.25rem;
+  background:var(--gray-50); border-top:1px solid var(--gray-200);
+  border-radius:0 0 var(--radius-lg) var(--radius-lg);
+  font-size:0.875rem; color:var(--gray-700); line-height:1.7;
+}
+.msg-detail.open { display:block; animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+/* Empty */
+.empty-inbox { text-align:center; padding:5rem 2rem; }
+.empty-inbox .ei-icon { font-size:3.5rem; margin-bottom:1rem; opacity:.4; }
+.empty-inbox h3 { font-size:1.1rem; font-weight:700; color:var(--gray-600); margin-bottom:0.5rem; }
+.empty-inbox p  { font-size:0.875rem; color:var(--gray-400); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="msg-header">
+  <div class="msg-header-left">
+    <h2>💬 Contact Messages</h2>
+    <p>Messages received from the Contact Us page</p>
+  </div>
+  {% if unread_count > 0 %}
+  <div class="unread-pill">{{ unread_count }} Unread</div>
+  {% endif %}
+</div>
+
+<!-- Tabs -->
+<div class="msg-tabs">
+  <button class="msg-tab active" onclick="filterMsgs('all',this)">All</button>
+  <button class="msg-tab" onclick="filterMsgs('unread',this)">Unread</button>
+  <button class="msg-tab" onclick="filterMsgs('read',this)">Read</button>
+</div>
+
+<!-- Message list -->
+{% if messages_list %}
+<div class="msg-list" id="msg-list">
+  {% for msg in messages_list %}
+  <div class="msg-card {% if msg.is_read %}read{% else %}unread{% endif %}"
+       data-status="{% if msg.is_read %}read{% else %}unread{% endif %}"
+       onclick="toggleDetail({{ msg.id }})">
+
+    <!-- Avatar -->
+    <div class="msg-avatar">{{ msg.name|slice:":1"|upper }}</div>
+
+    <!-- Body -->
+    <div style="overflow:hidden;">
+      <div class="msg-body-top">
+        <span class="msg-sender">{{ msg.name }}</span>
+        <span class="msg-subject-tag">{{ msg.subject }}</span>
+        {% if not msg.is_read %}<span class="msg-new-tag">NEW</span>{% endif %}
+      </div>
+      <div class="msg-preview">{{ msg.message }}</div>
+      <div class="msg-contact">
+        <a href="mailto:{{ msg.email }}" onclick="event.stopPropagation()">{{ msg.email }}</a>
+        {% if msg.phone %}&nbsp;·&nbsp;
+        <a href="https://wa.me/91{{ msg.phone|cut:' ' }}" target="_blank" onclick="event.stopPropagation()">📱 {{ msg.phone }}</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Meta -->
+    <div class="msg-meta" onclick="event.stopPropagation()">
+      <div class="msg-time">{{ msg.created_at|date:"d M" }}<br>{{ msg.created_at|time:"h:i A" }}</div>
+      {% if not msg.is_read %}
+      <form method="post" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="msg_id" value="{{ msg.id }}"/>
+        <button class="msg-mark-btn" type="submit">✓ Mark Read</button>
+      </form>
+      {% else %}
+      <div style="font-size:0.72rem;color:var(--gray-300);margin-top:0.5rem;">✓ Read</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Expandable detail -->
+  <div class="msg-detail" id="detail-{{ msg.id }}">
+    <strong>Full Message:</strong><br>
+    {{ msg.message }}
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="admin-card">
+  <div class="empty-inbox">
+    <div class="ei-icon">📭</div>
+    <h3>No messages yet</h3>
+    <p>When someone fills the Contact Us form, their message will appear here.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDetail(id) {
+  const el = document.getElementById('detail-' + id);
+  el.classList.toggle('open');
+}
+function filterMsgs(type, btn) {
+  document.querySelectorAll('.msg-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.msg-card').forEach(card => {
+    const detail = document.getElementById('detail-' + card.dataset.id);
+    if (type === 'all' || card.dataset.status === type) {
+      card.style.display = '';
+      if (detail) detail.style.display = '';
+    } else {
+      card.style.display = 'none';
+      if (detail) detail.style.display = 'none';
+    }
+  });
+}
+</script>
+{% endblock %}

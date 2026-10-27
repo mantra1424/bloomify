@@ -1,0 +1,362 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+
+{% block title %}Bloomify – Fresh Flower Bouquets Delivered with Love{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Hero ── */
+.hero-section {
+  display: grid; grid-template-columns: 1fr 1fr;
+  align-items: center; min-height: 92vh;
+  background: linear-gradient(135deg, #fff5f7 0%, #fffbf8 60%, #f8f5ff 100%);
+  overflow: hidden;
+}
+.hero-left {
+  padding: 5rem 3rem 5rem 0;
+  padding-left: max(1.5rem, calc((100vw - 1200px) / 2 + 1.5rem));
+}
+.hero-left h1 {
+  font-size: clamp(2.5rem, 4.5vw, 4rem);
+  line-height: 1.15; margin-bottom: 1.5rem; font-weight: 700;
+  color: var(--gray-900);
+}
+.hero-left h1 em {
+  color: var(--pink-600); font-style: italic;
+  font-family: var(--font-display);
+}
+.hero-left p {
+  font-size: 1rem; color: var(--gray-500);
+  line-height: 1.75; margin-bottom: 2.5rem; max-width: 400px;
+}
+.hero-btns { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.btn-hero-primary {
+  background: var(--pink-700); color: white;
+  padding: 0.85rem 2rem; border-radius: var(--radius-full);
+  font-weight: 600; font-size: 0.95rem;
+  transition: all var(--transition);
+  display: inline-flex; align-items: center;
+}
+.btn-hero-primary:hover { background: var(--pink-600); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(180,41,79,0.3); }
+.btn-hero-link {
+  color: var(--gray-700); font-weight: 500; font-size: 0.95rem;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  transition: color var(--transition);
+}
+.btn-hero-link:hover { color: var(--pink-600); }
+.btn-hero-link .arrow { transition: transform var(--transition); }
+.btn-hero-link:hover .arrow { transform: translateX(4px); }
+
+.hero-right {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; background: var(--pink-50);
+  padding: 3rem 2rem;
+  min-height: 92vh;
+}
+.hero-card {
+  background: var(--pink-100);
+  border-radius: 2rem;
+  overflow: hidden;
+  width: 100%; max-width: 440px;
+  aspect-ratio: 4/5;
+  box-shadow: 0 32px 80px rgba(180,41,79,0.18);
+  position: relative;
+}
+.hero-card img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+}
+
+/* ── Categories ── */
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.cat-card {
+  background: white; border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem; text-align: center;
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: all var(--transition); text-decoration: none;
+  border: 2px solid transparent;
+}
+.cat-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--pink-200); }
+.cat-icon { font-size: 2.75rem; margin-bottom: 1rem; }
+.cat-card h3 { font-size: 1.05rem; margin-bottom: 0.3rem; }
+.cat-card p { font-size: 0.78rem; }
+
+/* ── Featured ── */
+.featured-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+
+/* ── Testimonials ── */
+.testimonials { background: var(--pink-50); }
+.testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.testimonial-card {
+  background: white; border-radius: var(--radius-lg);
+  padding: 1.75rem; box-shadow: var(--shadow-sm);
+}
+.testimonial-stars { color: #fbbf24; font-size: 0.9rem; margin-bottom: 0.75rem; }
+.testimonial-text { font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
+.testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
+.author-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--pink-300), var(--pink-500));
+  color: white; font-weight: 700; font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.author-name { font-weight: 600; font-size: 0.85rem; }
+.author-loc  { font-size: 0.75rem; color: var(--gray-400); }
+
+/* ── Promo Banner ── */
+.promo-banner {
+  background: linear-gradient(135deg, var(--pink-500), var(--pink-700));
+  color: white; border-radius: var(--radius-xl); overflow: hidden;
+  padding: 3rem; display: flex; align-items: center; justify-content: space-between;
+  gap: 2rem; position: relative;
+}
+.promo-banner::before {
+  content: '🌸🌷🌺'; position: absolute; right: 2rem; font-size: 5rem;
+  opacity: 0.15; letter-spacing: 0.5rem;
+}
+.promo-banner h2 { color: white; font-size: clamp(1.25rem, 2.5vw, 1.75rem); margin-bottom: 0.5rem; }
+.promo-banner p { color: rgba(255,255,255,0.85); }
+.btn-white { background: white; color: var(--pink-600); font-weight: 700; }
+.btn-white:hover { background: var(--pink-50); transform: translateY(-2px); }
+
+@media (max-width: 1024px) {
+  .hero-section { grid-template-columns: 1fr; }
+  .hero-right { min-height: 50vh; }
+  .hero-left { padding: 4rem 1.5rem; }
+  .cat-grid { grid-template-columns: repeat(2,1fr); }
+  .featured-grid { grid-template-columns: repeat(2,1fr); }
+  .testimonial-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .hero-right { display: none; }
+  .hero-left { padding: 3rem 1.5rem; }
+  .testimonial-grid { grid-template-columns: 1fr; }
+  .promo-banner { flex-direction: column; text-align: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<section class="hero-section">
+  <!-- Left: text content -->
+  <div class="hero-left">
+    <h1>Artistry in<br/><em>Every Petal</em></h1>
+    <p>Curating bespoke floral arrangements that speak the language of your most precious moments. Hand-delivered, heart-crafted.</p>
+    <div class="hero-btns">
+      <a href="{% url 'products' %}" class="btn-hero-primary">Shop Now</a>
+    </div>
+  </div>
+
+  <!-- Right: floral image card -->
+  <div class="hero-right">
+    <div class="hero-card">
+      <img src="https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?auto=compress&cs=tinysrgb&w=600&h=800&fit=crop"
+           alt="Artistry in Every Petal"
+           onerror="this.onerror=null;this.src='https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?w=600'"/>
+    </div>
+  </div>
+</section>
+
+<!-- ── CATEGORIES ── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">🌷 Browse by Occasion</div>
+      <h2>Shop by Category</h2>
+      <p>Find the perfect bouquet for every special moment in life.</p>
+    </div>
+    <div class="cat-grid">
+      {% for cat in categories %}
+      <a href="{% url 'products' %}?category={{ cat.slug }}" class="cat-card reveal glow-on-hover">
+        <div class="cat-icon">{{ cat.icon }}</div>
+        <h3>{{ cat.name }}</h3>
+      </a>
+      {% empty %}
+      <a href="{% url 'products' %}?category=birthday" class="cat-card reveal glow-on-hover">
+        <div class="cat-icon">🎂</div><h3>Birthday</h3><p>Fresh bouquets</p>
+      </a>
+      <a href="{% url 'products' %}?category=anniversary" class="cat-card reveal glow-on-hover">
+        <div class="cat-icon">💍</div><h3>Anniversary</h3><p>Fresh bouquets</p>
+      </a>
+      <a href="{% url 'products' %}?category=love" class="cat-card reveal glow-on-hover">
+        <div class="cat-icon">❤️</div><h3>Love & Romance</h3><p>Fresh bouquets</p>
+      </a>
+      <a href="{% url 'products' %}?category=wedding" class="cat-card reveal glow-on-hover">
+        <div class="cat-icon">💐</div><h3>Wedding</h3><p>Fresh bouquets</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURED BOUQUETS ── -->
+<section class="section" style="background:var(--warm-white)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">⭐ Hand-picked for you</div>
+      <h2>Featured Bouquets</h2>
+      <p>Our most loved arrangements, crafted with premium blooms.</p>
+    </div>
+    <div class="featured-grid">
+      {% for product in featured %}
+      <div class="product-card reveal glow-on-hover">
+        <div class="product-card-img">
+          <img src="{{ product.get_image }}" alt="{{ product.name }}" loading="lazy"/>
+          {% if product.discount_percent > 0 %}
+            <span class="product-card-badge discount">{{ product.discount_percent }}% OFF</span>
+          {% else %}
+            <span class="product-card-badge">✨ New</span>
+          {% endif %}
+        </div>
+        <div class="product-card-body">
+          <div class="product-card-category">{{ product.category.name }}</div>
+          <div class="product-card-name">{{ product.name }}</div>
+          <div class="product-card-rating">
+            {% for i in "12345" %}
+              <span class="star {% if forloop.counter > product.avg_rating %}empty{% endif %}">★</span>
+            {% endfor %}
+            <span class="rating-count">({{ product.reviews.count }})</span>
+          </div>
+          <div class="product-card-price">
+            <span class="price-current">₹{{ product.price }}</span>
+            {% if product.original_price != product.price %}
+              <span class="price-original">₹{{ product.original_price }}</span>
+            {% endif %}
+          </div>
+          <div class="product-card-actions">
+            <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline btn-sm">View</a>
+            <form method="post" action="{% url 'add_to_cart' product.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1"/>
+              <button type="submit" class="btn btn-primary btn-sm">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;">
+        <p style="font-size:1.1rem;">🌸 Beautiful bouquets coming soon! <a href="{% url 'admin_login' %}" style="color:var(--pink-500)">Add products</a></p>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-3">
+      <a href="{% url 'products' %}" class="btn btn-outline btn-lg">View All Bouquets →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRENDING / SMART RECOMMENDATIONS ── -->
+{% if trending %}
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">🔥 Trending Now</div>
+      <h2>You May Also Like</h2>
+      <p>Our most popular picks based on customer orders.</p>
+    </div>
+    <div class="featured-grid">
+      {% for product in trending %}
+      <div class="product-card reveal glow-on-hover">
+        <div class="product-card-img">
+          <img src="{{ product.get_image }}" alt="{{ product.name }}" loading="lazy"/>
+          <span class="product-card-badge">🔥 Popular</span>
+        </div>
+        <div class="product-card-body">
+          <div class="product-card-category">{{ product.category.name }}</div>
+          <div class="product-card-name">{{ product.name }}</div>
+          <div class="product-card-price">
+            <span class="price-current">₹{{ product.price }}</span>
+            {% if product.original_price != product.price %}
+              <span class="price-original">₹{{ product.original_price }}</span>
+            {% endif %}
+          </div>
+          <div class="product-card-actions">
+            <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline btn-sm">View</a>
+            <form method="post" action="{% url 'add_to_cart' product.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1"/>
+              <button type="submit" class="btn btn-primary btn-sm">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── PROMO BANNER ── -->
+<section class="section-sm">
+  <div class="container">
+    <div class="promo-banner reveal">
+      <div>
+        <h2>🎁 Custom Bouquets for Every Moment</h2>
+        <p>Pick your flowers, wrapping style, and add a personal message card.</p>
+      </div>
+      <a href="{% url 'custom_bouquet' %}" class="btn btn-white btn-lg">Create Yours →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section class="section testimonials">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">💬 What Customers Say</div>
+      <h2>Loved by Thousands</h2>
+    </div>
+    <div class="testimonial-grid">
+      {% for t in testimonials_list %}
+        <div class="testimonial-card reveal">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"{{ t.text }}"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">{{ t.name|slice:":1" }}</div>
+            <div><div class="author-name">{{ t.name }}</div><div class="author-loc">{{ t.loc }}</div></div>
+          </div>
+        </div>
+      {% empty %}
+      {% for t in default_testimonials %}
+        <div class="testimonial-card reveal">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"{{ t.0 }}"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">{{ t.1|slice:":1" }}</div>
+            <div><div class="author-name">{{ t.1 }}</div><div class="author-loc">{{ t.2 }}</div></div>
+          </div>
+        </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const defaultTestimonials = [
+  ["The bouquet was so fresh and beautiful! My wife absolutely loved it. Delivery was right on time.", "Rahul M.", "Mumbai"],
+  ["Ordered a custom bouquet for my anniversary — it was stunning. The message card made it extra special!", "Priya S.", "Bangalore"],
+  ["Amazing quality and super fast delivery. Will definitely order again for my sister's birthday!", "Anjali K.", "Delhi"]
+];
+// Render testimonials via JS if Django didn't provide them
+const tGrid = document.querySelector('.testimonial-grid');
+if (tGrid && tGrid.children.length === 0) {
+  defaultTestimonials.forEach(([text, name, loc]) => {
+    tGrid.innerHTML += `
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"${text}"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">${name[0]}</div>
+          <div><div class="author-name">${name}</div><div class="author-loc">${loc}</div></div>
+        </div>
+      </div>`;
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,161 @@
+/* ══════════════════════════════════════════════════════════════════
+   Bloomify – Admin Panel Styles
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Admin Layout ────────────────────────────────────────────────── */
+.admin-wrapper { display: flex; min-height: 100vh; background: #f8f4f5; }
+
+.admin-sidebar {
+  width: 260px; min-height: 100vh;
+  background: linear-gradient(180deg, #1a0a10 0%, #2d1220 100%);
+  color: white; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  transition: width 0.3s ease;
+}
+.sidebar-logo {
+  padding: 1.75rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-family: var(--font-display); font-size: 1.4rem;
+  color: var(--pink-300); font-weight: 700;
+}
+.sidebar-logo small {
+  display: block; font-size: 0.7rem; font-weight: 400;
+  color: rgba(255,255,255,0.4); font-family: var(--font-body); letter-spacing: 1px;
+  margin-top: 0.2rem;
+}
+.sidebar-nav { flex: 1; padding: 1.25rem 0; }
+.sidebar-section-label {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+  padding: 0.75rem 1.5rem 0.4rem;
+}
+.sidebar-link {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.75rem 1.5rem; color: rgba(255,255,255,0.65);
+  font-size: 0.88rem; font-weight: 500;
+  transition: all 0.25s ease; position: relative;
+}
+.sidebar-link:hover { color: white; background: rgba(255,255,255,0.06); }
+.sidebar-link.active {
+  color: white; background: rgba(232,86,122,0.2);
+  border-right: 3px solid var(--pink-400);
+}
+.sidebar-link .icon { font-size: 1.1rem; flex-shrink: 0; width: 20px; }
+.sidebar-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-user { display: flex; align-items: center; gap: 0.75rem; }
+.sidebar-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--pink-500); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+}
+.sidebar-user-info small { display: block; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+.sidebar-user-name { font-size: 0.85rem; color: white; font-weight: 600; }
+
+/* ── Admin Main ──────────────────────────────────────────────────── */
+.admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.admin-topbar {
+  background: white; border-bottom: 1px solid var(--gray-200);
+  padding: 1rem 2rem; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 50;
+}
+.admin-topbar h1 { font-size: 1.1rem; font-weight: 600; color: var(--gray-900); }
+.admin-topbar-actions { display: flex; align-items: center; gap: 1rem; }
+.admin-content { padding: 2rem; flex: 1; }
+
+/* ── KPI Cards ───────────────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+.kpi-card {
+  background: white; border-radius: var(--radius-lg);
+  padding: 1.5rem; box-shadow: var(--shadow-sm);
+  display: flex; align-items: flex-start; justify-content: space-between;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.kpi-info small { font-size: 0.78rem; color: var(--gray-400); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--gray-900); line-height: 1.1; margin: 0.25rem 0; }
+.kpi-change { font-size: 0.78rem; font-weight: 600; }
+.kpi-change.up { color: var(--green-500); }
+.kpi-change.down { color: #ef4444; }
+.kpi-icon {
+  width: 48px; height: 48px; border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.kpi-icon.pink   { background: var(--pink-100); }
+.kpi-icon.green  { background: var(--green-100); }
+.kpi-icon.yellow { background: #fef3c7; }
+.kpi-icon.blue   { background: #dbeafe; }
+.kpi-bar { height:3px; border-radius:2px; background:var(--gray-100); overflow:hidden; margin-top:0.75rem; }
+.kpi-bar-fill { height:100%; border-radius:2px; transition:width 1s ease; }
+
+/* ── Admin Tables ────────────────────────────────────────────────── */
+.admin-card {
+  background: white; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.admin-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.admin-card-header h3 { font-size: 1rem; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th {
+  background: var(--gray-50); padding: 0.75rem 1rem;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--gray-500); text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+.admin-table td {
+  padding: 0.875rem 1rem; border-bottom: 1px solid var(--gray-100);
+  font-size: 0.875rem; color: var(--gray-700);
+  vertical-align: middle;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: var(--pink-50); }
+.product-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); }
+
+/* ── Charts ──────────────────────────────────────────────────────── */
+.charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.chart-card {
+  background: white; border-radius: var(--radius-lg);
+  padding: 1.5rem; box-shadow: var(--shadow-sm);
+}
+.chart-card h3 { font-size: 0.95rem; margin-bottom: 1.25rem; }
+
+/* ── Admin Filters ───────────────────────────────────────────────── */
+.admin-filters {
+  display: flex; align-items: center; gap: 1rem;
+  flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.admin-search {
+  flex: 1; min-width: 200px;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-full);
+  font-size: 0.875rem; outline: none; transition: border-color var(--transition);
+}
+.admin-search:focus { border-color: var(--pink-400); }
+.search-wrap { position: relative; flex: 1; }
+.search-wrap::before {
+  content: '🔍'; position: absolute;
+  left: 0.75rem; top: 50%; transform: translateY(-50%);
+  font-size: 0.85rem;
+}
+
+/* ── Responsive Admin ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .admin-sidebar { width: 0; overflow: hidden; }
+  .admin-sidebar.open { width: 260px; position: fixed; z-index: 200; height: 100%; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .admin-content { padding: 1rem; }
+}

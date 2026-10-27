@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Admin Panel – Bloomify{% endblock %}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap"/>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/animations.css' %}"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  {% block extra_css %}{% endblock %}
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>"/>
+</head>
+<body>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="django-message" data-type="{{ message.tags }}" style="display:none">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="admin-wrapper">
+  <!-- ── Sidebar ── -->
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="sidebar-logo">
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink-400),var(--pink-700));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(232,86,122,0.5);">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+            <path d="M12 3C10.5 5.5 8 7 5 7c0 3.5 2 6.5 5 8-1 2-1 4 0 6 1-2 2.5-3 2.5-3s1.5 1 2.5 3c1-2 1-4 0-6 3-1.5 5-4.5 5-8-3 0-5.5-1.5-7-4z" fill="white"/>
+            <circle cx="12" cy="14" r="1.8" fill="rgba(255,200,200,0.8)"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--pink-300);line-height:1;">Bloom<span style="color:#6ee7a0;">ify</span></div>
+          <small>ADMIN PANEL</small>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Overview</div>
+      <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+        <span class="icon">📊</span>
+        {% if admin_user.role == 'staff' %}My Dashboard{% else %}Dashboard{% endif %}
+      </a>
+
+      <div class="sidebar-section-label">Operations</div>
+      <a href="{% url 'admin_orders' %}" class="sidebar-link {% if 'admin_order' in request.resolver_match.url_name %}active{% endif %}">
+        <span class="icon">📦</span> Orders
+        {% if admin_user.role == 'staff' %}
+          <span style="margin-left:auto;background:var(--pink-500);color:white;font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:var(--radius-full);font-weight:700;">PRIMARY</span>
+        {% endif %}
+      </a>
+
+      <div class="sidebar-section-label">Catalogue</div>
+      <a href="{% url 'admin_products' %}" class="sidebar-link {% if 'admin_product' in request.resolver_match.url_name %}active{% endif %}">
+        <span class="icon">🌷</span> Products
+        {% if admin_user.role == 'staff' %}<span style="margin-left:auto;font-size:0.65rem;color:var(--gray-400);">view only</span>{% endif %}
+      </a>
+
+      {% if admin_user.role == 'admin' %}
+      <div class="sidebar-section-label">Users &amp; Coupons</div>
+      <a href="{% url 'admin_users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="{% url 'admin_coupons' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_coupons' %}active{% endif %}">
+        <span class="icon">🎟️</span> Coupons
+      </a>
+      <a href="{% url 'admin_messages' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_messages' %}active{% endif %}">
+        <span class="icon">💬</span> Messages
+      </a>
+
+      <div class="sidebar-section-label">Reports</div>
+      <a href="{% url 'admin_sales_report' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_sales_report' or request.resolver_match.url_name == 'admin_sales_report_csv' %}active{% endif %}"
+         style="{% if request.resolver_match.url_name == 'admin_sales_report' %}background:rgba(16,185,129,0.1);border-left:3px solid #10b981;{% endif %}">
+        <span class="icon">📊</span> Sales Report
+      </a>
+      {% endif %}
+
+      <div class="sidebar-section-label">Store</div>
+      <a href="{% url 'home' %}" class="sidebar-link" target="_blank">
+        <span class="icon">🛍️</span> View Store
+      </a>
+      <a href="{% url 'admin_logout' %}" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ admin_user.full_name|slice:":1"|upper }}</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">{{ admin_user.full_name|truncatechars:18 }}</div>
+          <small>{{ admin_user.get_role_display }}</small>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button id="sidebar-toggle" style="font-size:1.25rem;background:none;border:none;cursor:pointer;">☰</button>
+        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+      </div>
+      <div class="admin-topbar-actions">
+        <span class="badge badge-pink">{{ admin_user.get_role_display }}</span>
+        <a href="{% url 'admin_logout' %}" class="btn btn-ghost btn-sm">Logout</a>
+      </div>
+    </div>
+
+    <div class="admin-content page-enter">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/admin.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

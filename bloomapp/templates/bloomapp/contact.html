@@ -1,0 +1,154 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Contact Us – Bloomify{% endblock %}
+
+{% block extra_css %}
+<style>
+.contact-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; }
+.contact-card { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:2rem; }
+.contact-info-item {
+  display:flex; align-items:center; gap:1rem;
+  padding:1rem 0; border-bottom:1px solid var(--gray-100);
+}
+.contact-info-item:last-child { border-bottom:none; }
+.contact-info-item .icon-circle {
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; flex-shrink:0;
+}
+.contact-info-item .info-label { font-size:0.75rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+.contact-info-item .info-val   { font-size:0.9rem; font-weight:600; color:var(--gray-900); margin-top:0.15rem; }
+.contact-info-item a { color:var(--pink-600); text-decoration:none; }
+.contact-info-item a:hover { text-decoration:underline; }
+.social-row { display:flex; gap:0.75rem; margin-top:1.5rem; }
+.social-btn {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  padding:0.6rem 1.1rem; border-radius:var(--radius-full);
+  font-size:0.82rem; font-weight:600; text-decoration:none;
+  transition:transform 0.2s, opacity 0.2s;
+}
+.social-btn:hover { transform:translateY(-2px); opacity:0.9; }
+.success-banner { background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:var(--radius-md); padding:1rem 1.25rem; color:#15803d; font-weight:600; display:none; margin-bottom:1rem; }
+
+@media(max-width:768px) { .contact-layout { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📬 Contact Us</h1>
+    <p style="color:var(--gray-500);margin-top:0.5rem;">We'd love to hear from you — reach out anytime!</p>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="contact-layout">
+
+      <!-- Left: Info -->
+      <div>
+        <div class="contact-card">
+          <h3 style="font-family:var(--font-display);margin-bottom:0.25rem;">Get in Touch 🌸</h3>
+          <p style="color:var(--gray-400);font-size:0.875rem;margin-bottom:1.25rem;">We typically reply within a few hours.</p>
+
+          <div class="contact-info-item">
+            <div class="icon-circle" style="background:#fdf2f8;">📞</div>
+            <div>
+              <div class="info-label">Phone / WhatsApp</div>
+              <div class="info-val"><a href="tel:+919428974532">+91 94289 74532</a></div>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="icon-circle" style="background:#eff6ff;">📧</div>
+            <div>
+              <div class="info-label">Email</div>
+              <div class="info-val"><a href="mailto:bloomify.help@gmail.com">bloomify.help@gmail.com</a></div>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="icon-circle" style="background:#f0fdf4;">📍</div>
+            <div>
+              <div class="info-label">Service Areas</div>
+              <div class="info-val">Anand · Vadodara · Ahmedabad · Surat · Bharuch · Vapi</div>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="icon-circle" style="background:#fefce8;">🕐</div>
+            <div>
+              <div class="info-label">Working Hours</div>
+              <div class="info-val">Mon – Sat &nbsp;|&nbsp; 9 AM – 8 PM</div>
+            </div>
+          </div>
+
+          <!-- Social -->
+          <div class="social-row">
+            <a href="https://www.facebook.com/mantra.patel.7393/" target="_blank" class="social-btn" style="background:#1877f2;color:white;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              Facebook
+            </a>
+            <a href="https://www.instagram.com/mant.ra_14/" target="_blank" class="social-btn" style="background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285aeb 90%);color:white;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              Instagram
+            </a>
+            <a href="https://wa.me/919428974532?text=Hi%20Bloomify!" target="_blank" class="social-btn" style="background:#25d366;color:white;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+              WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Message Form -->
+      <div>
+        <div class="contact-card">
+          <h3 style="font-family:var(--font-display);margin-bottom:1.25rem;">Send a Message 💌</h3>
+
+          {% if success %}
+          <div class="success-banner" style="display:flex;align-items:center;gap:0.5rem;">
+            ✅ Your message has been sent! We'll get back to you soon.
+          </div>
+          {% endif %}
+
+          <form method="post" action="{% url 'contact' %}">
+            {% csrf_token %}
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Your Name</label>
+                <input type="text" name="name" class="form-control" placeholder="Full Name" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" name="phone" class="form-control" placeholder="+91 XXXXX XXXXX"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" placeholder="your@email.com" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject</label>
+              <select name="subject" class="form-control">
+                <option value="Order Query">Order Query</option>
+                <option value="Custom Bouquet">Custom Bouquet</option>
+                <option value="Delivery Issue">Delivery Issue</option>
+                <option value="Returns & Refund">Returns &amp; Refund</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea name="message" class="form-control" rows="4" placeholder="How can we help you?" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Send Message 🌸</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

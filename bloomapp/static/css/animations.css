@@ -1,0 +1,199 @@
+/* ══════════════════════════════════════════════════════════════════
+   Bloomify – Animations & Micro-interactions
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Skeleton Loader ─────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #f5f5f5 25%, #ebe8e8 50%, #f5f5f5 75%);
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+@keyframes skeleton-wave {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-card { height: 340px; border-radius: var(--radius-lg); }
+.skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
+.skeleton-text.w-75 { width: 75%; }
+.skeleton-text.w-50 { width: 50%; }
+
+/* ── Fade-in Scroll Animation ────────────────────────────────────── */
+.reveal {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-left {
+  opacity: 0; transform: translateX(-30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+.reveal-right {
+  opacity: 0; transform: translateX(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+/* ── Petal Hero Background ───────────────────────────────────────── */
+.petal {
+  position: absolute; pointer-events: none; user-select: none;
+  font-size: 1.5rem; opacity: 0;
+  animation: petal-fall linear infinite;
+}
+@keyframes petal-fall {
+  0%   { opacity: 0; transform: translateY(-20px) rotate(0deg); }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translateY(110vh) rotate(720deg); }
+}
+
+/* ── Ripple on buttons ───────────────────────────────────────────── */
+.btn { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute; border-radius: 50%;
+  transform: scale(0); animation: ripple-expand 0.6s linear;
+  background: rgba(255,255,255,0.4);
+  pointer-events: none;
+}
+@keyframes ripple-expand {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── Pulse badge ─────────────────────────────────────────────────── */
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.15); }
+}
+.pulse { animation: pulse-badge 1.5s ease infinite; }
+
+/* ── Spinner ─────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block; width: 20px; height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Page fade-in ────────────────────────────────────────────────── */
+.page-enter {
+  animation: page-in 0.4s ease both;
+}
+@keyframes page-in {
+  from { opacity:0; transform: translateY(10px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── Hover card glow ─────────────────────────────────────────────── */
+.glow-on-hover { transition: box-shadow 0.3s ease; }
+.glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(232, 86, 122, 0.25), 0 8px 32px rgba(212, 64, 106, 0.15);
+}
+
+/* ── Float animation (hero image) ───────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-15px); }
+}
+.float-anim { animation: float 4s ease-in-out infinite; }
+
+/* ── Order tracker line animation ───────────────────────────────── */
+@keyframes progress-fill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ── Star Rating ─────────────────────────────────────────────────── */
+.star-input-group { display: flex; flex-direction: row-reverse; gap: 0.25rem; }
+.star-input-group input { display: none; }
+.star-input-group label {
+  font-size: 1.5rem; color: var(--gray-200);
+  cursor: pointer; transition: color var(--transition);
+}
+.star-input-group label:hover,
+.star-input-group label:hover ~ label,
+.star-input-group input:checked ~ label {
+  color: #fbbf24;
+}
+
+/* ── Steps / Stepper ─────────────────────────────────────────────── */
+.stepper { display: flex; align-items: flex-start; justify-content: center; gap: 0; }
+.step-item { flex: 1; text-align: center; position: relative; }
+.step-item:last-child .step-connector { display: none; }
+.step-connector {
+  position: absolute; top: 16px; left: 50%; width: 100%;
+  height: 2px; background: var(--gray-200); z-index: 0;
+  transition: background 0.6s ease;
+}
+.step-connector.done { background: var(--green-400); }
+.step-dot {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--gray-200); color: var(--gray-400);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700;
+  margin: 0 auto 0.75rem; position: relative; z-index: 1;
+  transition: all 0.4s ease;
+}
+.step-dot.done   { background: var(--green-400); color: white; }
+.step-dot.active { background: var(--pink-500); color: white; box-shadow: 0 0 0 4px rgba(232,86,122,0.2); }
+.step-label { font-size: 0.75rem; font-weight: 600; color: var(--gray-400); }
+.step-label.done   { color: var(--green-500); }
+.step-label.active { color: var(--pink-600); }
+
+/* ── Slot picker grid ────────────────────────────────────────────── */
+.slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 0.75rem; }
+.slot-card {
+  border: 2px solid var(--gray-200); border-radius: var(--radius-md);
+  padding: 0.75rem; text-align: center; cursor: pointer;
+  transition: all var(--transition);
+}
+.slot-card:hover:not(.unavailable) { border-color: var(--pink-400); background: var(--pink-50); }
+.slot-card.selected { border-color: var(--pink-500); background: var(--pink-50); }
+.slot-card.unavailable { opacity: 0.45; cursor: not-allowed; }
+.slot-card .time { font-weight: 600; font-size: 0.85rem; color: var(--gray-900); }
+.slot-card .avail { font-size: 0.72rem; color: var(--gray-400); margin-top: 0.2rem; }
+.slot-card .avail.good { color: var(--green-500); }
+.slot-card .avail.low  { color: #f59e0b; }
+
+/* ── Price range slider ──────────────────────────────────────────── */
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 4px;
+  background: linear-gradient(to right, var(--pink-400) 0%, var(--pink-400) 50%, var(--gray-200) 50%, var(--gray-200) 100%);
+  border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--pink-500); cursor: pointer;
+  box-shadow: 0 2px 8px rgba(232,86,122,0.35);
+  transition: transform 0.2s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ── Modal ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px); z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: var(--radius-xl);
+  padding: 2rem; max-width: 540px; width: 90%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  animation: modal-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes modal-in {
+  from { opacity:0; transform: scale(0.9) translateY(20px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.modal-header h3 { font-size: 1.2rem; }
+.modal-close { font-size: 1.25rem; color: var(--gray-400); cursor: pointer; transition: color var(--transition); }
+.modal-close:hover { color: var(--gray-900); }

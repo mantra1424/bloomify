@@ -1,0 +1,439 @@
+{% extends 'bloomapp/admin_panel/base_admin.html' %}
+{% block title %}Dashboard – Bloomify Admin{% endblock %}
+{% block page_title %}
+  {% if is_staff %}Staff Dashboard{% else %}Dashboard{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Today Strip ───────────────────────────────────── */
+.today-strip {
+  display:flex; align-items:center; justify-content:space-between;
+  background:linear-gradient(135deg,#1a0a10 0%,#3d1a28 100%);
+  border-radius:var(--radius-lg); padding:1.25rem 2rem;
+  margin-bottom:1.75rem; color:white;
+  box-shadow:0 4px 20px rgba(139,34,82,0.25);
+}
+.today-strip .welcome { display:flex; align-items:center; gap:1rem; }
+.today-strip .avatar {
+  width:48px; height:48px; border-radius:50%;
+  background:linear-gradient(135deg,var(--pink-400),var(--pink-600));
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; font-weight:700; flex-shrink:0;
+  box-shadow:0 0 0 3px rgba(255,255,255,0.15);
+}
+.today-strip .welcome-text h2 {
+  font-size:1.1rem; font-weight:700; color:white; margin:0;
+}
+.today-strip .welcome-text p {
+  font-size:0.8rem; color:rgba(255,255,255,0.55); margin:0.15rem 0 0;
+}
+.today-meta { display:flex; gap:2rem; }
+.today-meta-item { text-align:center; }
+.today-meta-item .tm-val { font-size:1.5rem; font-weight:800; color:white; line-height:1; }
+.today-meta-item .tm-lbl { font-size:0.68rem; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; margin-top:0.2rem; }
+
+/* ── Quick Actions ─────────────────────────────────── */
+.quick-actions { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.75rem; }
+.qa-btn {
+  display:flex; align-items:center; gap:0.5rem;
+  padding:0.6rem 1.1rem; border-radius:var(--radius-full);
+  font-size:0.82rem; font-weight:600; cursor:pointer;
+  border:1.5px solid; transition:all 0.2s; text-decoration:none;
+}
+.qa-btn.primary { background:var(--pink-500); border-color:var(--pink-500); color:white; }
+.qa-btn.primary:hover { background:var(--pink-600); transform:translateY(-1px); box-shadow:0 4px 12px rgba(232,86,122,0.35); }
+.qa-btn.outline { background:white; border-color:var(--gray-200); color:var(--gray-700); }
+.qa-btn.outline:hover { border-color:var(--pink-300); color:var(--pink-600); background:var(--pink-50); transform:translateY(-1px); }
+
+/* ── KPI Cards enhanced ────────────────────────────── */
+.kpi-trend { font-size:0.68rem; color:var(--gray-400); margin-top:0.1rem; }
+.kpi-bar { height:3px; border-radius:2px; margin-top:0.75rem; background:var(--gray-100); overflow:hidden; }
+.kpi-bar-fill { height:100%; border-radius:2px; transition:width 0.8s ease; }
+
+/* ── Alert Banners ──────────────────────────────────── */
+.alert-strip {
+  display:flex; align-items:center; gap:0.75rem;
+  background:#fffbeb; border:1.5px solid #fcd34d;
+  border-radius:var(--radius-md); padding:0.75rem 1.25rem;
+  font-size:0.84rem; font-weight:600; color:#92400e;
+  margin-bottom:1.5rem;
+}
+
+/* Stock alert panels */
+.stock-alert {
+  border-radius:var(--radius-md);
+  margin-bottom:1rem;
+  overflow:hidden;
+  border:1.5px solid;
+}
+.stock-alert-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.85rem 1.25rem; font-weight:700; font-size:0.88rem;
+  cursor:pointer; user-select:none;
+}
+.stock-alert-header .sa-left { display:flex; align-items:center; gap:0.65rem; }
+.stock-alert-header .sa-toggle { font-size:0.75rem; transition:transform 0.25s; }
+.stock-alert-header .sa-toggle.open { transform:rotate(180deg); }
+.stock-alert-body {
+  padding:0 1.25rem; max-height:0; overflow:hidden;
+  transition:max-height 0.35s ease, padding 0.25s ease;
+}
+.stock-alert-body.open { max-height:500px; padding:0.75rem 1.25rem 1rem; }
+.stock-chip-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+.stock-chip {
+  display:inline-flex; align-items:center; gap:0.4rem;
+  padding:0.3rem 0.8rem; border-radius:var(--radius-full);
+  font-size:0.75rem; font-weight:600;
+}
+/* Red — out of stock */
+.sa-oos { background:#fef2f2; border-color:#fca5a5; }
+.sa-oos .stock-alert-header { background:#fef2f2; color:#991b1b; }
+.stock-chip-oos { background:#fee2e2; color:#b91c1c; }
+/* Orange — low stock */
+.sa-low { background:#fff7ed; border-color:#fed7aa; }
+.sa-low .stock-alert-header { background:#fff7ed; color:#9a3412; }
+.stock-chip-low { background:#ffedd5; color:#c2410c; }
+
+/* ── Charts row ────────────────────────────────────── */
+.dash-charts-top { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+.dash-charts-bot { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+
+/* ── Orders table enhancements ─────────────────────── */
+.status-dot {
+  display:inline-block; width:8px; height:8px; border-radius:50%;
+  margin-right:5px; flex-shrink:0;
+}
+.dot-placed   { background:#f59e0b; }
+.dot-packed   { background:#3b82f6; }
+.dot-out      { background:#8b5cf6; }
+.dot-delivered{ background:#10b981; }
+.dot-cancelled{ background:#ef4444; }
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width:1100px) {
+  .dash-charts-top { grid-template-columns:1fr; }
+  .dash-charts-bot { grid-template-columns:1fr; }
+  .today-meta { display:none; }
+}
+@media (max-width:768px) {
+  .quick-actions { flex-direction:column; }
+  .today-strip { flex-direction:column; gap:1rem; align-items:flex-start; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ═══════════════ TODAY AT A GLANCE STRIP ═══════════════ #}
+<div class="today-strip">
+  <div class="welcome">
+    <div class="avatar">{{ admin_user.full_name|slice:":1"|upper }}</div>
+    <div class="welcome-text">
+      <h2>Welcome back, {{ admin_user.full_name }}! 🌸</h2>
+      <p>{{ admin_user.get_role_display }} · Here's your store at a glance</p>
+    </div>
+  </div>
+  <div class="today-meta">
+    <div class="today-meta-item">
+      <div class="tm-val">{{ total_orders }}</div>
+      <div class="tm-lbl">Total Orders</div>
+    </div>
+    <div class="today-meta-item">
+      <div class="tm-val">{{ pending_orders }}</div>
+      <div class="tm-lbl">Pending</div>
+    </div>
+    {% if not is_staff %}
+    <div class="today-meta-item">
+      <div class="tm-val">₹{{ total_revenue|floatformat:0 }}</div>
+      <div class="tm-lbl">Revenue</div>
+    </div>
+    <div class="today-meta-item">
+      <div class="tm-val">{{ total_users }}</div>
+      <div class="tm-lbl">Customers</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{# ═══════════════ QUICK ACTIONS ═══════════════ #}
+<div class="quick-actions">
+  <a href="{% url 'admin_orders' %}" class="qa-btn primary">📦 Manage Orders</a>
+  {% if not is_staff %}
+  <a href="{% url 'admin_products' %}" class="qa-btn outline">🌷 Add Product</a>
+  <a href="{% url 'admin_coupons' %}" class="qa-btn outline">🎟️ Create Coupon</a>
+  <a href="{% url 'admin_users' %}" class="qa-btn outline">👥 View Users</a>
+  <a href="{% url 'admin_messages' %}" class="qa-btn outline">💬 Messages</a>
+  <a href="{% url 'admin_sales_report' %}" class="qa-btn outline" style="border-color:#10b981;color:#059669;">📊 Sales Report</a>
+  {% else %}
+  <a href="{% url 'admin_orders' %}?status=placed" class="qa-btn outline">⏳ Pending Orders</a>
+  <a href="{% url 'admin_orders' %}?status=packed" class="qa-btn outline">📬 Being Packed</a>
+  <a href="{% url 'admin_products' %}" class="qa-btn outline">🌷 Products</a>
+  {% endif %}
+  <a href="{% url 'home' %}" class="qa-btn outline" target="_blank">🛍️ View Store ↗</a>
+</div>
+
+{# ═══════════════ PENDING ALERT ═══════════════ #}
+{% if pending_orders > 0 %}
+<div class="alert-strip">
+  ⚠️ {{ pending_orders }} order{{ pending_orders|pluralize }} waiting for action —
+  <a href="{% url 'admin_orders' %}?status=placed" style="color:var(--pink-600);margin-left:4px;text-decoration:underline;">Process now →</a>
+</div>
+{% endif %}
+
+{# ═══════════════ OUT OF STOCK ALERT ═══════════════ #}
+{% if out_of_stock %}
+<div class="stock-alert sa-oos">
+  <div class="stock-alert-header" onclick="toggleAlert('oos')">
+    <span class="sa-left">
+      🚫 <span>{{ out_of_stock|length }} product{{ out_of_stock|length|pluralize }} out of stock — restock needed</span>
+    </span>
+    <span class="sa-toggle" id="oos-toggle">▼</span>
+  </div>
+  <div class="stock-alert-body" id="oos-body">
+    <div class="stock-chip-list" style="margin-bottom:0.75rem;">
+      {% for p in out_of_stock %}
+        <span class="stock-chip stock-chip-oos">🚫 {{ p.name }}</span>
+      {% endfor %}
+    </div>
+    <a href="{% url 'admin_products' %}" class="btn btn-sm" style="background:#dc2626;color:white;font-size:0.78rem;">Manage Stock →</a>
+  </div>
+</div>
+{% endif %}
+
+{# ═══════════════ LOW STOCK ALERT ═══════════════ #}
+{% if low_stock %}
+<div class="stock-alert sa-low">
+  <div class="stock-alert-header" onclick="toggleAlert('low')">
+    <span class="sa-left">
+      ⚠️ <span>{{ low_stock|length }} product{{ low_stock|length|pluralize }} running low (≤ 5 left)</span>
+    </span>
+    <span class="sa-toggle" id="low-toggle">▼</span>
+  </div>
+  <div class="stock-alert-body" id="low-body">
+    <div class="stock-chip-list" style="margin-bottom:0.75rem;">
+      {% for p in low_stock %}
+        <span class="stock-chip stock-chip-low">⚠️ {{ p.name }} — {{ p.stock_quantity }} left</span>
+      {% endfor %}
+    </div>
+    <a href="{% url 'admin_products' %}" class="btn btn-sm" style="background:#ea580c;color:white;font-size:0.78rem;">Manage Stock →</a>
+  </div>
+</div>
+{% endif %}
+
+{# ═══════════════ KPI CARDS ═══════════════ #}
+{% if is_staff %}
+{# ─── STAFF KPIs ─── #}
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Total Orders</small>
+      <div class="kpi-value">{{ total_orders }}</div>
+      <span class="kpi-change up">📦 All time</span>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:var(--pink-400);"></div></div>
+    </div>
+    <div class="kpi-icon pink">📦</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Needs Action</small>
+      <div class="kpi-value">{{ pending_orders }}</div>
+      <span class="kpi-change {% if pending_orders > 0 %}down{% else %}up{% endif %}">⏳ Pending</span>
+    </div>
+    <div class="kpi-icon yellow">⏳</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Being Packed</small>
+      <div class="kpi-value">{{ packed_orders }}</div>
+      <span class="kpi-change up">📬 In progress</span>
+    </div>
+    <div class="kpi-icon blue">📬</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Out for Delivery</small>
+      <div class="kpi-value">{{ out_orders }}</div>
+      <span class="kpi-change up">🚚 On the way</span>
+    </div>
+    <div class="kpi-icon green">🚚</div>
+  </div>
+</div>
+
+{# ─── STAFF Recent Orders ─── #}
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h3>📦 Recent Orders — Your Task List</h3>
+    <a href="{% url 'admin_orders' %}" class="btn btn-primary btn-sm">View All Orders</a>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>#</th><th>Customer</th><th>Phone</th><th>City</th><th>Items</th><th>Slot</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td><strong>#{{ order.id }}</strong></td>
+          <td><div style="font-weight:600;">{{ order.full_name }}</div></td>
+          <td>{{ order.phone }}</td>
+          <td style="font-size:0.8rem;color:var(--gray-500);">{{ order.city }}</td>
+          <td>{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+          <td style="font-size:0.75rem;">{% if order.delivery_slot %}{{ order.delivery_slot.slot_label }}{% else %}—{% endif %}</td>
+          <td>
+            <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}">
+              <span class="status-dot dot-{% if order.status == 'delivered' %}delivered{% elif order.status == 'placed' %}placed{% elif order.status == 'out_for_delivery' %}out{% elif order.status == 'cancelled' %}cancelled{% else %}packed{% endif %}"></span>
+              {{ order.status_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'admin_orders' %}?status={{ order.status }}" class="btn btn-outline btn-sm">Manage →</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:2rem;">No orders yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+{# ─── ADMIN KPIs ─── #}
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Total Orders</small>
+      <div class="kpi-value">{{ total_orders }}</div>
+      <span class="kpi-change up">📦 All time</span>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:var(--pink-400);"></div></div>
+    </div>
+    <div class="kpi-icon pink">📦</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Total Revenue</small>
+      <div class="kpi-value">₹{{ total_revenue|floatformat:0 }}</div>
+      <span class="kpi-change up">💰 All time</span>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:82%;background:#10b981;"></div></div>
+    </div>
+    <div class="kpi-icon green">💰</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Total Customers</small>
+      <div class="kpi-value">{{ total_users }}</div>
+      <span class="kpi-change up">👥 Registered</span>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:65%;background:#f59e0b;"></div></div>
+    </div>
+    <div class="kpi-icon yellow">👥</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-info">
+      <small>Pending Orders</small>
+      <div class="kpi-value">{{ pending_orders }}</div>
+      <span class="kpi-change {% if pending_orders > 0 %}down{% else %}up{% endif %}">⏳ Needs action</span>
+      {% widthratio pending_orders total_orders|default:1 100 as pending_pct %}
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{{ pending_pct }}%;background:#ef4444;"></div></div>
+    </div>
+    <div class="kpi-icon blue">⏳</div>
+  </div>
+</div>
+
+{# ─── CHARTS ─── #}
+<div class="dash-charts-top">
+  <div class="chart-card">
+    <h3>📈 Revenue – Last 7 Days</h3>
+    <div style="height:280px;"><canvas id="revenueChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>🌸 Orders by Category</h3>
+    <div style="height:280px;"><canvas id="categoryChart"></canvas></div>
+  </div>
+</div>
+
+<div class="dash-charts-bot">
+  <div class="chart-card">
+    <h3>👥 New Signups – Last 7 Days</h3>
+    <div style="height:220px;"><canvas id="signupsChart"></canvas></div>
+  </div>
+
+  {# ─── ADMIN Recent Orders sidebar ─── #}
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h3>🕐 Recent Orders</h3>
+      <a href="{% url 'admin_orders' %}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Customer</th><th>City</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><strong>#{{ order.id }}</strong></td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">{{ order.full_name|truncatechars:16 }}</div>
+              <div style="font-size:0.72rem;color:var(--gray-400);">{{ order.created_at|date:"d M, H:i" }}</div>
+            </td>
+            <td style="font-size:0.78rem;color:var(--gray-500);">{{ order.city }}</td>
+            <td style="font-weight:700;font-size:0.85rem;">₹{{ order.total_amount|floatformat:0 }}</td>
+            <td>
+              <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}" style="font-size:0.7rem;padding:0.2rem 0.5rem;">
+                {{ order.status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:2rem;">No orders yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{# ─── ORDER STATUS OVERVIEW (admin only) ─── #}
+<div class="admin-card" style="margin-bottom:1.5rem;">
+  <div class="admin-card-header">
+    <h3>📊 Order Pipeline</h3>
+    <a href="{% url 'admin_orders' %}" class="btn btn-outline btn-sm">Manage All</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--gray-100);">
+    <div style="padding:1.25rem;text-align:center;border-right:1px solid var(--gray-100);">
+      <div style="font-size:1.75rem;font-weight:800;color:#f59e0b;">{{ pending_orders }}</div>
+      <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">⏳ Placed</div>
+    </div>
+    <div style="padding:1.25rem;text-align:center;border-right:1px solid var(--gray-100);">
+      <div style="font-size:1.75rem;font-weight:800;color:#3b82f6;">{{ packed_orders }}</div>
+      <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">📬 Packed</div>
+    </div>
+    <div style="padding:1.25rem;text-align:center;border-right:1px solid var(--gray-100);">
+      <div style="font-size:1.75rem;font-weight:800;color:#8b5cf6;">{{ out_orders }}</div>
+      <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">🚚 Out for Delivery</div>
+    </div>
+    <div style="padding:1.25rem;text-align:center;">
+      <div style="font-size:1.75rem;font-weight:800;color:#10b981;">—</div>
+      <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">✅ Delivered Today</div>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleAlert(key) {
+  const body   = document.getElementById(key + '-body');
+  const toggle = document.getElementById(key + '-toggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+// Auto-open if there are alerts
+window.addEventListener('DOMContentLoaded', () => {
+  ['oos','low'].forEach(k => {
+    const b = document.getElementById(k + '-body');
+    if (b) { b.classList.add('open'); document.getElementById(k+'-toggle').classList.add('open'); }
+  });
+});
+</script>
+{% endblock %}

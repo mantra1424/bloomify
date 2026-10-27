@@ -1,0 +1,304 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Bloomify – Fresh Flower Bouquets Delivered{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}Order beautiful handcrafted flower bouquets online. Same-day delivery available.{% endblock %}"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"/>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/animations.css' %}"/>
+  {% block extra_css %}{% endblock %}
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>"/>
+</head>
+<body>
+
+<!-- Django Messages → converted to Toasts by JS -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="django-message" data-type="{{ message.tags }}" style="display:none">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<!-- ── Navigation ── -->
+<nav class="navbar">
+  <div class="container nav-inner">
+
+    <!-- Logo: plain text, no icon circle -->
+    <a href="{% url 'home' %}" class="nav-logo-text">Bloomify</a>
+
+    <!-- Centre links -->
+    <ul class="nav-links">
+      <li><a href="{% url 'products' %}" {% if 'product' in request.resolver_match.url_name %}class="active"{% endif %}>Shop</a></li>
+      <li><a href="{% url 'custom_bouquet' %}" {% if request.resolver_match.url_name == 'custom_bouquet' %}class="active"{% endif %}>Custom</a></li>
+    </ul>
+
+    <!-- Search -->
+    <div style="position:relative;flex:1;max-width:320px;margin:0 1.5rem;">
+      <input id="nav-search" type="text" placeholder="🔍 Search bouquets…"
+        autocomplete="off"
+        style="width:100%;padding:0.55rem 1rem 0.55rem 2.4rem;border-radius:var(--radius-full);
+               border:1.5px solid var(--gray-200);font-size:0.85rem;outline:none;
+               background:var(--gray-50);transition:border-color 0.2s,box-shadow 0.2s;"
+        onfocus="this.style.borderColor='var(--pink-400)';this.style.boxShadow='0 0 0 3px rgba(232,86,122,0.12)'"
+        onblur="setTimeout(()=>{this.style.borderColor='var(--gray-200)';this.style.boxShadow='none';hideAC()},200)"
+      />
+      <svg style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none;"
+           xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+      </svg>
+      <div id="nav-ac" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
+        background:white;border-radius:var(--radius-md);box-shadow:0 8px 32px rgba(0,0,0,0.12);
+        border:1px solid var(--gray-100);z-index:500;overflow:hidden;"></div>
+    </div>
+
+    <!-- Right: person icon + cart icon -->
+    <div class="nav-actions">
+      {% if request.session.user_id %}
+        <a href="{% url 'dashboard' %}" class="nav-icon-btn" aria-label="Account" title="{{ request.session.user_name }}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="8" r="4"/>
+            <path stroke-linecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </a>
+        <span style="font-size:0.8rem;font-weight:600;color:var(--pink-600);white-space:nowrap;">Welcome! {{ request.session.user_name|truncatechars:12 }}</span>
+        <a href="{% url 'wishlist' %}" class="nav-icon-btn" aria-label="Wishlist" title="Wishlist">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" class="nav-icon-btn" aria-label="Login">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="8" r="4"/>
+            <path stroke-linecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </a>
+      {% endif %}
+
+      <a href="{% url 'cart' %}" class="nav-icon-btn cart-btn" aria-label="Cart">
+        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <!-- L-shaped handle -->
+          <polyline points="1 1 5 1 5 4"/>
+          <!-- Basket body: open top trapezoid -->
+          <path d="M5 4 L20 4 L18.5 14 L6.5 14 Z"/>
+          <!-- Bottom rail connecting to wheels -->
+          <path d="M6.5 14 Q6 17 9 17.5"/>
+          <path d="M18.5 14 Q19 17 17 17.5"/>
+          <line x1="9" y1="17.5" x2="17" y2="17.5"/>
+          <!-- Wheels -->
+          <circle cx="9" cy="20" r="1.3"/>
+          <circle cx="17" cy="20" r="1.3"/>
+        </svg>
+        {% if cart_count > 0 %}<span class="cart-badge pulse">{{ cart_count }}</span>{% endif %}
+      </a>
+    </div>
+
+    <button class="hamburger" aria-label="Menu" id="hamburger-btn">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="{% url 'home' %}">🏠 Home</a>
+    <a href="{% url 'products' %}">🌷 Shop All</a>
+    <a href="{% url 'products' %}?category=birthday">🎂 Birthday</a>
+    <a href="{% url 'products' %}?category=anniversary">💍 Anniversary</a>
+    <a href="{% url 'custom_bouquet' %}">🎨 Custom Bouquet</a>
+    <a href="{% url 'cart' %}">🛒 Cart ({{ cart_count }})</a>
+    {% if request.session.user_id %}
+      <a href="{% url 'dashboard' %}">👤 My Account</a>
+      <a href="{% url 'logout' %}">🚪 Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}">🔑 Login</a>
+      <a href="{% url 'signup' %}">✨ Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- ── Page Content ── -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="{% url 'home' %}" class="nav-logo">
+          <span class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3C10.5 5.5 8 7 5 7c0 3.5 2 6.5 5 8-1 2-1 4 0 6 1-2 2.5-3 2.5-3s1.5 1 2.5 3c1-2 1-4 0-6 3-1.5 5-4.5 5-8-3 0-5.5-1.5-7-4z" fill="white"/>
+              <circle cx="12" cy="14" r="1.8" fill="rgba(255,200,200,0.8)"/>
+            </svg>
+          </span>
+          <span class="logo-wordmark">Bloom<em>ify</em></span>
+        </a>
+        <p>Handcrafted flower bouquets delivered fresh to your door. Spreading love one bloom at a time.</p>
+        <div class="social-links mt-3">
+
+          <!-- Facebook -->
+          <a href="https://www.facebook.com/mantra.patel.7393/" target="_blank" rel="noopener" aria-label="Facebook"
+             style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#1877f2;color:white;margin-right:8px;transition:transform 0.2s,opacity 0.2s;" onmouseover="this.style.opacity='.8';this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+
+          <!-- Instagram -->
+          <a href="https://www.instagram.com/mant.ra_14/" target="_blank" rel="noopener" aria-label="Instagram"
+             style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285aeb 90%);color:white;margin-right:8px;transition:transform 0.2s,opacity 0.2s;" onmouseover="this.style.opacity='.8';this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+
+          <!-- WhatsApp -->
+          <a href="https://wa.me/919428974532" target="_blank" rel="noopener" aria-label="WhatsApp"
+             style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#25d366;color:white;transition:transform 0.2s,opacity 0.2s;" onmouseover="this.style.opacity='.8';this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+            </svg>
+          </a>
+
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="{% url 'products' %}">All Bouquets</a></li>
+          <li><a href="{% url 'products' %}?category=birthday">Birthday</a></li>
+          <li><a href="{% url 'products' %}?category=anniversary">Anniversary</a></li>
+          <li><a href="{% url 'products' %}?category=love">Love & Romance</a></li>
+          <li><a href="{% url 'products' %}?category=wedding">Wedding</a></li>
+          <li><a href="{% url 'custom_bouquet' %}">Custom Bouquet</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <ul>
+          <li><a href="{% url 'dashboard' %}">My Orders</a></li>
+          <li><a href="{% url 'dashboard' %}?tab=profile">Profile</a></li>
+          <li><a href="{% url 'dashboard' %}?tab=addresses">Saved Addresses</a></li>
+          <li><a href="{% url 'cart' %}">Cart</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="{% url 'dashboard' %}?tab=orders">Delivery Info</a></li>
+          <li><a href="{% url 'returns' %}">Returns Policy</a></li>
+          <li><a href="{% url 'faqs' %}">FAQs</a></li>
+          <li><a href="{% url 'contact' %}">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Newsletter -->
+    <div style="border-top:1px solid #2a1520;padding-top:2rem;margin-top:0.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;">
+        <div>
+          <h4 style="color:white;font-family:var(--font-display);font-size:1.05rem;margin-bottom:0.25rem;">🌸 Stay in Bloom</h4>
+          <p style="color:#a3a3a3;font-size:0.82rem;margin:0;">Get exclusive offers & flower inspiration in your inbox.</p>
+        </div>
+        <form id="newsletter-form" style="display:flex;gap:0.5rem;flex:1;max-width:420px;" onsubmit="submitNewsletter(event)">
+          {% csrf_token %}
+          <input type="email" id="nl-email" placeholder="Your email address" required
+            style="flex:1;padding:0.65rem 1rem;border-radius:var(--radius-full);border:none;font-size:0.87rem;outline:none;background:#1a0a10;color:white;border:1px solid #3a1a28;"/>
+          <button type="submit" class="btn btn-primary" style="padding:0.65rem 1.4rem;font-size:0.83rem;white-space:nowrap;">Subscribe</button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Bloomify. Made with 🌸 for flower lovers.</p>
+      <p>Privacy Policy · Terms of Service</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Back to Top Button -->
+<button id="back-to-top" aria-label="Back to top" title="Back to top"
+  style="position:fixed;bottom:28px;right:28px;z-index:9000;
+    width:44px;height:44px;border-radius:50%;
+    background:linear-gradient(135deg,var(--pink-500),var(--pink-700));
+    color:white;border:none;cursor:pointer;
+    box-shadow:0 4px 16px rgba(232,86,122,0.45);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:translateY(12px);
+    transition:opacity 0.3s,transform 0.3s;
+    pointer-events:none;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+  </svg>
+</button>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+<script>
+// Search Autocomplete
+(function(){
+  const inp = document.getElementById('nav-search');
+  const box = document.getElementById('nav-ac');
+  if (!inp) return;
+  let timer;
+  inp.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = inp.value.trim();
+    if (q.length < 2) { box.style.display='none'; return; }
+    timer = setTimeout(() => {
+      fetch('/products/autocomplete/?q=' + encodeURIComponent(q))
+        .then(r => r.json()).then(data => {
+          if (!data.results.length) { box.style.display='none'; return; }
+          box.innerHTML = data.results.map(p => `
+            <a href="${p.url}" style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1rem;
+              text-decoration:none;transition:background 0.15s;" onmouseover="this.style.background='var(--pink-50)'" onmouseout="this.style.background=''">
+              <img src="${p.image}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>
+              <div><div style="font-size:0.83rem;font-weight:600;color:var(--gray-900);">${p.name}</div>
+              <div style="font-size:0.72rem;color:var(--pink-500);">\u20b9${p.price} · ${p.category}</div></div>
+            </a>`).join('');
+          box.style.display = 'block';
+        });
+    }, 220);
+  });
+  function hideAC() { box.style.display = 'none'; }
+  window.hideAC = hideAC;
+})();
+
+// Back to Top
+(function(){
+  const btn = document.getElementById('back-to-top');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      btn.style.opacity = '1'; btn.style.transform = 'translateY(0)'; btn.style.pointerEvents = 'auto';
+    } else {
+      btn.style.opacity = '0'; btn.style.transform = 'translateY(12px)'; btn.style.pointerEvents = 'none';
+    }
+  });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+
+// Newsletter
+function submitNewsletter(e) {
+  e.preventDefault();
+  const email = document.getElementById('nl-email').value;
+  const csrf  = document.querySelector('[name=csrfmiddlewaretoken]') ||
+                { value: document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '' };
+  fetch('/newsletter/subscribe/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrf.value, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'email=' + encodeURIComponent(email)
+  }).then(r => r.json()).then(d => {
+    document.getElementById('newsletter-form').innerHTML =
+      '<p style="color:#6ee7a0;font-weight:600;font-size:0.9rem;">🌸 ' + (d.message || 'Subscribed! Thank you.') + '</p>';
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>

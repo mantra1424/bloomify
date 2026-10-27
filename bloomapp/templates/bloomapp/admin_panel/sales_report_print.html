@@ -1,0 +1,381 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bloomify Sales Report{% if filters.date_from %} · {{ filters.date_from }} → {{ filters.date_to }}{% endif %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:'Inter', sans-serif;
+      font-size:12px; color:#1a1a2e;
+      background:#fff;
+      padding:0;
+    }
+
+    /* ── Page ─────────────────────────────────────── */
+    .page { padding:20mm 18mm; max-width:297mm; margin:0 auto; }
+
+    /* ── Branded Header ───────────────────────────── */
+    .report-header {
+      background:linear-gradient(135deg,#c2185b 0%,#e91e8c 60%,#f06292 100%);
+      border-radius:14px; padding:22px 28px;
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:22px; color:#fff;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    .report-header .brand { display:flex; align-items:center; gap:12px; }
+    .report-header .flower-icon {
+      width:44px; height:44px; border-radius:50%;
+      background:rgba(255,255,255,0.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; flex-shrink:0;
+    }
+    .report-header h1 { font-size:22px; font-weight:800; line-height:1; letter-spacing:-0.5px; }
+    .report-header .subtitle { font-size:12px; opacity:0.8; margin-top:3px; }
+    .report-meta { text-align:right; font-size:11px; }
+    .report-meta .meta-row { opacity:0.85; margin-bottom:3px; }
+    .report-meta strong { opacity:1; font-weight:700; }
+
+    /* ── Section heading ──────────────────────────── */
+    .section-title {
+      font-size:11px; font-weight:700; color:#9d174d;
+      text-transform:uppercase; letter-spacing:1px;
+      border-bottom:2px solid #fce4ec;
+      padding-bottom:5px; margin:20px 0 12px;
+    }
+
+    /* ── KPI Cards ────────────────────────────────── */
+    .kpi-grid {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:10px;
+      margin-bottom:20px;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    .kpi-card {
+      border-radius:10px; padding:12px 10px; text-align:center;
+      border-top:3px solid #c2185b;
+      border:1px solid #fce4ec; border-top:3px solid #c2185b;
+    }
+    .kpi-card.green  { border-top-color:#10b981; }
+    .kpi-card.blue   { border-top-color:#3b82f6; }
+    .kpi-card.amber  { border-top-color:#f59e0b; }
+    .kpi-card.red    { border-top-color:#ef4444; }
+    .kpi-card.purple { border-top-color:#8b5cf6; }
+    .kpi-val { font-size:17px; font-weight:800; color:#1a1a2e; line-height:1; }
+    .kpi-lbl { font-size:9px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; margin-top:4px; }
+
+    /* ── Two-column breakdown ─────────────────────── */
+    .breakdown-row-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+    .breakdown-table { width:100%; border-collapse:collapse; }
+    .breakdown-table td { padding:6px 8px; border-bottom:1px solid #fce4ec; font-size:11px; }
+    .breakdown-table td:first-child { font-weight:600; color:#374151; }
+    .breakdown-table td:last-child { text-align:right; font-weight:700; color:#1a1a2e; }
+    .breakdown-table .sub { font-weight:400; font-size:10px; color:#9ca3af; margin-left:4px; }
+    .breakdown-bar-cell { width:100px; padding:0 8px; }
+    .bar-track { background:#fce4ec; border-radius:3px; height:5px; overflow:hidden; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .bar-fill  { height:100%; border-radius:3px; background:#c2185b; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .bar-fill.blue { background:#3b82f6; }
+
+    /* ── Tables ───────────────────────────────────── */
+    table.main-table { width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:16px; }
+    table.main-table thead tr { background:#fdf2f8; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.main-table th { padding:7px 8px; text-align:left; font-size:9px; font-weight:700; color:#9d174d; text-transform:uppercase; letter-spacing:0.7px; border-bottom:2px solid #fce4ec; }
+    table.main-table td { padding:6px 8px; border-bottom:1px solid #fce4ec; vertical-align:middle; }
+    table.main-table tbody tr:hover { background:#fdf9fb; }
+    table.main-table tfoot tr { background:#fdf2f8; font-weight:700; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.main-table tfoot td { padding:8px; border-top:2px solid #c2185b; font-size:11px; }
+
+    /* Status badges */
+    .badge { display:inline-block; padding:2px 7px; border-radius:20px; font-size:9px; font-weight:700; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .badge-placed    { background:#fef3c7; color:#92400e; }
+    .badge-packed    { background:#dbeafe; color:#1e40af; }
+    .badge-delivered { background:#d1fae5; color:#065f46; }
+    .badge-cancelled { background:#fee2e2; color:#991b1b; }
+    .badge-out       { background:#ede9fe; color:#5b21b6; }
+    .badge-cod       { background:#fef3c7; color:#92400e; }
+    .badge-upi       { background:#dbeafe; color:#1e40af; }
+    .badge-card      { background:#ede9fe; color:#5b21b6; }
+    .badge-online    { background:#d1fae5; color:#065f46; }
+
+    /* Top product rank */
+    .rank { display:inline-flex; align-items:center; justify-content:center;
+      width:20px; height:20px; border-radius:50%; font-size:9px; font-weight:800;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .rank-1 { background:#fef3c7; color:#92400e; }
+    .rank-2 { background:#f3f4f6; color:#374151; }
+    .rank-3 { background:#fce7f3; color:#9d174d; }
+    .rank-n { background:#f9fafb; color:#6b7280; }
+
+    /* Footer */
+    .report-footer {
+      margin-top:20px; padding-top:12px; border-top:1px solid #fce4ec;
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:10px; color:#9ca3af;
+    }
+
+    /* Print specifics */
+    @media print {
+      @page { size:A4 landscape; margin:10mm; }
+      body { font-size:10px; }
+      .kpi-grid { grid-template-columns:repeat(6,1fr) !important; }
+      .breakdown-row-grid { grid-template-columns:1fr 1fr !important; }
+      .page { padding:0; }
+      .no-print { display:none !important; }
+      table.main-table { page-break-inside:auto; }
+      table.main-table tr { page-break-inside:avoid; }
+    }
+
+    /* Print button (hidden in PDF) */
+    .print-toolbar {
+      position:fixed; top:16px; right:16px; z-index:999;
+      display:flex; gap:8px;
+    }
+    .print-btn {
+      padding:10px 20px; border-radius:30px;
+      background:linear-gradient(135deg,#c2185b,#e91e8c);
+      color:#fff; font-weight:700; font-size:13px;
+      border:none; cursor:pointer; box-shadow:0 4px 16px rgba(194,24,91,0.35);
+      transition:all 0.2s;
+    }
+    .print-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(194,24,91,0.45); }
+    .close-btn {
+      padding:10px 16px; border-radius:30px;
+      background:#f3f4f6; color:#374151; font-weight:600; font-size:13px;
+      border:1px solid #e5e7eb; cursor:pointer;
+    }
+    @media print { .print-toolbar { display:none !important; } }
+  </style>
+</head>
+<body>
+
+{# ── Print Toolbar (hidden in PDF) ── #}
+<div class="print-toolbar no-print">
+  <button class="close-btn" onclick="window.close()">✕ Close</button>
+  <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
+</div>
+
+<div class="page">
+
+  {# ── Header ── #}
+  <div class="report-header">
+    <div class="brand">
+      <div class="flower-icon">🌸</div>
+      <div>
+        <h1>Bloomify</h1>
+        <div class="subtitle">Sales Report</div>
+      </div>
+    </div>
+    <div class="report-meta">
+      <div class="meta-row">
+        Period: <strong>
+          {% if filters.date_from %}{{ filters.date_from }} → {{ filters.date_to }}{% else %}All Time{% endif %}
+        </strong>
+      </div>
+      {% if filters.status %}<div class="meta-row">Status: <strong>{{ filters.status|title }}</strong></div>{% endif %}
+      {% if filters.payment %}<div class="meta-row">Payment: <strong>{{ filters.payment|upper }}</strong></div>{% endif %}
+      <div class="meta-row" style="margin-top:6px;opacity:0.7;">
+        Generated by <strong>{{ admin_user.full_name }}</strong> · {{ "now"|date:"d M Y, H:i" }}
+      </div>
+    </div>
+  </div>
+
+  {# ── KPI Cards ── #}
+  <div class="section-title">📊 Summary</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-val">{{ total_orders }}</div>
+      <div class="kpi-lbl">Total Orders</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-val">₹{{ total_revenue|floatformat:0 }}</div>
+      <div class="kpi-lbl">Revenue</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-val">₹{{ avg_order_val|floatformat:0 }}</div>
+      <div class="kpi-lbl">Avg Order</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-val">₹{{ total_delivery|floatformat:0 }}</div>
+      <div class="kpi-lbl">Delivery</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-val">₹{{ total_discount|floatformat:0 }}</div>
+      <div class="kpi-lbl">Discounts</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-val">₹{{ total_subtotal|floatformat:0 }}</div>
+      <div class="kpi-lbl">Subtotal</div>
+    </div>
+  </div>
+
+  {# ── Breakdown Tables ── #}
+  <div class="section-title">📦 Breakdown</div>
+  <div class="breakdown-row-grid">
+
+    {# Status breakdown #}
+    <div>
+      <table class="breakdown-table">
+        <tbody>
+          {% for row in status_breakdown %}
+          <tr>
+            <td>
+              {% if row.status == 'placed' %}⏳{% elif row.status == 'packed' %}📬{% elif row.status == 'out_for_delivery' %}🚚{% elif row.status == 'delivered' %}✅{% else %}❌{% endif %}
+              {{ row.status|title|cut:"_" }}
+            </td>
+            <td class="breakdown-bar-cell">
+              <div class="bar-track">
+                {% widthratio row.count total_orders|default:1 100 as pct %}
+                <div class="bar-fill" style="width:{{ pct }}%;"></div>
+              </div>
+            </td>
+            <td>{{ row.count }} orders<span class="sub">₹{{ row.revenue|floatformat:0 }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# Payment breakdown #}
+    <div>
+      <table class="breakdown-table">
+        <tbody>
+          {% for row in payment_breakdown %}
+          <tr>
+            <td>
+              {% if row.payment_mode == 'cod' %}💵{% elif row.payment_mode == 'upi' %}📱{% else %}💳{% endif %}
+              {{ row.payment_mode|upper }}
+            </td>
+            <td class="breakdown-bar-cell">
+              <div class="bar-track">
+                {% widthratio row.count total_orders|default:1 100 as pct2 %}
+                <div class="bar-fill blue" style="width:{{ pct2 }}%;"></div>
+              </div>
+            </td>
+            <td>{{ row.count }} orders<span class="sub">₹{{ row.revenue|floatformat:0 }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ── Top Products ── #}
+  {% if top_products %}
+  <div class="section-title">🌷 Top Products</div>
+  <table class="main-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product Name</th>
+        <th>Units Sold</th>
+        <th>Revenue (₹)</th>
+        <th>Share</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in top_products %}
+      <tr>
+        <td>
+          <span class="rank {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-n{% endif %}">{{ forloop.counter }}</span>
+        </td>
+        <td><strong>{{ p.product__name|default:"Custom Bouquet" }}</strong></td>
+        <td>{{ p.units_sold }}</td>
+        <td style="color:#c2185b;font-weight:700;">₹{{ p.revenue|floatformat:0 }}</td>
+        <td style="width:90px;">
+          {% widthratio p.revenue total_revenue|default:1 100 as share %}
+          <div class="bar-track" style="height:6px;">
+            <div class="bar-fill" style="width:{{ share }}%;"></div>
+          </div>
+          <span style="font-size:9px;color:#9ca3af;">{{ share }}%</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {# ── Full Order Table ── #}
+  <div class="section-title">🧾 All Orders</div>
+  <table class="main-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>City</th>
+        <th>Payment</th>
+        <th>Status</th>
+        <th>Subtotal</th>
+        <th>Delivery</th>
+        <th>Discount</th>
+        <th>Total ₹</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>#{{ order.id }}</strong></td>
+        <td style="white-space:nowrap;color:#6b7280;">{{ order.created_at|date:"d M Y" }}</td>
+        <td>
+          <div style="font-weight:600;">{{ order.full_name }}</div>
+          <div style="font-size:9px;color:#9ca3af;">{{ order.phone }}</div>
+        </td>
+        <td>{{ order.city }}</td>
+        <td>
+          <span class="badge badge-{% if order.payment_mode == 'cod' %}cod{% elif order.payment_mode == 'upi' %}upi{% else %}card{% endif %}">
+            {{ order.payment_mode|upper }}
+          </span>
+        </td>
+        <td>
+          <span class="badge badge-{% if order.status == 'placed' %}placed{% elif order.status == 'packed' %}packed{% elif order.status == 'delivered' %}delivered{% elif order.status == 'cancelled' %}cancelled{% else %}out{% endif %}">
+            {{ order.status_display }}
+          </span>
+        </td>
+        <td>₹{{ order.subtotal|floatformat:0 }}</td>
+        <td style="color:{% if order.delivery_charge == 0 %}#10b981{% else %}#374151{% endif %};">
+          {% if order.delivery_charge == 0 %}FREE{% else %}₹{{ order.delivery_charge|floatformat:0 }}{% endif %}
+        </td>
+        <td style="color:#16a34a;">
+          {% if order.discount_amount > 0 %}-₹{{ order.discount_amount|floatformat:0 }}{% else %}—{% endif %}
+        </td>
+        <td style="font-weight:800;color:#c2185b;">₹{{ order.total_amount|floatformat:0 }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="10" style="text-align:center;padding:20px;color:#9ca3af;">No orders in this period</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if orders %}
+    <tfoot>
+      <tr>
+        <td colspan="6" style="color:#9d174d;font-size:10px;">
+          TOTALS — {{ total_orders }} order{{ total_orders|pluralize }}
+        </td>
+        <td>₹{{ total_subtotal|floatformat:0 }}</td>
+        <td>₹{{ total_delivery|floatformat:0 }}</td>
+        <td style="color:#16a34a;">-₹{{ total_discount|floatformat:0 }}</td>
+        <td style="font-size:13px;color:#c2185b;">₹{{ total_revenue|floatformat:0 }}</td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+
+  {# ── Footer ── #}
+  <div class="report-footer">
+    <span>🌸 Bloomify · Confidential Sales Report · For Internal Use Only</span>
+    <span>Generated by {{ admin_user.full_name }} · {{ "now"|date:"d M Y, H:i" }}</span>
+  </div>
+
+</div>
+
+<script>
+  // Auto-trigger print dialog after fonts load
+  document.fonts.ready.then(() => {
+    setTimeout(() => window.print(), 400);
+  });
+</script>
+</body>
+</html>

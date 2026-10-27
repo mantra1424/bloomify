@@ -1,0 +1,85 @@
+{% extends 'bloomapp/admin_panel/base_admin.html' %}
+{% block title %}Coupons – Bloomify Admin{% endblock %}
+{% block page_title %}Coupon Management{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:1.5rem;">
+  <button class="btn btn-primary" data-modal-open="add-coupon-modal">+ Create Coupon</button>
+</div>
+<div class="admin-card">
+  <div class="admin-card-header"><h3>All Coupons ({{ coupons|length }})</h3></div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr><th>Code</th><th>Discount</th><th>Used / Max</th><th>Expiry</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for c in coupons %}
+        <tr>
+          <td><strong style="font-family:monospace;letter-spacing:1px;color:var(--pink-600);">{{ c.code }}</strong></td>
+          <td><span class="badge badge-green">{{ c.discount_percent }}% OFF</span></td>
+          <td>{{ c.used_count }} / {{ c.max_uses }}</td>
+          <td>{{ c.expiry }}</td>
+          <td>
+            <span class="badge {% if c.is_valid %}badge-green{% else %}badge-red{% endif %}">
+              {% if c.is_valid %}Active{% else %}Inactive{% endif %}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:0.5rem;">
+              <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="toggle"/>
+                <input type="hidden" name="coupon_id" value="{{ c.id }}"/>
+                <button type="submit" class="btn btn-ghost btn-sm">{% if c.is_active %}Disable{% else %}Enable{% endif %}</button>
+              </form>
+              <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="delete"/>
+                <input type="hidden" name="coupon_id" value="{{ c.id }}"/>
+                <button type="submit" class="btn btn-danger btn-sm" data-confirm="Delete coupon {{ c.code }}?">Del</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--gray-400);">No coupons yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Coupon Modal -->
+<div class="modal-overlay" id="add-coupon-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🎟️ Create Coupon</h3>
+      <span class="modal-close" onclick="closeAllModals()">✕</span>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create"/>
+      <div class="form-group">
+        <label class="form-label">Coupon Code *</label>
+        <input type="text" name="code" class="form-control" placeholder="e.g. BLOOM20" style="text-transform:uppercase;" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Discount % *</label>
+          <input type="number" name="discount_percent" class="form-control" min="1" max="100" value="10" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Uses</label>
+          <input type="number" name="max_uses" class="form-control" value="100"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Expiry Date *</label>
+        <input type="date" name="expiry" class="form-control" required/>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeAllModals()">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">Create Coupon 🎟️</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

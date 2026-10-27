@@ -1,0 +1,280 @@
+{% extends 'bloomapp/admin_panel/base_admin.html' %}
+{% block title %}Products – Bloomify Admin{% endblock %}
+{% block page_title %}Product Management{% endblock %}
+
+{% block content %}
+<div class="admin-filters">
+  <div class="search-wrap">
+    <input class="admin-search" id="admin-search" type="text" placeholder="Search products..."/>
+  </div>
+  {% if not is_staff %}
+    <button class="btn btn-primary" data-modal-open="add-product-modal">+ Add Product</button>
+  {% else %}
+    <div style="display:flex;align-items:center;gap:0.5rem;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:0.5rem 1rem;font-size:0.85rem;color:var(--gray-500);">
+      <span>🔒</span> View-only access — contact admin to manage products
+    </div>
+  {% endif %}
+</div>
+
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h3>All Products ({{ products|length }})</h3>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Image</th><th>Name</th><th>Category</th><th>Also In</th><th>Price</th>
+          <th>Stock</th><th>Status</th><th>Featured</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>
+            {% if p.image_main or p.image_url %}
+              <img class="product-thumb" src="{{ p.get_image }}" alt="{{ p.name }}"/>
+            {% else %}
+              <div class="product-thumb" style="display:flex;align-items:center;justify-content:center;background:var(--pink-50);font-size:1.5rem;">🌸</div>
+            {% endif %}
+          </td>
+          <td><strong>{{ p.name }}</strong></td>
+          <td>{{ p.category.name }}</td>
+          <td>
+            {% for c in p.extra_categories.all %}
+              <span style="display:inline-block;background:var(--pink-50);color:var(--pink-600);border:1px solid var(--pink-200);border-radius:20px;padding:2px 8px;font-size:0.72rem;margin:1px;">{{ c.name }}</span>
+            {% empty %}—{% endfor %}
+          </td>
+          <td>
+            <span style="color:var(--pink-600);font-weight:700;">₹{{ p.price }}</span>
+            {% if p.original_price != p.price %}
+              <br/><span style="text-decoration:line-through;font-size:0.75rem;color:var(--gray-400);">₹{{ p.original_price }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if p.stock_quantity > 5 %}badge-green{% elif p.stock_quantity > 0 %}badge-yellow{% else %}badge-red{% endif %}">
+              {{ p.stock_quantity }}
+            </span>
+          </td>
+          <td>
+            <span class="badge {% if p.status == 'available' %}badge-green{% else %}badge-gray{% endif %}">
+              {{ p.status|title }}
+            </span>
+          </td>
+          <td>{% if p.is_featured %}⭐{% else %}—{% endif %}</td>
+          <td>
+            {% if not is_staff %}
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-outline btn-sm"
+                onclick="fillEditModal({
+                  name:'{{ p.name|escapejs }}',
+                  category:'{{ p.category.id }}',
+                  extra_categories:'{{ p.extra_categories.all|join:"," }}',
+                  extra_cat_ids:[{% for c in p.extra_categories.all %}{{ c.id }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                  description:'{{ p.description|escapejs }}',
+                  original_price:'{{ p.original_price }}',
+                  price:'{{ p.price }}',
+                  stock_quantity:'{{ p.stock_quantity }}',
+                  flowers:'{{ p.flowers|escapejs }}',
+                  occasion_tags:'{{ p.occasion_tags|escapejs }}',
+                  status:'{{ p.status }}',
+                  edit_url:'/admin-panel/products/{{ p.pk }}/edit/'
+                })">Edit</button>
+              <form method="POST" action="{% url 'admin_product_delete' p.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit"
+                  data-confirm="Delete '{{ p.name }}'? This cannot be undone."
+                  class="btn btn-danger btn-sm">Del</button>
+              </form>
+            </div>
+            {% else %}
+            <span style="font-size:0.8rem;color:var(--gray-400);">🔒 View only</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--gray-400);">No products yet. Add your first bouquet!</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if not is_staff %}
+<!-- Add Product Modal -->
+<div class="modal-overlay" id="add-product-modal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <h3>🌸 Add New Product</h3>
+      <span class="modal-close" onclick="closeAllModals()">✕</span>
+    </div>
+    <form method="post" action="{% url 'admin_product_add' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input type="text" name="name" class="form-control" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Primary Category *</label>
+          <select name="category" class="form-control" required>
+            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Also Show In (optional)</label>
+        <select name="extra_categories" class="form-control" multiple style="height:100px;">
+          {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+        </select>
+        <small style="color:var(--gray-400);font-size:0.72rem;">Hold Ctrl/Cmd to select multiple categories</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Original Price (₹) *</label>
+          <input type="number" name="original_price" class="form-control" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Selling Price (₹) *</label>
+          <input type="number" name="price" class="form-control" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Stock Quantity</label>
+          <input type="number" name="stock_quantity" class="form-control" value="10"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Flowers</label>
+          <input type="text" name="flowers" class="form-control" placeholder="rose lily tulip"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Occasion Tags</label>
+          <input type="text" name="occasion_tags" class="form-control" placeholder="birthday anniversary"/>
+        </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
+        <input type="checkbox" name="is_featured" id="is_featured" style="width:auto;"/>
+        <label for="is_featured" class="form-label" style="margin:0;">Featured on Homepage</label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Main Image</label>
+        <input type="file" name="image_main" class="form-control" accept="image/*"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Image 2 (optional)</label>
+          <input type="file" name="image_2" class="form-control" accept="image/*"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Image 3 (optional)</label>
+          <input type="file" name="image_3" class="form-control" accept="image/*"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeAllModals()">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">Add Product 🌸</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <h3>✏️ Edit Product</h3>
+      <span class="modal-close" onclick="closeAllModals()">✕</span>
+    </div>
+    <form method="post" id="edit-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Product Name</label>
+          <input type="text" name="name" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Primary Category</label>
+          <select name="category" class="form-control">
+            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Also Show In (optional)</label>
+        <select name="extra_categories" id="edit-extra-cats" class="form-control" multiple style="height:100px;">
+          {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+        </select>
+        <small style="color:var(--gray-400);font-size:0.72rem;">Hold Ctrl/Cmd to select multiple categories</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Original Price</label>
+          <input type="number" name="original_price" class="form-control"/></div>
+        <div class="form-group"><label class="form-label">Selling Price</label>
+          <input type="number" name="price" class="form-control"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Stock</label>
+          <input type="number" name="stock_quantity" class="form-control"/></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+          </select></div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
+        <input type="checkbox" name="is_featured" id="edit_is_featured" style="width:auto;"/>
+        <label for="edit_is_featured" class="form-label" style="margin:0;">Featured</label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Replace Main Image</label>
+        <input type="file" name="image_main" class="form-control" accept="image/*"/>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeAllModals()">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes ✅</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillEditModal(data) {
+  const form = document.getElementById('edit-form');
+  form.action = data.edit_url;
+  Object.entries(data).forEach(([k,v]) => {
+    if (k === 'edit_url' || k === 'extra_cat_ids' || k === 'extra_categories') return;
+    const el = form.querySelector(`[name="${k}"]`);
+    if (el) { if (el.type==='checkbox') el.checked=!!v; else el.value=v; }
+  });
+  // Pre-select extra categories
+  const ecSel = document.getElementById('edit-extra-cats');
+  if (ecSel && data.extra_cat_ids) {
+    Array.from(ecSel.options).forEach(opt => {
+      opt.selected = data.extra_cat_ids.includes(parseInt(opt.value));
+    });
+  }
+  openModal('edit-modal');
+}
+</script>
+{% endblock %}

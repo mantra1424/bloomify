@@ -1,0 +1,721 @@
+{% extends 'bloomapp/admin_panel/base_admin.html' %}
+{% block title %}Sales Report – Bloomify Admin{% endblock %}
+{% block page_title %}📊 Sales Report{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Filter Bar ──────────────────────────────────────────────── */
+  .report-filter-bar {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .filter-group label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-group select,
+  .filter-group input[type="date"] {
+    padding: 0.5rem 0.8rem;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    color: var(--gray-800);
+    background: white;
+    min-width: 140px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .filter-group select:focus,
+  .filter-group input[type="date"]:focus {
+    border-color: var(--pink-400);
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-end;
+    margin-left: auto;
+  }
+
+  /* ── KPI Summary Strip ──────────────────────────────────────── */
+  .report-kpis {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .rep-kpi {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+    border-top: 3px solid transparent;
+    text-align: center;
+  }
+
+  .rep-kpi.pink {
+    border-color: var(--pink-400);
+  }
+
+  .rep-kpi.green {
+    border-color: #10b981;
+  }
+
+  .rep-kpi.blue {
+    border-color: #3b82f6;
+  }
+
+  .rep-kpi.amber {
+    border-color: #f59e0b;
+  }
+
+  .rep-kpi.red {
+    border-color: #ef4444;
+  }
+
+  .rep-kpi.purple {
+    border-color: #8b5cf6;
+  }
+
+  .rep-kpi .rk-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--gray-900);
+    line-height: 1;
+  }
+
+  .rep-kpi .rk-lbl {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 0.35rem;
+    font-weight: 600;
+  }
+
+  /* ── Two-column breakdown ───────────────────────────────────── */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 0.85rem;
+  }
+
+  .breakdown-row:last-child {
+    border-bottom: none;
+  }
+
+  .breakdown-row .br-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .breakdown-bar-wrap {
+    flex: 1;
+    margin: 0 1rem;
+  }
+
+  .breakdown-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--pink-400);
+    transition: width 1s ease;
+  }
+
+  .breakdown-row .br-val {
+    font-weight: 700;
+    color: var(--gray-900);
+    white-space: nowrap;
+  }
+
+  .br-sub {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+    font-weight: 400;
+  }
+
+  /* ── Top Products ───────────────────────────────────────────── */
+  .top-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .rank-1 {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .rank-2 {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .rank-3 {
+    background: #fce7f3;
+    color: #9d174d;
+  }
+
+  .rank-other {
+    background: #f9fafb;
+    color: #6b7280;
+  }
+
+  /* ── Download Button ────────────────────────────────────────── */
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  }
+
+  .dl-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+
+  /* ── PDF Download Button ────────────────────────────────────── */
+  .pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, #c2185b, #e91e8c);
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(194, 24, 91, 0.3);
+  }
+
+  .pdf-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(194, 24, 91, 0.4);
+  }
+
+  .pdf-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* ── Responsive ─────────────────────────────────────────────── */
+  @media (max-width:1200px) {
+    .report-kpis {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width:900px) {
+    .breakdown-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .report-kpis {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width:600px) {
+    .report-kpis {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .report-filter-bar {
+      flex-direction: column;
+    }
+
+    .filter-actions {
+      margin-left: 0;
+    }
+  }
+
+  /* ── Print / PDF Layout ──────────────────────────────────────── */
+  @media print {
+
+    .admin-sidebar,
+    .admin-topbar,
+    .report-filter-bar,
+    .preset-bar,
+    .no-print {
+      display: none !important;
+    }
+
+    .admin-main {
+      margin-left: 0 !important;
+      padding: 0 !important;
+    }
+
+    .admin-content {
+      padding: 0 !important;
+    }
+
+    .admin-card {
+      box-shadow: none !important;
+      border: 1px solid #eee !important;
+      page-break-inside: avoid;
+    }
+
+    .rep-kpi {
+      box-shadow: none !important;
+      border: 1px solid #eee !important;
+    }
+
+    body {
+      font-size: 11px !important;
+    }
+
+    .report-kpis {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .breakdown-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ═══ FILTER BAR ═══ #}
+<form method="get" id="report-filter-form">
+  <div class="report-filter-bar">
+    <div class="filter-group">
+      <label>From Date</label>
+      <input type="date" name="date_from" value="{{ filters.date_from }}" id="date_from" />
+    </div>
+    <div class="filter-group">
+      <label>To Date</label>
+      <input type="date" name="date_to" value="{{ filters.date_to }}" id="date_to" />
+    </div>
+    <div class="filter-group">
+      <label>Order Status</label>
+      <select name="status">
+        <option value="">All Statuses</option>
+        {% for s in order_statuses %}
+        <option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s|title|cut:"_" }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Payment Mode</label>
+      <select name="payment">
+        <option value="">All Modes</option>
+        {% for p in payment_modes %}
+        <option value="{{ p }}" {% if filters.payment == p %}selected{% endif %}>{{ p|upper }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn btn-primary" id="apply-filters-btn">Apply Filters</button>
+      <a href="{% url 'admin_sales_report' %}" class="btn btn-outline" id="clear-filters-btn">Clear</a>
+    </div>
+  </div>
+</form>
+
+{# ═══ QUICK DATE PRESETS ═══ #}
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.75rem;">
+  {% with today=filters.date_from %}
+  <button class="qa-btn outline" onclick="setPreset(0)" id="preset-today">📅 Today</button>
+  <button class="qa-btn outline" onclick="setPreset(7)" id="preset-7days">Last 7 Days</button>
+  <button class="qa-btn outline" onclick="setPreset(30)" id="preset-30days">Last 30 Days</button>
+  <button class="qa-btn outline" onclick="setPreset(90)" id="preset-90days">Last 90 Days</button>
+  {% endwith %}
+
+  {# Download buttons — carries all current filters #}
+  <div style="display:flex;gap:0.6rem;margin-left:auto;">
+    <a href="{% url 'admin_sales_report_csv' %}?date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&status={{ filters.status }}&payment={{ filters.payment }}"
+      class="dl-btn" id="download-csv-btn">
+      ⬇️ CSV
+    </a>
+    <a href="{% url 'admin_sales_report_print' %}?date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&status={{ filters.status }}&payment={{ filters.payment }}"
+      target="_blank" class="pdf-btn" id="download-pdf-btn">
+      📄 Download PDF
+    </a>
+  </div>
+</div>
+
+{# ═══ KPI SUMMARY CARDS ═══ #}
+<div class="report-kpis">
+  <div class="rep-kpi pink">
+    <div class="rk-val">{{ total_orders }}</div>
+    <div class="rk-lbl">Total Orders</div>
+  </div>
+  <div class="rep-kpi green">
+    <div class="rk-val">₹{{ total_revenue|floatformat:0 }}</div>
+    <div class="rk-lbl">Total Revenue</div>
+  </div>
+  <div class="rep-kpi blue">
+    <div class="rk-val">₹{{ avg_order_val|floatformat:0 }}</div>
+    <div class="rk-lbl">Avg. Order Value</div>
+  </div>
+  <div class="rep-kpi amber">
+    <div class="rk-val">₹{{ total_delivery|floatformat:0 }}</div>
+    <div class="rk-lbl">Delivery Collected</div>
+  </div>
+  <div class="rep-kpi red">
+    <div class="rk-val">₹{{ total_discount|floatformat:0 }}</div>
+    <div class="rk-lbl">Discounts Given</div>
+  </div>
+  <div class="rep-kpi purple">
+    <div class="rk-val">₹{{ total_subtotal|floatformat:0 }}</div>
+    <div class="rk-lbl">Gross Subtotal</div>
+  </div>
+</div>
+
+{# ═══ BREAKDOWN TABLES ═══ #}
+<div class="breakdown-grid">
+
+  {# Status Breakdown #}
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h3>📦 By Order Status</h3>
+    </div>
+    <div style="padding:0.5rem 1.5rem 1rem;">
+      {% for row in status_breakdown %}
+      <div class="breakdown-row">
+        <span class="br-label">
+          {% if row.status == 'placed' %}⏳{% elif row.status == 'packed' %}📬{% elif row.status == 'out_for_delivery' %}🚚{% elif row.status == 'delivered' %}✅{% else %}❌{% endif %}
+          {{ row.status|title|cut:"_" }}
+        </span>
+        <div class="breakdown-bar-wrap">
+          {% widthratio row.count total_orders|default:1 100 as pct %}
+          <div class="breakdown-bar" style="width:{{ pct }}%;"></div>
+        </div>
+        <span class="br-val">{{ row.count }} <span class="br-sub">₹{{ row.revenue|floatformat:0 }}</span></span>
+      </div>
+      {% empty %}
+      <p style="color:var(--gray-400);padding:1rem 0;">No data</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# Payment Breakdown #}
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h3>💳 By Payment Mode</h3>
+    </div>
+    <div style="padding:0.5rem 1.5rem 1rem;">
+      {% for row in payment_breakdown %}
+      <div class="breakdown-row">
+        <span class="br-label">
+          {% if row.payment_mode == 'cod' %}💵{% elif row.payment_mode == 'upi' %}📱{% else %}💳{% endif %}
+          {{ row.payment_mode|upper }}
+        </span>
+        <div class="breakdown-bar-wrap">
+          {% widthratio row.count total_orders|default:1 100 as pct2 %}
+          <div class="breakdown-bar" style="width:{{ pct2 }}%;background:#3b82f6;"></div>
+        </div>
+        <span class="br-val">{{ row.count }} <span class="br-sub">₹{{ row.revenue|floatformat:0 }}</span></span>
+      </div>
+      {% empty %}
+      <p style="color:var(--gray-400);padding:1rem 0;">No data</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{# ═══ TOP PRODUCTS ═══ #}
+<div class="admin-card" style="margin-bottom:1.75rem;">
+  <div class="admin-card-header">
+    <h3>🌷 Top 10 Products</h3>
+    <span style="font-size:0.78rem;color:var(--gray-400);">by revenue in selected period</span>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">#</th>
+          <th>Product Name</th>
+          <th>Units Sold</th>
+          <th>Revenue (₹)</th>
+          <th>Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in top_products %}
+        <tr>
+          <td>
+            <span
+              class="top-rank {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+              {{ forloop.counter }}
+            </span>
+          </td>
+          <td><strong>{{ p.product__name|default:"Custom Bouquet" }}</strong></td>
+          <td>{{ p.units_sold }}</td>
+          <td style="font-weight:700;color:var(--pink-600);">₹{{ p.revenue|floatformat:0 }}</td>
+          <td>
+            {% widthratio p.revenue total_revenue|default:1 100 as share %}
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <div style="flex:1;height:5px;border-radius:3px;background:var(--gray-100);overflow:hidden;">
+                <div style="height:100%;width:{{ share }}%;background:var(--pink-400);border-radius:3px;"></div>
+              </div>
+              <span style="font-size:0.75rem;color:var(--gray-500);white-space:nowrap;">{{ share }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="text-align:center;color:var(--gray-400);padding:2rem;">No product data in this period
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ═══ FULL ORDER TABLE ═══ #}
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h3>🧾 Order Details <span style="font-size:0.78rem;font-weight:400;color:var(--gray-400);">(showing up to 200 rows
+        — download CSV for full data)</span></h3>
+    <div style="display:flex;gap:0.5rem;">
+      <a href="{% url 'admin_sales_report_csv' %}?date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&status={{ filters.status }}&payment={{ filters.payment }}"
+        class="dl-btn" id="download-csv-btn-2" style="padding:0.5rem 1rem;font-size:0.78rem;">⬇️ CSV</a>
+      <a href="{% url 'admin_sales_report_print' %}?date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&status={{ filters.status }}&payment={{ filters.payment }}"
+        target="_blank" class="pdf-btn" id="download-pdf-btn-2" style="padding:0.5rem 1rem;font-size:0.78rem;">📄
+        PDF</a>
+    </div>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>City</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Subtotal</th>
+          <th>Delivery</th>
+          <th>Discount</th>
+          <th style="color:var(--pink-600);">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><strong>#{{ order.id }}</strong></td>
+          <td style="font-size:0.78rem;white-space:nowrap;">{{ order.created_at|date:"d M Y, H:i" }}</td>
+          <td>
+            <div style="font-weight:600;font-size:0.85rem;">{{ order.full_name }}</div>
+            <div style="font-size:0.72rem;color:var(--gray-400);">{{ order.email }}</div>
+          </td>
+          <td style="font-size:0.82rem;">{{ order.city }}</td>
+          <td>
+            <span class="badge badge-pink" style="font-size:0.7rem;">
+              {% if order.payment_mode == 'cod' %}💵{% elif order.payment_mode == 'upi' %}📱{% else %}💳{% endif %}
+              {{ order.payment_mode|upper }}
+            </span>
+          </td>
+          <td>
+            <span
+              class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}"
+              style="font-size:0.7rem;">
+              {{ order.status_display }}
+            </span>
+          </td>
+          <td style="font-size:0.83rem;">₹{{ order.subtotal|floatformat:0 }}</td>
+          <td
+            style="font-size:0.83rem;color:{% if order.delivery_charge == 0 %}#10b981{% else %}var(--gray-600){% endif %};">
+            {% if order.delivery_charge == 0 %}FREE{% else %}₹{{ order.delivery_charge|floatformat:0 }}{% endif %}
+          </td>
+          <td style="font-size:0.83rem;color:#16a34a;">
+            {% if order.discount_amount > 0 %}-₹{{ order.discount_amount|floatformat:0 }}{% else %}—{% endif %}
+          </td>
+          <td style="font-weight:800;font-size:0.9rem;color:var(--pink-600);">₹{{ order.total_amount|floatformat:0 }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10" style="text-align:center;padding:3rem;color:var(--gray-400);">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">📊</div>
+            No orders match the selected filters
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if orders %}
+      <tfoot>
+        <tr style="background:var(--pink-50);font-weight:700;">
+          <td colspan="6" style="padding:0.75rem 1rem;text-align:right;font-size:0.82rem;color:var(--gray-600);">
+            TOTALS ({{ total_orders }} orders)
+          </td>
+          <td style="padding:0.75rem 1rem;">₹{{ total_subtotal|floatformat:0 }}</td>
+          <td style="padding:0.75rem 1rem;">₹{{ total_delivery|floatformat:0 }}</td>
+          <td style="padding:0.75rem 1rem;color:#16a34a;">-₹{{ total_discount|floatformat:0 }}</td>
+          <td style="padding:0.75rem 1rem;font-size:1rem;color:var(--pink-600);">₹{{ total_revenue|floatformat:0 }}</td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- html2pdf.js — no integrity attr (avoids SRI mismatch blocking) -->
+<script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<script>
+  function setPreset(days) {
+    const today = new Date();
+    const from = new Date(today);
+    from.setDate(today.getDate() - (days === 0 ? 0 : days - 1));
+
+    const fmt = d => d.toISOString().split('T')[0];
+    document.getElementById('date_from').value = fmt(from);
+    document.getElementById('date_to').value = fmt(today);
+    document.getElementById('report-filter-form').submit();
+  }
+
+  // Update download links dynamically when filters change
+  function syncDownloadLinks() {
+    const params = new URLSearchParams(new FormData(document.getElementById('report-filter-form')));
+    const url = "{% url 'admin_sales_report_csv' %}?" + params.toString();
+    document.querySelectorAll('[id^="download-csv-btn"]').forEach(a => a.href = url);
+  }
+  document.getElementById('report-filter-form')
+    .querySelectorAll('input, select')
+    .forEach(el => el.addEventListener('change', syncDownloadLinks));
+
+  // ── PDF Download ────────────────────────────────────────────────────────────
+  async function downloadPDF() {
+    // Guard — library must be loaded
+    if (typeof html2pdf === 'undefined') {
+      alert('PDF library failed to load. Please check your internet connection and try again.');
+      return;
+    }
+    const btn = document.getElementById('download-pdf-btn');
+    btn.classList.add('loading');
+    btn.textContent = '⏳ Generating…';
+
+    // Build a clean filename
+    const from = document.getElementById('date_from').value || 'all';
+    const to = document.getElementById('date_to').value || 'all';
+    const filename = `Bloomify_Sales_Report_${from}_to_${to}.pdf`;
+
+    // Inject a branded header into the PDF (hidden on screen)
+    const header = document.createElement('div');
+    header.id = 'pdf-brand-header';
+    header.style.cssText = [
+      'background:linear-gradient(135deg,#c2185b,#e91e8c)',
+      'color:white',
+      'padding:20px 28px',
+      'border-radius:12px',
+      'margin-bottom:20px',
+      'display:flex',
+      'align-items:center',
+      'justify-content:space-between',
+    ].join(';');
+    header.innerHTML = `
+    <div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">🌸 Bloomify</div>
+      <div style="font-size:13px;opacity:0.85;margin-top:2px;">Sales Report</div>
+    </div>
+    <div style="text-align:right;font-size:12px;opacity:0.85;">
+      <div>Period: <strong>${from === 'all' ? 'All Time' : from + ' → ' + to}</strong></div>
+      <div style="margin-top:4px;">Generated: <strong>${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></div>
+    </div>`;
+
+    // The content region to capture (everything below the preset bar)
+    const content = document.querySelector('.admin-content');
+
+    // Prepend header
+    content.insertBefore(header, content.firstChild);
+
+    // Elements to hide during PDF render
+    const hideSelectors = [
+      '#report-filter-form',
+      '.preset-bar-wrapper',
+      '[id^="download-csv-btn"]',
+      '[id^="download-pdf-btn"]',
+      '#download-pdf-btn',
+      '.admin-card-header .dl-btn',
+    ];
+    const hidden = [];
+    document.querySelectorAll(hideSelectors.join(',')).forEach(el => {
+      hidden.push([el, el.style.display]);
+      el.style.display = 'none';
+    });
+    // Also hide the preset row
+    const presetRow = content.querySelector('div[style*="margin-bottom:1.75rem"]');
+    let presetHidden = false;
+    if (presetRow) { presetRow.style.display = 'none'; presetHidden = true; }
+
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.97 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    };
+
+    try {
+      await html2pdf().set(opt).from(content).save();
+    } finally {
+      // Restore everything
+      header.remove();
+      hidden.forEach(([el, d]) => el.style.display = d);
+      if (presetHidden) presetRow.style.display = '';
+      btn.classList.remove('loading');
+      btn.textContent = '📄 Download PDF';
+    }
+  }
+</script>
+{% endblock %}

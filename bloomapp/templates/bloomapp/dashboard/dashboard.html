@@ -1,0 +1,224 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}My Account – Bloomify{% endblock %}
+{% block extra_css %}
+<style>
+.dashboard-layout { display:grid; grid-template-columns:240px 1fr; gap:2rem; align-items:start; }
+.dash-sidebar { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); overflow:hidden; position:sticky; top:90px; }
+.dash-user-card { background:linear-gradient(135deg,var(--pink-500),var(--pink-700)); padding:2rem; text-align:center; }
+.dash-avatar { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.25);
+  color:white; font-size:1.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; }
+.dash-user-name { color:white; font-size:1.05rem; font-weight:700; }
+.dash-user-email { color:rgba(255,255,255,0.8); font-size:0.78rem; margin-top:0.2rem; }
+.dash-nav a { display:flex; align-items:center; gap:0.75rem; padding:0.9rem 1.5rem;
+  font-size:0.875rem; font-weight:500; color:var(--gray-600);
+  border-left:3px solid transparent; transition:all var(--transition); }
+.dash-nav a:hover { color:var(--pink-600); background:var(--pink-50); }
+.dash-nav a.active { color:var(--pink-600); background:var(--pink-50); border-left-color:var(--pink-500); }
+.dash-content-card { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:2rem; }
+.dash-content-card h2 { font-size:1.1rem; margin-bottom:1.5rem; }
+.order-card { border:1.5px solid var(--gray-200); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; transition:all var(--transition); }
+.order-card:hover { border-color:var(--pink-300); box-shadow:var(--shadow-sm); }
+.order-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem; }
+.order-card-id { font-weight:700; font-size:0.9rem; }
+.order-card-date { font-size:0.78rem; color:var(--gray-400); }
+.order-card-items { font-size:0.82rem; color:var(--gray-500); margin-bottom:0.75rem; }
+.order-card-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; }
+.address-card { border:1.5px solid var(--gray-200); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; }
+.address-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; }
+.address-label { display:inline-flex; align-items:center; gap:0.4rem; background:var(--pink-100); color:var(--pink-600); padding:0.2rem 0.75rem; border-radius:var(--radius-full); font-size:0.75rem; font-weight:700; }
+@media(max-width:768px) {
+  .dashboard-layout { grid-template-columns:1fr; }
+  .dash-sidebar { position:static; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1>👤 My Account</h1></div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="dashboard-layout">
+      <!-- Sidebar -->
+      <aside class="dash-sidebar">
+        <div class="dash-user-card">
+          <div class="dash-avatar">{{ user.full_name|slice:":1"|upper }}</div>
+          <div class="dash-user-name">{{ user.full_name }}</div>
+          <div class="dash-user-email">{{ user.email }}</div>
+        </div>
+        <nav class="dash-nav">
+          <a href="?tab=orders" class="{% if tab == 'orders' %}active{% endif %}">📦 My Orders</a>
+          <a href="{% url 'wishlist' %}" class="">❤️ Wishlist</a>
+          <a href="?tab=profile" class="{% if tab == 'profile' %}active{% endif %}">👤 Profile</a>
+          <a href="?tab=addresses" class="{% if tab == 'addresses' %}active{% endif %}">📍 Saved Addresses</a>
+          <a href="{% url 'products' %}">🌷 Shop</a>
+          <a href="{% url 'logout' %}">🚪 Logout</a>
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <div>
+        <!-- My Orders Tab -->
+        {% if tab == 'orders' %}
+        <div class="dash-content-card">
+          <h2>My Orders ({{ orders|length }})</h2>
+          {% for order in orders %}
+          <div class="order-card">
+            <div class="order-card-header">
+              <div>
+                <div class="order-card-id">Order #{{ order.id }}</div>
+                <div class="order-card-date">{{ order.created_at|date:"d M Y, g:i A" }}</div>
+              </div>
+              <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}">
+                {{ order.status_display }}
+              </span>
+            </div>
+            <div class="order-card-items">
+              {{ order.items.count }} item{{ order.items.count|pluralize }} ·
+              {% for item in order.items.all|slice:":2" %}
+                {% if item.product %}{{ item.product.name }}{% else %}Custom Bouquet{% endif %}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+              {% if order.items.count > 2 %} +{{ order.items.count|add:"-2" }} more{% endif %}
+            </div>
+            <div class="order-card-footer">
+              <span style="font-weight:700;color:var(--pink-600);">₹{{ order.total_amount }}</span>
+              <div style="display:flex;gap:0.5rem;">
+                <a href="{% url 'order_tracking' order.pk %}" class="btn btn-outline btn-sm">Track Order</a>
+                {% if order.status == 'placed' %}
+                <form method="post" action="{% url 'cancel_order' order.pk %}" onsubmit="return confirm('Cancel this order?')" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fca5a5;">✕ Cancel</button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="empty-state" style="padding:3rem 1rem;">
+            <div class="emoji">📦</div>
+            <h3>No orders yet</h3>
+            <p>Your first bouquet order will appear here.</p>
+            <a href="{% url 'products' %}" class="btn btn-primary mt-2">Shop Now 🌷</a>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Profile Tab -->
+        {% elif tab == 'profile' %}
+        <div class="dash-content-card">
+          <h2>Edit Profile</h2>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_profile"/>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" value="{{ user.email }}" disabled style="opacity:0.6;"/>
+              <p style="font-size:0.75rem;color:var(--gray-400);margin-top:0.3rem;">Email cannot be changed.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" name="phone" class="form-control" value="{{ user.phone }}"/>
+            </div>
+            <hr class="divider"/>
+            <h3 style="font-size:0.95rem;margin-bottom:1rem;">Change Password</h3>
+            <div class="form-group">
+              <label class="form-label">New Password (leave blank to keep current)</label>
+              <input type="password" name="new_password" class="form-control" placeholder="Enter new password"/>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes ✅</button>
+          </form>
+        </div>
+
+        <!-- Addresses Tab -->
+        {% elif tab == 'addresses' %}
+        <div class="dash-content-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+            <h2 style="margin:0;">Saved Addresses</h2>
+            <button class="btn btn-primary btn-sm" data-modal-open="add-addr-modal">+ Add New</button>
+          </div>
+
+          {% for addr in addresses %}
+          <div class="address-card">
+            <div class="address-card-header">
+              <span class="address-label">📍 {{ addr.label }}</span>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_address"/>
+                <input type="hidden" name="address_id" value="{{ addr.id }}"/>
+                <button type="submit" class="btn btn-ghost btn-sm" onclick="return confirm('Delete this address?')">🗑️</button>
+              </form>
+            </div>
+            <strong>{{ addr.full_name }}</strong>
+            <p style="color:var(--gray-500);font-size:0.875rem;margin-top:0.3rem;">{{ addr.address }}, {{ addr.city }}, {{ addr.state }} – {{ addr.pincode }}</p>
+            <p style="color:var(--gray-400);font-size:0.8rem;">📱 {{ addr.phone }}</p>
+          </div>
+          {% empty %}
+          <div class="empty-state" style="padding:2rem;">
+            <div class="emoji">📍</div>
+            <h3>No saved addresses</h3>
+            <p>Add your delivery addresses for faster checkout.</p>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Add Address Modal -->
+        <div class="modal-overlay" id="add-addr-modal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3>📍 Add New Address</h3>
+              <span class="modal-close" onclick="document.getElementById('add-addr-modal').classList.remove('open')">✕</span>
+            </div>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_address"/>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Label</label>
+                  <select name="label" class="form-control">
+                    <option>Home</option><option>Work</option><option>Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" name="addr_name" class="form-control" required/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" name="addr_phone" class="form-control" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Street Address</label>
+                <textarea name="addr_street" class="form-control" rows="2" required></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">City</label>
+                  <input type="text" name="addr_city" class="form-control" required/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">State</label>
+                  <input type="text" name="addr_state" class="form-control" required/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Pincode</label>
+                <input type="text" name="addr_pincode" class="form-control" maxlength="6" required/>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Save Address</button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

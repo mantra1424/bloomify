@@ -1,0 +1,175 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}FAQs – Bloomify{% endblock %}
+
+{% block extra_css %}
+<style>
+.faq-wrap { max-width: 780px; margin: 0 auto; }
+.faq-item {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.faq-question {
+  width: 100%; text-align: left;
+  padding: 1.1rem 1.5rem;
+  font-weight: 600; font-size: 0.95rem;
+  background: none; border: none; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--gray-900);
+  transition: background 0.2s;
+}
+.faq-question:hover { background: var(--pink-50); }
+.faq-question .arrow {
+  font-size: 1.1rem; transition: transform 0.3s;
+  color: var(--pink-500); flex-shrink: 0;
+}
+.faq-question.open .arrow { transform: rotate(180deg); }
+.faq-answer {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.2s;
+  font-size: 0.875rem; color: var(--gray-600);
+  line-height: 1.7;
+  padding: 0 1.5rem;
+}
+.faq-answer.open { max-height: 300px; padding: 0 1.5rem 1.25rem; }
+.faq-category { font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--pink-500); margin: 2rem 0 0.75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>❓ Frequently Asked Questions</h1>
+    <p style="color:var(--gray-500);margin-top:0.5rem;">Everything you need to know about Bloomify</p>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="faq-wrap">
+
+      <div class="faq-category">🛒 Orders</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          How do I place an order? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Browse our Shop, add your favourite bouquet to the cart, and proceed to Checkout. Fill in your delivery details, choose a time slot, and place your order. It's that simple! 🌸
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Can I customise my bouquet? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes! Visit our <strong>Custom Bouquet Builder</strong> from the navigation bar. You can choose your flowers, quantity, wrapping style, and add a personal message card.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          How do I track my order? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Log in to your account and visit <strong>My Orders</strong> from your dashboard. You'll see real-time status updates: Placed → Packed → Out for Delivery → Delivered.
+        </div>
+      </div>
+
+      <div class="faq-category">🚚 Delivery</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Which cities do you deliver to? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          We currently deliver to <strong>Anand, Vadodara, Ahmedabad, Surat, Bharuch, and Vapi</strong>. We're expanding soon — stay tuned!
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          What are the delivery charges? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Delivery charges vary by city: Anand ₹40, Bharuch ₹45, Vadodara ₹50, Ahmedabad ₹60, Surat ₹70, Vapi ₹80. Charges are shown at checkout before you place your order.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          How long does delivery take? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Delivery typically takes 2–6 hours depending on your city and your chosen time slot. You can select a preferred time slot during checkout.
+        </div>
+      </div>
+
+      <div class="faq-category">💳 Payments</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          What payment methods do you accept? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          We accept <strong>Cash on Delivery (COD)</strong> and <strong>Online Payment</strong> via Razorpay — UPI, Debit/Credit Card, Net Banking, and Wallets.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Is online payment safe? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Absolutely. All online payments are processed securely through <strong>Razorpay</strong>, one of India's most trusted payment gateways. We never store your card details.
+        </div>
+      </div>
+
+      <div class="faq-category">🌸 Products</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Are the flowers fresh? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes! All bouquets are handcrafted with fresh flowers on the day of delivery to ensure maximum freshness and beauty.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Can I add a message card to my bouquet? <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes! When building a Custom Bouquet, you can add a personal message card for just ₹30. It's a lovely touch for birthdays, anniversaries, and special occasions.
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:2.5rem;padding:1.5rem;background:var(--pink-50);border-radius:var(--radius-xl);">
+        <p style="font-weight:600;color:var(--gray-900);margin-bottom:0.5rem;">Still have questions? 💬</p>
+        <p style="font-size:0.875rem;color:var(--gray-500);margin-bottom:1rem;">Our team is happy to help you!</p>
+        <a href="{% url 'contact' %}" class="btn btn-primary">Contact Us 🌸</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = btn.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-question').forEach(b => { b.classList.remove('open'); b.nextElementSibling.classList.remove('open'); });
+  // Open clicked if it was closed
+  if (!isOpen) { btn.classList.add('open'); answer.classList.add('open'); }
+}
+</script>
+{% endblock %}

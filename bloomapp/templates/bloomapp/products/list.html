@@ -1,0 +1,335 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Shop Bouquets – Bloomify{% endblock %}
+{% block extra_css %}
+<style>
+.shop-layout { display:grid; grid-template-columns:260px 1fr; gap:2rem; align-items:start; }
+.filter-sidebar { background:white; border-radius:var(--radius-lg); padding:1.75rem; box-shadow:var(--shadow-sm); position:sticky; top:90px; }
+.filter-title { font-size:1rem; font-weight:700; color:var(--gray-900); margin-bottom:1.25rem;
+  display:flex; align-items:center; justify-content:space-between; }
+.filter-section { margin-bottom:1.75rem; }
+.filter-section h4 { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+  color:var(--gray-500); margin-bottom:0.9rem; }
+.filter-chip-group { display:flex; flex-wrap:wrap; gap:0.5rem; }
+.filter-chip { padding:0.4rem 0.9rem; border:1.5px solid var(--gray-200);
+  border-radius:var(--radius-full); font-size:0.78rem; font-weight:600;
+  cursor:pointer; transition:all var(--transition); color:var(--gray-600); background:white; }
+.filter-chip:hover, .filter-chip.active { border-color:var(--pink-400); background:var(--pink-50); color:var(--pink-600); }
+.price-display { display:flex; justify-content:space-between; font-size:0.8rem;
+  color:var(--gray-500); margin-top:0.5rem; }
+.products-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
+.products-count { font-size:0.85rem; color:var(--gray-400); }
+.products-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+.search-bar { display:flex; gap:0.75rem; margin-bottom:1.5rem; }
+.search-bar .form-control { border-radius:var(--radius-full); }
+.no-products { text-align:center; padding:4rem 2rem; grid-column:1/-1; }
+
+@media(max-width:1024px) { .products-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:768px) { .shop-layout { grid-template-columns:1fr; }
+  .filter-sidebar { position:static; }
+  .products-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:480px) { .products-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🌷 Shop Bouquets</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'home' %}">Home</a>
+      <span>›</span>
+      <span class="current">Shop</span>
+      {% if selected_cat %}<span>›</span><span class="current">{{ selected_cat|title }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="shop-layout">
+
+      <!-- ── Filter Sidebar (its own self-contained form) ── -->
+      <aside class="filter-sidebar">
+        <form method="get" id="filter-form">
+          <div class="filter-title">
+            Filters
+            <a href="{% url 'products' %}" style="font-size:0.75rem;color:var(--pink-500);font-weight:600;">Clear all</a>
+          </div>
+
+          <div class="filter-section">
+            <h4>Category</h4>
+            <div class="filter-chip-group">
+              <button type="submit" name="category" value="" class="filter-chip {% if not selected_cat %}active{% endif %}">All</button>
+              {% for cat in categories %}
+                <button type="submit" name="category" value="{{ cat.slug }}"
+                  class="filter-chip {% if selected_cat == cat.slug %}active{% endif %}">
+                  {{ cat.icon }} {{ cat.name }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h4>Price Range</h4>
+            <input type="range" id="price-slider" min="0" max="5000" value="{{ max_price|default:5000 }}"
+              oninput="document.getElementById('max-price-val').textContent=this.value;document.getElementById('max_price').value=this.value"/>
+            <div class="price-display">
+              <span>₹0</span>
+              <span>Up to ₹<span id="max-price-val">{{ max_price|default:5000 }}</span></span>
+            </div>
+            <input type="hidden" name="max_price" id="max_price" value="{{ max_price|default:5000 }}"/>
+            {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}"/>{% endif %}
+          </div>
+
+          <div class="filter-section">
+            <h4>Occasion</h4>
+            <div class="filter-chip-group">
+              {% for occ in occasion_choices %}
+                <button type="submit" name="occasion" value="{{ occ }}"
+                  class="filter-chip {% if occasion == occ %}active{% endif %}">
+                  {{ occ|title }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h4>Sort By</h4>
+            <select name="sort" class="form-control" onchange="this.form.submit()">
+              <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+              <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+              <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+              <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most Popular</option>
+            </select>
+          </div>
+
+          <!-- Search inside sidebar form -->
+          <div class="filter-section">
+            <h4>Search</h4>
+            <div style="display:flex;gap:0.5rem;">
+              <input type="text" name="q" class="form-control" placeholder="🔍 Search..." value="{{ search_q }}" style="border-radius:var(--radius-full);"/>
+              <button type="submit" class="btn btn-primary" style="padding:0.5rem 1rem;border-radius:var(--radius-full);">Go</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Apply Filters</button>
+        </form>
+      </aside>
+
+      <!-- ── Products Column (no form wrapper — Add buttons use fetch JS) ── -->
+      <div>
+        <div class="products-header">
+          <span class="products-count">{{ products|length }} bouquet{{ products|length|pluralize }} found</span>
+          {% if selected_cat %}
+            <span class="badge badge-pink">{{ selected_cat|title }}</span>
+          {% endif %}
+        </div>
+
+        <div class="products-grid">
+          {% for product in products %}
+          <div class="product-card glow-on-hover">
+            <div class="product-card-img {% if not product.is_in_stock %}oos{% endif %}">
+              <img src="{{ product.get_image }}" alt="{{ product.name }}" loading="lazy"/>
+              {% if product.discount_percent > 0 %}
+                <span class="product-card-badge discount">{{ product.discount_percent }}% OFF</span>
+              {% endif %}
+              {% if not product.is_in_stock %}
+                <span class="product-card-badge oos">Out of Stock</span>
+              {% endif %}
+              <!-- Wishlist heart -->
+              {% if user %}
+              <button class="wl-btn {% if product.pk in wishlist_ids %}wl-active{% endif %}"
+                data-pk="{{ product.pk }}"
+                data-url="{% url 'toggle_wishlist' product.pk %}"
+                title="{% if product.pk in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                     fill="{% if product.pk in wishlist_ids %}currentColor{% else %}none{% endif %}"
+                     stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+              {% else %}
+              <a href="{% url 'login' %}" class="wl-btn" title="Login to wishlist">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </a>
+              {% endif %}
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-category">{{ product.category.name }}</div>
+              <div class="product-card-name">{{ product.name }}</div>
+              <div class="product-card-rating">
+                {% for i in "12345" %}
+                  <span class="star {% if forloop.counter > product.avg_rating %}empty{% endif %}">★</span>
+                {% endfor %}
+                <span class="rating-count">({{ product.reviews.count }})</span>
+              </div>
+              <div class="product-card-price">
+                <span class="price-current">₹{{ product.price }}</span>
+                {% if product.original_price != product.price %}
+                  <span class="price-original">₹{{ product.original_price }}</span>
+                {% endif %}
+              </div>
+              {% if product.is_in_stock and product.stock_quantity <= 5 %}
+                <div style="font-size:0.72rem;font-weight:700;color:#ea580c;display:flex;align-items:center;gap:0.3rem;margin-bottom:0.4rem;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ea580c;animation:pulse-dot 1.2s infinite;"></span>
+                  Only {{ product.stock_quantity }} left!
+                </div>
+              {% endif %}
+              <div class="product-card-actions">
+                <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline btn-sm">Details</a>
+                {% if product.is_in_stock %}
+                <button
+                  class="btn btn-primary btn-sm add-cart-btn"
+                  data-url="{% url 'add_to_cart' product.pk %}"
+                  data-name="{{ product.name|escapejs }}"
+                  style="flex:1;width:100%"
+                >🛒 Add</button>
+                {% else %}
+                  <span class="btn btn-ghost btn-sm" style="flex:1;opacity:0.5;cursor:not-allowed">Sold Out</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="no-products">
+            <div style="font-size:3.5rem;margin-bottom:1rem;">🌸</div>
+            <h3>No bouquets found</h3>
+            <p>Try adjusting your filters or search query.</p>
+            <a href="{% url 'products' %}" class="btn btn-outline mt-2">Clear Filters</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+// ── Add to Cart via fetch (avoids nested-form / page-reload issues) ──────────
+const CSRF = document.cookie.split(';').map(c=>c.trim())
+  .find(c=>c.startsWith('csrftoken='))?.split('=')[1] || '';
+
+document.querySelectorAll('.add-cart-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const url  = this.dataset.url;
+    const name = this.dataset.name;
+    const orig = this.textContent;
+
+    this.disabled = true;
+    this.textContent = '⏳ Adding…';
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': CSRF,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'quantity=1',
+        redirect: 'manual',   // intercept the redirect — don't follow it
+      });
+
+      // fetch returns opaqueredirect (type=opaqueredirect) on success
+      // OR 200 if the view returns a JSON response in future
+      if (res.ok || res.type === 'opaqueredirect' || res.status === 0) {
+        this.textContent = '✅ Added!';
+        this.style.background = '#16a34a';
+        showCartToast(name);
+        // Increment cart badge
+        const badge = document.querySelector('.cart-badge');
+        if (badge) {
+          badge.textContent = parseInt(badge.textContent || '0') + 1;
+        } else {
+          // Create badge if it didn't exist
+          const cartBtn = document.querySelector('.cart-btn');
+          if (cartBtn) {
+            const span = document.createElement('span');
+            span.className = 'cart-badge pulse';
+            span.textContent = '1';
+            cartBtn.appendChild(span);
+          }
+        }
+        setTimeout(() => {
+          this.textContent = orig;
+          this.style.background = '';
+          this.disabled = false;
+        }, 1800);
+      } else {
+        // Likely not logged in — redirect to login
+        window.location.href = '/login/?next=' + encodeURIComponent(url);
+      }
+    } catch {
+      // Network error — fall back to normal form POST
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = url;
+      form.innerHTML = `<input type="hidden" name="csrfmiddlewaretoken" value="${CSRF}">
+                        <input type="hidden" name="quantity" value="1">`;
+      document.body.appendChild(form);
+      form.submit();
+    }
+  });
+});
+
+function showCartToast(name) {
+  let toast = document.getElementById('cart-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'cart-toast';
+    toast.style.cssText = `
+      position:fixed;bottom:24px;right:24px;z-index:9999;
+      background:white;border-radius:12px;padding:14px 20px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.15);display:flex;
+      align-items:center;gap:12px;font-size:14px;font-weight:600;
+      border-left:4px solid #16a34a;opacity:0;transform:translateY(12px);
+      transition:all 0.3s ease;max-width:300px;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span style="font-size:1.4rem;">🛒</span>
+    <div><div style="color:#111;">"${name}"</div>
+    <div style="font-weight:400;font-size:12px;color:#666;margin-top:2px;">Added to cart</div></div>`;
+  setTimeout(() => { toast.style.opacity='1'; toast.style.transform='translateY(0)'; }, 10);
+  setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateY(12px)'; }, 2500);
+}
+</script>
+
+<script>
+// Wishlist AJAX toggle
+const WL_CSRF = document.cookie.split(';').map(c=>c.trim())
+  .find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+document.querySelectorAll('.wl-btn[data-url]').forEach(btn => {
+  btn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const url = this.dataset.url;
+    try {
+      const res = await fetch(url, {
+        method:'POST',
+        headers:{'X-CSRFToken':WL_CSRF,'X-Requested-With':'XMLHttpRequest'},
+      });
+      const data = await res.json();
+      const svg = this.querySelector('svg');
+      if (data.in_wishlist) {
+        this.classList.add('wl-active');
+        svg.setAttribute('fill','currentColor');
+        this.title='Remove from wishlist';
+      } else {
+        this.classList.remove('wl-active');
+        svg.setAttribute('fill','none');
+        this.title='Add to wishlist';
+      }
+    } catch(err) { window.location.href='/login/'; }
+  });
+});
+</script>
+{% endblock %}

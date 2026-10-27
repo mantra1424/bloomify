@@ -1,0 +1,151 @@
+{% extends 'bloomapp/base.html' %}
+{% load static %}
+{% block title %}Cart – Bloomify{% endblock %}
+{% block extra_css %}
+<style>
+.cart-layout { display:grid; grid-template-columns:1fr 360px; gap:2rem; align-items:start; }
+.cart-table { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); overflow:hidden; }
+.cart-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--gray-100);
+  display:flex; align-items:center; justify-content:space-between; }
+.cart-header h2 { font-size:1.1rem; }
+.cart-item { display:grid; grid-template-columns:80px 1fr auto auto;
+  gap:1.25rem; align-items:center; padding:1.25rem 1.5rem;
+  border-bottom:1px solid var(--gray-100); }
+.cart-item:last-child { border-bottom:none; }
+.cart-item-img { width:80px; height:80px; border-radius:var(--radius-md); object-fit:cover; background:var(--pink-50); }
+.cart-item-name { font-weight:600; font-size:0.9rem; color:var(--gray-900); margin-bottom:0.25rem; }
+.cart-item-cat  { font-size:0.75rem; color:var(--gray-400); }
+.cart-item-price { font-size:0.95rem; font-weight:700; color:var(--pink-600); }
+.cart-btn-remove { color:var(--gray-300); font-size:1.1rem; transition:color var(--transition); padding:0.3rem; }
+.cart-btn-remove:hover { color:#ef4444; }
+.qty-mini { display:flex; align-items:center; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); overflow:hidden; }
+.qty-mini button { width:34px; height:34px; background:var(--gray-50); transition:background var(--transition); }
+.qty-mini button:hover { background:var(--pink-100); color:var(--pink-600); }
+.qty-mini input { width:42px; text-align:center; border:none; border-left:1px solid var(--gray-200); border-right:1px solid var(--gray-200); font-size:0.85rem; font-weight:700; outline:none; padding:0 0.2rem; }
+.order-summary { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:1.75rem; position:sticky; top:90px; }
+.order-summary h3 { margin-bottom:1.25rem; font-size:1.05rem; }
+.summary-row { display:flex; justify-content:space-between; padding:0.65rem 0;
+  border-bottom:1px solid var(--gray-100); font-size:0.875rem; }
+.summary-row:last-of-type { border-bottom:none; }
+.summary-total { display:flex; justify-content:space-between; padding:1rem 0;
+  margin-top:0.5rem; border-top:2px solid var(--pink-100); font-weight:700; font-size:1.1rem; }
+.summary-total .amount { color:var(--pink-600); }
+@media(max-width:768px) {
+  .cart-layout { grid-template-columns:1fr; }
+  .order-summary { position:static; }
+  .cart-item { grid-template-columns:60px 1fr; }
+  .cart-item .qty-mini, .cart-item-price { grid-column:2; }
+  .cart-btn-remove { grid-column:2; justify-self:end; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🛒 Your Cart</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'home' %}">Home</a><span>›</span><span class="current">Cart</span>
+    </div>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+
+  {% if items %}
+  <div class="cart-layout">
+    <!-- Items -->
+    <div>
+      <div class="cart-table">
+        <div class="cart-header">
+          <h2>Cart Items ({{ items|length }})</h2>
+          <span style="font-size:0.8rem;color:var(--gray-400);">🌸 Free delivery on orders ₹999+</span>
+        </div>
+
+        {% for item in items %}
+        <div class="cart-item">
+          {% if item.product %}
+            <img class="cart-item-img" src="{{ item.product.get_image }}" alt="{{ item.product.name }}"/>
+          {% else %}
+            <div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:2rem;">
+              {% if item.custom_bouquet %}🎨{% else %}🌸{% endif %}
+            </div>
+          {% endif %}
+
+          <div>
+            <div class="cart-item-name">
+              {% if item.product %}{{ item.product.name }}
+              {% elif item.custom_bouquet %}Custom Bouquet ({{ item.custom_bouquet.flowers|title }})
+              {% endif %}
+            </div>
+            <div class="cart-item-cat">
+              {% if item.product %}{{ item.product.category.name }}
+              {% elif item.custom_bouquet %}{{ item.custom_bouquet.get_wrapping_display }}{% endif %}
+            </div>
+            <div style="margin-top:0.5rem;font-size:0.85rem;color:var(--pink-600);font-weight:700;">
+              ₹{{ item.unit_price }} each
+            </div>
+          </div>
+
+          <form method="post" action="{% url 'update_cart' %}">
+            {% csrf_token %}
+            <input type="hidden" name="item_id" value="{{ item.id }}"/>
+            <div class="qty-mini">
+              <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}">−</button>
+              <input type="number" value="{{ item.quantity }}" min="1" max="99" readonly/>
+              <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}">+</button>
+            </div>
+          </form>
+
+          <div>
+            <div class="cart-item-price" style="text-align:right;">₹{{ item.subtotal }}</div>
+            <form method="POST" action="{% url 'remove_from_cart' item.id %}" style="text-align:right;margin-top:0.4rem;">
+              {% csrf_token %}
+              <button type="submit" class="cart-btn-remove" aria-label="Remove item"
+                      onclick="return confirm('Remove this item?')"
+                      style="background:none;border:none;cursor:pointer;padding:0;font:inherit;">🗑️</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top:1rem;display:flex;gap:1rem;">
+        <a href="{% url 'products' %}" class="btn btn-ghost">← Continue Shopping</a>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+      <div class="summary-row"><span>Subtotal ({{ items|length }} items)</span><span>₹{{ subtotal }}</span></div>
+      <div class="summary-row"><span>Delivery</span><span style="color:var(--green-500);">Calculated at checkout</span></div>
+      <div class="summary-row"><span>Discount</span><span style="color:var(--green-500);">—</span></div>
+      <div class="summary-total">
+        <span>Estimated Total</span>
+        <span class="amount">₹{{ subtotal }}</span>
+      </div>
+      <a href="{% url 'checkout' %}" class="btn btn-primary btn-block btn-lg" style="margin-top:1.25rem;">
+        Proceed to Checkout →
+      </a>
+      <div style="margin-top:1rem;text-align:center;">
+        <p style="font-size:0.75rem;color:var(--gray-400);">🔒 Secure checkout · Free returns</p>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div style="font-size:5rem;margin-bottom:1.25rem;">🛒</div>
+    <h3>Your cart is empty</h3>
+    <p>Looks like you haven't added any beautiful blooms yet!</p>
+    <a href="{% url 'products' %}" class="btn btn-primary btn-lg" style="margin-top:1rem;">🌷 Shop Bouquets</a>
+    <a href="{% url 'custom_bouquet' %}" class="btn btn-outline btn-lg" style="margin-top:1rem;margin-left:0.75rem;">🎨 Create Custom</a>
+  </div>
+  {% endif %}
+
+  </div>
+</section>
+{% endblock %}

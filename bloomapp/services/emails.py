@@ -14,7 +14,7 @@ def send_order_confirmation_email(order):
     context = {'order': order, 'items': items}
     try:
         send_mail(
-            subject=f'🌸 Order #{order.id} Confirmed – Bloomify',
+            subject=f'Order #{order.id} Confirmed – Bloomify',
             message=render_to_string('bloomapp/emails/order_confirmation.txt', context),
             html_message=render_to_string('bloomapp/emails/order_confirmation.html', context),
             from_email=settings.DEFAULT_FROM_EMAIL,

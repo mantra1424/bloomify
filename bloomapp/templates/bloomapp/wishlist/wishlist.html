@@ -1,110 +1,28 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
-{% block title %}My Wishlist – Bloomify{% endblock %}
-{% block extra_css %}
-<style>
-.wishlist-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.25rem; }
-@media(max-width:1024px){.wishlist-grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:768px) {.wishlist-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:480px) {.wishlist-grid{grid-template-columns:1fr;}}
-.wishlist-remove {
-  position:absolute;top:0.6rem;right:0.6rem;
-  background:rgba(255,255,255,0.9);border-radius:50%;
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;border:none;color:#ef4444;font-size:1rem;
-  transition:background 0.2s,transform 0.2s;
-}
-.wishlist-remove:hover{background:#fee2e2;transform:scale(1.1);}
-</style>
-{% endblock %}
+{% load bloom %}
+{% block title %}Your wishlist – Bloomify{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container">
-    <h1>❤️ My Wishlist</h1>
-    <div class="breadcrumb">
-      <a href="{% url 'home' %}">Home</a><span>›</span>
-      <span class="current">Wishlist</span>
-    </div>
-  </div>
+<div class="container page-head">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a><span aria-hidden="true">/</span><span class="current" aria-current="page">Wishlist</span>
+  </nav>
+  <h1>Your wishlist</h1>
+  {% if products %}<p>{{ products|length }} saved bouquet{{ products|length|pluralize }}. Tap the heart to remove one.</p>{% endif %}
 </div>
 
-<section class="section-sm">
-  <div class="container">
-    {% if items %}
-    <p style="color:var(--gray-400);margin-bottom:1.5rem;">{{ items|length }} saved item{{ items|length|pluralize }}</p>
-    <div class="wishlist-grid">
-      {% for item in items %}
-      <div class="product-card glow-on-hover" style="position:relative;">
-        <div class="product-card-img {% if not item.product.is_in_stock %}oos{% endif %}">
-          <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}" loading="lazy"/>
-          {% if not item.product.is_in_stock %}
-            <span class="product-card-badge oos">Out of Stock</span>
-          {% elif item.product.discount_percent > 0 %}
-            <span class="product-card-badge discount">{{ item.product.discount_percent }}% OFF</span>
-          {% endif %}
-        </div>
-        <!-- Remove from wishlist -->
-        <form method="post" action="{% url 'toggle_wishlist' item.product.pk %}" style="display:inline;">
-          {% csrf_token %}
-          <button type="submit" class="wishlist-remove" title="Remove from wishlist">✕</button>
-        </form>
-        <div class="product-card-body">
-          <div class="product-card-category">{{ item.product.category.name }}</div>
-          <div class="product-card-name">{{ item.product.name }}</div>
-          <div class="product-card-price">
-            <span class="price-current">₹{{ item.product.price }}</span>
-            {% if item.product.original_price != item.product.price %}
-              <span class="price-original">₹{{ item.product.original_price }}</span>
-            {% endif %}
-          </div>
-          <div class="product-card-actions">
-            <a href="{% url 'product_detail' item.product.pk %}" class="btn btn-outline btn-sm">Details</a>
-            {% if item.product.is_in_stock %}
-            <button class="btn btn-primary btn-sm add-cart-btn"
-              data-url="{% url 'add_to_cart' item.product.pk %}"
-              data-name="{{ item.product.name|escapejs }}"
-              style="flex:1;">🛒 Add</button>
-            {% else %}
-              <span class="btn btn-ghost btn-sm" style="flex:1;opacity:0.5;cursor:not-allowed;">Sold Out</span>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      {% endfor %}
+<div class="container page-body">
+  {% if products %}
+    <div class="product-grid">
+      {% for product in products %}{% include 'bloomapp/partials/product_card.html' %}{% endfor %}
     </div>
-
-    {% else %}
+  {% else %}
     <div class="empty-state">
-      <div class="emoji">❤️</div>
-      <h3>Your wishlist is empty</h3>
-      <p>Save products you love and come back to them anytime.</p>
-      <a href="{% url 'products' %}" class="btn btn-primary mt-2">🌷 Browse Bouquets</a>
+      <div class="empty-mark">{% icon 'heart' 26 %}</div>
+      <h2>Nothing saved yet</h2>
+      <p>Tap the heart on any bouquet to keep it here for later.</p>
+      <a href="{% url 'products' %}" class="btn btn-primary btn-lg">Shop bouquets</a>
     </div>
-    {% endif %}
-  </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const CSRF = document.cookie.split(';').map(c=>c.trim())
-  .find(c=>c.startsWith('csrftoken='))?.split('=')[1] || '';
-document.querySelectorAll('.add-cart-btn').forEach(btn => {
-  btn.addEventListener('click', async function() {
-    const url = this.dataset.url, name = this.dataset.name, orig = this.textContent;
-    this.disabled = true; this.textContent = '⏳ Adding…';
-    try {
-      const res = await fetch(url, {
-        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},
-        body:'quantity=1', redirect:'manual'
-      });
-      if (res.ok || res.type==='opaqueredirect' || res.status===0) {
-        this.textContent='✅ Added!'; this.style.background='#16a34a';
-        setTimeout(()=>{this.textContent=orig;this.style.background='';this.disabled=false;},1800);
-      }
-    } catch { window.location.href='/login/'; }
-  });
-});
-</script>
+  {% endif %}
+</div>
 {% endblock %}

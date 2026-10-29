@@ -1,175 +1,110 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
+{% load bloom %}
 {% block title %}FAQs – Bloomify{% endblock %}
 
 {% block extra_css %}
 <style>
-.faq-wrap { max-width: 780px; margin: 0 auto; }
-.faq-item {
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 1rem;
-  overflow: hidden;
-}
-.faq-question {
-  width: 100%; text-align: left;
-  padding: 1.1rem 1.5rem;
-  font-weight: 600; font-size: 0.95rem;
-  background: none; border: none; cursor: pointer;
-  display: flex; justify-content: space-between; align-items: center;
-  color: var(--gray-900);
-  transition: background 0.2s;
-}
-.faq-question:hover { background: var(--pink-50); }
-.faq-question .arrow {
-  font-size: 1.1rem; transition: transform 0.3s;
-  color: var(--pink-500); flex-shrink: 0;
-}
-.faq-question.open .arrow { transform: rotate(180deg); }
-.faq-answer {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.35s ease, padding 0.2s;
-  font-size: 0.875rem; color: var(--gray-600);
-  line-height: 1.7;
-  padding: 0 1.5rem;
-}
-.faq-answer.open { max-height: 300px; padding: 0 1.5rem 1.25rem; }
-.faq-category { font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--pink-500); margin: 2rem 0 0.75rem; }
+.faq { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 2.5rem; align-items: start; }
+.faq-toc { position: sticky; top: 96px; }
+.faq-toc a { display: flex; align-items: center; min-height: var(--tap); padding: 0 0.85rem; border-radius: var(--radius-sm); color: var(--ink-soft); font-weight: 500; }
+.faq-toc a:hover { background: var(--gray-100); color: var(--ink); }
+.faq-group + .faq-group { margin-top: 2.5rem; }
+.faq-group h2 { font-size: var(--text-2xl); margin-bottom: 0.75rem; scroll-margin-top: 110px; }
+.qa { border-top: 1px solid var(--line); }
+.qa:last-child { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 56px; padding: 0.75rem 0; font-weight: 600; color: var(--ink); }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary .icon { flex: none; color: var(--muted); transition: transform var(--transition); }
+.qa[open] summary .icon { transform: rotate(180deg); }
+.qa .a { padding: 0 2rem 1.1rem 0; }
+.qa .a p + p, .qa .a p + table { margin-top: 0.6rem; }
+.qa table { width: 100%; max-width: 28rem; border-collapse: collapse; font-size: var(--text-sm); }
+.qa th, .qa td { text-align: left; padding: 0.45rem 0.5rem 0.45rem 0; border-bottom: 1px solid var(--line); }
+.qa th { color: var(--muted); font-weight: 600; }
+.faq-more { margin-top: 2.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
+@media (max-width: 860px) { .faq { grid-template-columns: 1fr; gap: 1rem; } .faq-toc { position: static; } .faq-toc ul { display: flex; flex-wrap: wrap; gap: 0.35rem; } .faq-toc a { border: 1px solid var(--line); border-radius: var(--radius-full); padding: 0 1rem; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container">
-    <h1>❓ Frequently Asked Questions</h1>
-    <p style="color:var(--gray-500);margin-top:0.5rem;">Everything you need to know about Bloomify</p>
-  </div>
+<div class="container page-head">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a><span aria-hidden="true">/</span><span class="current" aria-current="page">FAQs</span>
+  </nav>
+  <h1>Questions, answered</h1>
+  <p class="lead">Ordering, delivery, payment and the bouquets themselves.</p>
 </div>
 
-<section class="section-sm">
-  <div class="container">
-    <div class="faq-wrap">
+<div class="container page-body">
+  <div class="faq">
+    <nav class="faq-toc" aria-label="FAQ sections">
+      <ul>
+        <li><a href="#orders">Orders</a></li>
+        <li><a href="#delivery">Delivery</a></li>
+        <li><a href="#payment">Payment</a></li>
+        <li><a href="#bouquets">Bouquets</a></li>
+      </ul>
+    </nav>
 
-      <div class="faq-category">🛒 Orders</div>
+    <div>
+      <section class="faq-group" aria-labelledby="orders">
+        <h2 id="orders">Orders</h2>
+        <details class="qa"><summary>How do I place an order? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Pick a bouquet, tap Add, then Checkout. Checkout has three short steps: your address, a delivery date and time slot, and payment. You need an account so you can track the order afterwards.</p>
+        </div></details>
+        <details class="qa"><summary>Can I design my own bouquet? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Yes. The <a class="link" href="{% url 'custom_bouquet' %}">bouquet builder</a> lets you choose the flower, the number of stems, the wrapping and a message card, and shows the price as you go.</p>
+        </div></details>
+        <details class="qa"><summary>How do I track my order? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Open <a class="link" href="{% url 'dashboard' %}">Your account</a> and choose Track order. You’ll see each stage: placed, packed, out for delivery and delivered.</p>
+        </div></details>
+        <details class="qa"><summary>Can I cancel an order? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Yes, until the florist starts packing it. Use Cancel on the order in your account. Online payments are refunded to the original payment method within 3–5 working days.</p>
+        </div></details>
+      </section>
 
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          How do I place an order? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Browse our Shop, add your favourite bouquet to the cart, and proceed to Checkout. Fill in your delivery details, choose a time slot, and place your order. It's that simple! 🌸
-        </div>
+      <section class="faq-group" aria-labelledby="delivery">
+        <h2 id="delivery">Delivery</h2>
+        <details class="qa" open><summary>Where do you deliver, and how much does it cost? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <table>
+            <thead><tr><th scope="col">City</th><th scope="col">Delivery</th><th scope="col">Usually takes</th></tr></thead>
+            <tbody>{% for c in cities %}<tr><td>{{ c.name }}</td><td>{{ c.charge|rupees }}</td><td>{{ c.eta }}</td></tr>{% endfor %}</tbody>
+          </table>
+          <p>Orders over {{ free_delivery_above|rupees }} get free delivery, and orders over {{ discount_above|rupees }} get {{ discount|rupees }} off delivery. Your exact charge is shown at checkout before you pay.</p>
+        </div></details>
+        <details class="qa"><summary>Can you deliver today, or at midnight? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Yes. Same-day express costs {{ time_charges.sameday|rupees }} extra and midnight delivery (11 PM – 1 AM) costs {{ time_charges.midnight|rupees }} extra. Otherwise we deliver in the time slot you choose at checkout.</p>
+        </div></details>
+        <details class="qa"><summary>What if nobody is home? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Our delivery partner calls the recipient’s number. Add a note at checkout, for example “leave with security”, and we’ll follow it.</p>
+        </div></details>
+      </section>
+
+      <section class="faq-group" aria-labelledby="payment">
+        <h2 id="payment">Payment</h2>
+        <details class="qa"><summary>How can I pay? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Cash on delivery, or online with UPI, cards, netbanking or wallets through Razorpay.</p>
+        </div></details>
+        <details class="qa"><summary>Is paying online safe? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Yes. Payments happen on Razorpay’s secure checkout, and we never see or store your card details. Every payment is checked with Razorpay before your order is confirmed.</p>
+        </div></details>
+      </section>
+
+      <section class="faq-group" aria-labelledby="bouquets">
+        <h2 id="bouquets">Bouquets</h2>
+        <details class="qa"><summary>How fresh are the flowers? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Every bouquet is hand-tied on the day of delivery. If it arrives damaged or wilted, send us a photo within 24 hours and we’ll replace or refund it. See the <a class="link" href="{% url 'returns' %}">returns policy</a>.</p>
+        </div></details>
+        <details class="qa"><summary>Can I add a message card? {% icon 'chevron-down' 20 %}</summary><div class="a">
+          <p>Yes, for {{ card_price|rupees }} when you design your own bouquet. Write your message in the builder and we’ll handwrite it on the card.</p>
+        </div></details>
+      </section>
+
+      <div class="panel faq-more">
+        <div><h2 style="font-size: var(--text-xl); margin: 0;">Still have a question?</h2><p>We usually reply within a few hours.</p></div>
+        <a href="{% url 'contact' %}" class="btn btn-primary">Contact us</a>
       </div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Can I customise my bouquet? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Yes! Visit our <strong>Custom Bouquet Builder</strong> from the navigation bar. You can choose your flowers, quantity, wrapping style, and add a personal message card.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          How do I track my order? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Log in to your account and visit <strong>My Orders</strong> from your dashboard. You'll see real-time status updates: Placed → Packed → Out for Delivery → Delivered.
-        </div>
-      </div>
-
-      <div class="faq-category">🚚 Delivery</div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Which cities do you deliver to? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          We currently deliver to <strong>Anand, Vadodara, Ahmedabad, Surat, Bharuch, and Vapi</strong>. We're expanding soon — stay tuned!
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          What are the delivery charges? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Delivery charges vary by city: Anand ₹40, Bharuch ₹45, Vadodara ₹50, Ahmedabad ₹60, Surat ₹70, Vapi ₹80. Charges are shown at checkout before you place your order.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          How long does delivery take? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Delivery typically takes 2–6 hours depending on your city and your chosen time slot. You can select a preferred time slot during checkout.
-        </div>
-      </div>
-
-      <div class="faq-category">💳 Payments</div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          What payment methods do you accept? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          We accept <strong>Cash on Delivery (COD)</strong> and <strong>Online Payment</strong> via Razorpay — UPI, Debit/Credit Card, Net Banking, and Wallets.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Is online payment safe? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Absolutely. All online payments are processed securely through <strong>Razorpay</strong>, one of India's most trusted payment gateways. We never store your card details.
-        </div>
-      </div>
-
-      <div class="faq-category">🌸 Products</div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Are the flowers fresh? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Yes! All bouquets are handcrafted with fresh flowers on the day of delivery to ensure maximum freshness and beauty.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Can I add a message card to my bouquet? <span class="arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          Yes! When building a Custom Bouquet, you can add a personal message card for just ₹30. It's a lovely touch for birthdays, anniversaries, and special occasions.
-        </div>
-      </div>
-
-      <div style="text-align:center;margin-top:2.5rem;padding:1.5rem;background:var(--pink-50);border-radius:var(--radius-xl);">
-        <p style="font-weight:600;color:var(--gray-900);margin-bottom:0.5rem;">Still have questions? 💬</p>
-        <p style="font-size:0.875rem;color:var(--gray-500);margin-bottom:1rem;">Our team is happy to help you!</p>
-        <a href="{% url 'contact' %}" class="btn btn-primary">Contact Us 🌸</a>
-      </div>
-
     </div>
   </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function toggleFaq(btn) {
-  const answer = btn.nextElementSibling;
-  const isOpen = btn.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.faq-question').forEach(b => { b.classList.remove('open'); b.nextElementSibling.classList.remove('open'); });
-  // Open clicked if it was closed
-  if (!isOpen) { btn.classList.add('open'); answer.classList.add('open'); }
-}
-</script>
+</div>
 {% endblock %}

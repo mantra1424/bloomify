@@ -154,6 +154,7 @@
 
     <section aria-label="Bouquets">
       {% if products %}
+        <h2 class="sr-only">Bouquets</h2>
         <div class="product-grid">
           {% for product in products %}
             {% include 'bloomapp/partials/product_card.html' %}

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    Bloomify – main.js
    Header (menu, occasions, pincode panel, search), pincode checker,
-   toasts, newsletter, back-to-top, scroll reveal, modals.
+   toasts, newsletter, back-to-top, slide-in cart, password toggle.
    Never builds HTML from strings: user/server text goes in via textContent.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -181,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (pinPanel && !pinPanel.hidden) { pinPanel.hidden = true; toggle(document.querySelector('[data-pin-toggle]'), pinPanel, false); }
-    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   });
 
   /* Pincode checkers (header panel, home hero, …) */
@@ -217,42 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(m.textContent.trim(), type);
     m.remove();
   });
-
-  /* Scroll reveal (used by pages not yet redesigned) */
-  const reveal = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
-      });
-    }, { threshold: 0.12 });
-    reveal.forEach(n => observer.observe(n));
-  } else {
-    reveal.forEach(n => n.classList.add('visible'));
-  }
-
-  /* Modals (customer pages) */
-  document.querySelectorAll('[data-modal-open]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const modal = document.getElementById(btn.dataset.modalOpen);
-      if (modal) modal.classList.add('open');
-    });
-  });
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
-  });
-  document.querySelectorAll('[data-modal-close]').forEach(btn => {
-    btn.addEventListener('click', () => { const m = btn.closest('.modal-overlay'); if (m) m.classList.remove('open'); });
-  });
 });
-
-/* ─── Quantity controls (product page) ───────────────────────── */
-function changeQty(inputId, delta) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  input.value = Math.max(1, Math.min(99, (parseInt(input.value, 10) || 1) + delta));
-}
-window.changeQty = changeQty;
 
 /* ─── Slide-in cart: "Add" without leaving the page ──────────── */
 (function () {
@@ -319,3 +283,22 @@ window.changeQty = changeQty;
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) close(); });
   }
 })();
+
+/* ── Show / hide password ─────────────────────────────────────────── */
+document.querySelectorAll('[data-pw-toggle]').forEach(btn => {
+  const input = btn.parentElement.querySelector('input');
+  btn.addEventListener('click', () => {
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.setAttribute('aria-pressed', String(show));
+    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    btn.querySelector('[data-show]').hidden = show;
+    btn.querySelector('[data-hide]').hidden = !show;
+  });
+});
+
+/* ── Ask before destructive form posts: <form data-confirm="…"> ───── */
+document.addEventListener('submit', e => {
+  const msg = e.target.dataset && e.target.dataset.confirm;
+  if (msg && !window.confirm(msg)) e.preventDefault();
+}, true);

@@ -125,7 +125,7 @@
       </div>
     </div>
     <div class="hero-media">
-      <img src="{% static hero_image %}" alt="A hand-tied bouquet of white, pink and yellow flowers" width="800" height="880" fetchpriority="high"/>
+      <img src="{% static hero_image %}" srcset="{% static hero_image_small %} 480w, {% static hero_image %} 800w" sizes="(max-width: 900px) calc(100vw - 2rem), 560px" alt="A hand-tied bouquet of white, pink and yellow flowers" width="800" height="880" fetchpriority="high"/>
       <div class="hero-note">
         <span class="round-icon">{% icon 'truck' 20 %}</span>
         <span><strong>Same-day &amp; midnight</strong><span>Pick a slot at checkout</span></span>

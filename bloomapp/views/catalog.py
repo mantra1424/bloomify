@@ -9,7 +9,16 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from bloomapp.forms import CustomBouquetForm, first_error
-from bloomapp.models import FLOWER_CHOICES, CartItem, Category, CustomBouquet, Product, Review, Wishlist
+from bloomapp.models import (
+    FLOWER_CHOICES,
+    WRAPPING_CHOICES,
+    CartItem,
+    Category,
+    CustomBouquet,
+    Product,
+    Review,
+    Wishlist,
+)
 from bloomapp.services import pricing
 from bloomapp.utils import back_url, parse_float, parse_int
 
@@ -152,7 +161,7 @@ def submit_review(request, pk):
         Review.objects.update_or_create(
             product=product, user=request.user, defaults={'rating': rating, 'comment': comment}
         )
-        messages.success(request, 'Review submitted! Thank you 🌸')
+        messages.success(request, 'Thanks for your review.')
     return redirect('product_detail', pk=pk)
 
 
@@ -182,6 +191,22 @@ def search_autocomplete(request):
     )
 
 
+# Free-licensed demo photos (see photo_credits.json) shown on the bouquet builder.
+BOUQUET_PHOTOS = {
+    'rose': 'bloomapp/demo/products/romantic-red-rose-bouquet.jpg',
+    'lily': 'bloomapp/demo/products/sympathy-white-lilies.jpg',
+    'tulip': 'bloomapp/demo/products/rainbow-tulip-mix.jpg',
+    'sunflower': 'bloomapp/demo/products/sunshine-sunflower-bunch.jpg',
+    'orchid': 'bloomapp/demo/products/orchid-paradise.jpg',
+}
+WRAP_LOOKS = {
+    'classic': {'desc': 'Crisp white paper, satin ribbon', 'swatch': '#F7F3EE'},
+    'rustic': {'desc': 'Brown kraft paper and twine', 'swatch': '#C9A67A'},
+    'luxury': {'desc': 'Wine satin with a gift box', 'swatch': '#7B2D3B'},
+    'minimal': {'desc': 'Sage tissue, no plastic', 'swatch': '#A9BCA3'},
+}
+
+
 @login_required
 def custom_bouquet_view(request):
     if request.method == 'POST':
@@ -199,15 +224,39 @@ def custom_bouquet_view(request):
             price=form.price(),
         )
         CartItem.objects.create(user=request.user, custom_bouquet=bouquet, quantity=1)
-        messages.success(request, 'Custom bouquet added to cart! 🌺')
+        messages.success(request, 'Custom bouquet added to your cart.')
         return redirect('cart')
-    return render(request, 'bloomapp/bouquet/custom.html', {'bouquet_pricing': pricing.bouquet_pricing_config()})
+    return render(
+        request,
+        'bloomapp/bouquet/custom.html',
+        {
+            'bouquet_pricing': pricing.bouquet_pricing_config(),
+            'flower_options': [
+                {'key': key, 'label': label, 'extra': pricing.FLOWER_SURCHARGES[key], 'image': BOUQUET_PHOTOS[key]}
+                for key, label in FLOWER_CHOICES
+            ],
+            'wrap_options': [
+                {'key': key, 'label': label, 'cost': pricing.WRAPPING_COSTS[key], **WRAP_LOOKS[key]}
+                for key, label in WRAPPING_CHOICES
+            ],
+            'stem_presets': [6, 12, 18, 24, 36],
+            'min_stems': pricing.BOUQUET_MIN_STEMS,
+            'max_stems': pricing.BOUQUET_MAX_STEMS,
+        },
+    )
 
 
 @login_required
 def wishlist_view(request):
-    items = Wishlist.objects.filter(user=request.user).select_related('product', 'product__category')
-    return render(request, 'bloomapp/wishlist/wishlist.html', {'items': items})
+    products = with_ratings(
+        Product.objects.filter(wishlisted_by__user=request.user).select_related('category')
+    ).order_by('-wishlisted_by__added_at')
+    products = list(products)
+    return render(
+        request,
+        'bloomapp/wishlist/wishlist.html',
+        {'products': products, 'wishlist_ids': {p.pk for p in products}},
+    )
 
 
 @login_required
@@ -216,7 +265,7 @@ def toggle_wishlist(request, pk):
     product = get_object_or_404(Product, pk=pk)
     obj, created = Wishlist.objects.get_or_create(user=request.user, product=product)
     if created:
-        msg = f'"{product.name}" added to wishlist! ♥'
+        msg = f'"{product.name}" saved to your wishlist.'
     else:
         obj.delete()
         msg = f'"{product.name}" removed from wishlist.'

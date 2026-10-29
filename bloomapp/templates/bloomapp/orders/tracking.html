@@ -1,141 +1,104 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
-{% block title %}Order #{{ order.id }} Tracking – Bloomify{% endblock %}
+{% load bloom static %}
+{% block title %}Order #{{ order.id }} – Bloomify{% endblock %}
+
 {% block extra_css %}
 <style>
-.tracking-layout { display:grid; grid-template-columns:1fr 360px; gap:2rem; align-items:start; }
-.tracking-card { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:2rem; margin-bottom:1.5rem; }
-.tracking-hero { text-align:center; padding:2rem; background:linear-gradient(135deg,var(--pink-50),var(--green-50)); border-radius:var(--radius-xl); margin-bottom:2rem; }
-.tracking-hero h2 { margin-bottom:0.5rem; }
-.order-status-badge { display:inline-block; padding:0.4rem 1.25rem; border-radius:var(--radius-full);
-  font-size:0.82rem; font-weight:700; margin-top:0.5rem; }
-.stepper-wrap { padding:2rem 1rem; }
-.step-item-v { display:flex; gap:1.25rem; padding-bottom:1.75rem; position:relative; }
-.step-item-v:last-child { padding-bottom:0; }
-.step-item-v::before { content:''; position:absolute; left:16px; top:34px; bottom:0; width:2px; background:var(--gray-200); }
-.step-item-v.done::before { background:var(--green-400); }
-.step-dot-v { width:34px; height:34px; border-radius:50%; flex-shrink:0; z-index:1;
-  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; }
-.step-dot-v.done   { background:var(--green-400); color:white; }
-.step-dot-v.active { background:var(--pink-500); color:white; box-shadow:0 0 0 4px rgba(232,86,122,0.2); }
-.step-dot-v.pending { background:var(--gray-200); color:var(--gray-400); }
-.step-content-v h4 { font-size:0.9rem; margin-bottom:0.2rem; }
-.step-content-v p  { font-size:0.8rem; color:var(--gray-400); }
-.order-items-list { display:flex; flex-direction:column; gap:0.75rem; }
-.order-item-row { display:flex; align-items:center; gap:1rem; padding:0.75rem;
-  background:var(--gray-50); border-radius:var(--radius-md); }
-.order-item-row img { width:48px; height:48px; border-radius:var(--radius-sm); object-fit:cover; }
-.price-breakdown .row { display:flex; justify-content:space-between; padding:0.5rem 0;
-  border-bottom:1px solid var(--gray-100); font-size:0.85rem; }
-.price-breakdown .total { display:flex; justify-content:space-between; padding:0.75rem 0;
-  font-weight:700; font-size:1rem; border-top:2px solid var(--pink-100); }
-
-@media(max-width:768px) { .tracking-layout { grid-template-columns:1fr; } }
+.track { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 2rem; align-items: start; }
+.track-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-bottom: 1.5rem; }
+.track-status .when { color: var(--ink-soft); }
+.timeline { counter-reset: t; }
+.timeline li { position: relative; display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 1rem; padding-bottom: 1.5rem; }
+.timeline li:last-child { padding-bottom: 0; }
+.timeline li::after { content: ''; position: absolute; left: calc(1rem - 1px); top: 2.25rem; bottom: 0.25rem; width: 2px; background: var(--line); }
+.timeline li:last-child::after { display: none; }
+.timeline li.done::after { background: var(--sage); }
+.t-dot { width: 2rem; height: 2rem; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: var(--text-sm); font-weight: 600; background: var(--surface); border: 2px solid var(--line-strong); color: var(--muted); }
+.done .t-dot { background: var(--sage); border-color: var(--sage); color: #fff; }
+.now .t-dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px var(--accent-tint); }
+.timeline h3 { font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; margin-top: 0.3rem; }
+.timeline p { font-size: var(--text-sm); color: var(--muted); }
+.now h3 { color: var(--accent); }
+.track-cancel { display: flex; gap: 0.75rem; align-items: flex-start; padding: 1rem 1.1rem; border-radius: var(--radius-md); background: var(--danger-tint); color: var(--danger); }
+.track-addr p { color: var(--ink-soft); }
+.t-items li { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 0.85rem; align-items: center; padding: 0.6rem 0; }
+.t-items img { width: 56px; height: 70px; object-fit: cover; border-radius: var(--radius-sm); background: var(--accent-tint); }
+.t-items .name { font-weight: 500; color: var(--ink); line-height: 1.3; }
+.t-items .qty { font-size: var(--text-sm); color: var(--muted); }
+.t-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; color: var(--ink-soft); }
+.t-row.saving { color: var(--sage); }
+.t-row.total { margin-top: 0.4rem; padding-top: 0.75rem; border-top: 1px solid var(--line); font-weight: 600; font-size: var(--text-lg); color: var(--ink); }
+.t-sum { position: sticky; top: 96px; }
+.t-pay { margin-top: 0.75rem; font-size: var(--text-sm); color: var(--muted); }
+@media (max-width: 900px) { .track { grid-template-columns: 1fr; } .t-sum { position: static; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container">
-    <h1>📦 Track Your Order</h1>
-    <div class="breadcrumb">
-      <a href="{% url 'dashboard' %}">My Orders</a><span>›</span><span class="current">Order #{{ order.id }}</span>
-    </div>
+<div class="container page-head">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}">Your orders</a><span aria-hidden="true">/</span><span class="current" aria-current="page">Order #{{ order.id }}</span>
+  </nav>
+  <h1>Order #{{ order.id }}</h1>
+  <div class="track-status">
+    <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'cancelled' %}badge-red{% elif order.status == 'placed' %}badge-yellow{% else %}badge-pink{% endif %}">{{ order.status_display }}</span>
+    <span class="when">Placed {{ order.created_at|date:"j M Y, g:i A" }}{% if order.delivery_slot %} · Delivery {{ order.delivery_slot.date|date:"D j M" }}, {{ order.delivery_slot.slot_label }}{% endif %}</span>
   </div>
 </div>
 
-<section class="section-sm">
-  <div class="container">
-    <div class="tracking-layout">
-      <div>
-        <div class="tracking-hero">
-          <div style="font-size:3rem;margin-bottom:0.75rem;">
-            {% if order.status == 'delivered' %}🎉{% elif order.status == 'out_for_delivery' %}🚚{% elif order.status == 'packed' %}📦{% else %}✅{% endif %}
-          </div>
-          <h2>Order #{{ order.id }}</h2>
-          <p style="color:var(--gray-500);">Placed on {{ order.created_at|date:"d M Y, g:i A" }}</p>
-          <span class="order-status-badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}" style="padding:0.4rem 1.25rem;">
-            {{ order.status_display }}
-          </span>
-          {% if order.delivery_slot %}
-          <p style="margin-top:0.75rem;font-size:0.82rem;color:var(--gray-500);">
-            🕐 Slot: {{ order.delivery_slot.slot_label }} · {{ order.delivery_slot.date }}
-          </p>
-          {% endif %}
-        </div>
-
-        <div class="tracking-card">
-          <h3 style="margin-bottom:2rem;">Delivery Progress</h3>
-          <div class="stepper-wrap">
-            {% for key, label, desc in steps %}
-            {% with step_idx=forloop.counter0 %}
-            <div class="step-item-v {% if order.status_step >= step_idx %}done{% endif %}">
-              <div class="step-dot-v {% if order.status_step == step_idx %}active{% elif order.status_step > step_idx %}done{% else %}pending{% endif %}">
-                {% if order.status_step > step_idx %}✓{% else %}{{ forloop.counter }}{% endif %}
-              </div>
-              <div class="step-content-v">
-                <h4>{{ label }}</h4>
-                <p>{{ desc }}</p>
-                {% if order.status_step >= step_idx %}
-                <p style="color:var(--pink-500);font-size:0.75rem;margin-top:0.2rem;">✓ Completed</p>
-                {% endif %}
-              </div>
-            </div>
+<div class="container page-body">
+  <div class="track">
+    <div>
+      <section class="panel" aria-labelledby="progress-title">
+        <h2 id="progress-title">Progress</h2>
+        {% if order.status == 'cancelled' %}
+          <p class="track-cancel">{% icon 'alert' 20 %} <span>This order was cancelled.{% if order.payment_mode != 'cod' %} If you paid online, the refund goes back to your original payment method within 3–5 working days.{% endif %}</span></p>
+        {% else %}
+        <ol class="timeline">
+          {% for key, label, desc in steps %}
+            {% with i=forloop.counter0 %}
+            <li class="{% if order.status_step > i or order.status == 'delivered' %}done{% elif order.status_step == i %}now{% endif %}"{% if order.status_step == i %} aria-current="step"{% endif %}>
+              <span class="t-dot">{% if order.status_step > i or order.status == 'delivered' %}{% icon 'check-circle' 16 %}<span class="sr-only">Done:</span>{% else %}{{ forloop.counter }}{% endif %}</span>
+              <div><h3>{{ label }}</h3><p>{{ desc }}</p></div>
+            </li>
             {% endwith %}
-            {% endfor %}
-          </div>
-        </div>
+          {% endfor %}
+        </ol>
+        {% endif %}
+      </section>
 
-        <div class="tracking-card">
-          <h3 style="margin-bottom:1.25rem;">Delivery Address</h3>
-          <p style="font-weight:600;">{{ order.full_name }}</p>
-          <p style="color:var(--gray-500);">{{ order.address }}, {{ order.city }}, {{ order.state }} – {{ order.pincode }}</p>
-          <p style="color:var(--gray-500);">📱 {{ order.phone }}</p>
-        </div>
-      </div>
-
-      <!-- Sidebar Summary -->
-      <div>
-        <div class="tracking-card" style="position:sticky;top:90px;">
-          <h3 style="margin-bottom:1.25rem;">Items Ordered</h3>
-          <div class="order-items-list">
-            {% for item in items %}
-            <div class="order-item-row">
-              {% if item.product %}
-                <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}"/>
-              {% else %}
-                <div style="width:48px;height:48px;background:var(--pink-50);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🌸</div>
-              {% endif %}
-              <div style="flex:1;">
-                <div style="font-size:0.85rem;font-weight:600;">{% if item.product %}{{ item.product.name }}{% else %}Custom Bouquet{% endif %}</div>
-                <div style="font-size:0.75rem;color:var(--gray-400);">Qty: {{ item.quantity }}</div>
-              </div>
-              <div style="font-weight:700;font-size:0.875rem;color:var(--pink-600);">₹{{ item.line_total }}</div>
-            </div>
-            {% endfor %}
-          </div>
-
-          <hr style="margin:1.25rem 0;border-color:var(--gray-100);">
-          <div class="price-breakdown">
-            <div class="row"><span>Subtotal</span><span>₹{{ order.subtotal }}</span></div>
-            <div class="row"><span>Delivery</span><span>₹{{ order.delivery_charge }}</span></div>
-            {% if order.discount_amount > 0 %}
-            <div class="row" style="color:var(--green-500);">
-              <span>Discount ({{ order.coupon.code }})</span>
-              <span>-₹{{ order.discount_amount }}</span>
-            </div>
-            {% endif %}
-            <div class="total"><span>Total Paid</span><span style="color:var(--pink-600);">₹{{ order.total_amount }}</span></div>
-          </div>
-
-          <div style="margin-top:1.25rem;padding:0.75rem;background:var(--gray-50);border-radius:var(--radius-md);font-size:0.8rem;">
-            <strong>Payment:</strong> {{ order.get_payment_mode_display|default:order.payment_mode|upper }}
-          </div>
-
-          <a href="{% url 'dashboard' %}" class="btn btn-outline btn-block" style="margin-top:1.25rem;">← Back to Orders</a>
-        </div>
-      </div>
+      <section class="panel track-addr" aria-labelledby="addr-title">
+        <h2 id="addr-title">Delivering to</h2>
+        <p><strong>{{ order.full_name }}</strong></p>
+        <p>{{ order.address }}, {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} {{ order.pincode }}</p>
+        <p>{{ order.phone }}</p>
+        {% if order.special_note %}<p class="t-pay">Note: {{ order.special_note }}</p>{% endif %}
+      </section>
     </div>
+
+    <aside class="panel t-sum" aria-labelledby="items-title">
+      <h2 id="items-title">Items</h2>
+      <ul class="t-items">
+        {% for item in items %}
+        <li>
+          {% if item.product %}<img src="{{ item.product.get_image }}" alt="" width="56" height="70" loading="lazy"/>{% else %}<img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="56" height="70"/>{% endif %}
+          <div><div class="name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %}</div><div class="qty">Qty {{ item.quantity }}</div></div>
+          <span>{{ item.line_total|rupees }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="t-row"><span>Subtotal</span><span>{{ order.subtotal|rupees }}</span></div>
+      <div class="t-row"><span>Delivery</span><span>{% if order.delivery_charge == 0 %}Free{% else %}{{ order.delivery_charge|rupees }}{% endif %}</span></div>
+      {% if order.discount_amount > 0 %}<div class="t-row saving"><span>Coupon {{ order.coupon.code }}</span><span>−{{ order.discount_amount|rupees }}</span></div>{% endif %}
+      <div class="t-row total"><span>{% if order.status == 'cancelled' %}Total{% elif order.is_paid %}Total paid{% elif order.payment_mode == 'cod' %}To pay on delivery{% else %}Total{% endif %}</span><span>{{ order.total_amount|rupees }}</span></div>
+      <p class="t-pay">{% if order.payment_mode == 'cod' %}Cash on delivery{% elif order.is_paid %}Paid online{% else %}Online payment not completed{% endif %}</p>
+      {% if order.status == 'placed' %}
+      <form method="post" action="{% url 'cancel_order' order.pk %}" data-confirm="Cancel order #{{ order.id }}? This can’t be undone." style="margin-top: 1rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-block">Cancel this order</button>
+      </form>
+      {% endif %}
+    </aside>
   </div>
-</section>
+</div>
 {% endblock %}

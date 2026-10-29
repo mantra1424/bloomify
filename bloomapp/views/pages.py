@@ -4,17 +4,18 @@ import json
 from functools import cache
 from pathlib import Path
 
-from django.contrib import messages
 from django.core.validators import validate_email
 from django.db import connection
 from django.db.models import Avg, Count
 from django.forms import ValidationError
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from bloomapp.forms import ContactForm, first_error
+from bloomapp.forms import ContactForm
 from bloomapp.models import Category, NewsletterSubscriber, Product, Wishlist
+from bloomapp.services import pricing
 
 
 def home(request):
@@ -45,6 +46,7 @@ def home(request):
             'bestsellers': bestsellers,
             'wishlist_ids': _wishlist_ids(request.user),
             'hero_image': 'bloomapp/demo/products/pink-garden-delight.jpg',
+            'hero_image_small': 'bloomapp/demo/hero-480.jpg',  # same photo, 480px, for phones
         },
     )
 
@@ -55,20 +57,34 @@ def _wishlist_ids(user):
     return set(Wishlist.objects.filter(user=user).values_list('product_id', flat=True))
 
 
+CONTACT_TOPICS = ['An order', 'Custom bouquet', 'Delivery', 'Returns and refunds', 'Something else']
+
+
 def contact_view(request):
-    success = False
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
             form.save()
-            success = True
-        else:
-            messages.error(request, first_error(form))
-    return render(request, 'bloomapp/contact.html', {'success': success})
+            return redirect(f'{reverse("contact")}?sent=1')  # a refresh won't send it twice
+    else:
+        form = ContactForm()
+    context = {'form': form, 'topics': CONTACT_TOPICS, 'sent': request.GET.get('sent') == '1'}
+    return render(request, 'bloomapp/contact.html', context)
 
 
 def faq_view(request):
-    return render(request, 'bloomapp/faq.html')
+    """FAQ answers use the live delivery and pricing settings, so they never go out of date."""
+    return render(
+        request,
+        'bloomapp/faq.html',
+        {
+            'cities': list(pricing.DELIVERY_CITIES.values()),
+            'time_charges': pricing.TIME_CHARGES,
+            'discount_above': pricing.DELIVERY_DISCOUNT_ABOVE,
+            'discount': pricing.DELIVERY_DISCOUNT,
+            'card_price': pricing.BOUQUET_MESSAGE_CARD_PRICE,
+        },
+    )
 
 
 def returns_view(request):
@@ -95,7 +111,7 @@ def newsletter_subscribe(request):
         return JsonResponse({'ok': False, 'message': 'Invalid email address.'}, status=400)
     _, created = NewsletterSubscriber.objects.get_or_create(email=email)
     if created:
-        return JsonResponse({'ok': True, 'message': 'Subscribed! Thank you 🌸'})
+        return JsonResponse({'ok': True, 'message': 'You’re subscribed. Thank you.'})
     return JsonResponse({'ok': True, 'message': "You're already subscribed!"})
 
 

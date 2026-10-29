@@ -1,6 +1,8 @@
 {% extends 'bloomapp/auth/_card.html' %}
 {% block title %}Too many attempts – Bloomify{% endblock %}
-{% block card_intro %}Too many failed login attempts. For your security, logins for this account are paused for an hour.{% endblock %}
+{% block card_title %}Logins paused{% endblock %}
+{% block card_intro %}There were too many failed login attempts, so for your security logins for this account are paused for an hour.{% endblock %}
 {% block card %}
-<p class="auth-note">Forgot your password? <a href="{% url 'password_reset' %}">Reset it</a></p>
+<a class="btn btn-primary btn-block btn-lg" href="{% url 'password_reset' %}">Reset your password</a>
+<div class="auth-foot"><p><a class="link" href="{% url 'home' %}">Back to the shop</a></p></div>
 {% endblock %}

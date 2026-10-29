@@ -74,7 +74,7 @@
               <div class="cart-line-meta">{{ item.product.category.name }} · {{ item.unit_price|rupees }} each</div>
             {% else %}
               <div class="cart-line-name">Custom bouquet</div>
-              <div class="cart-line-meta">{{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.flowers }} · {{ item.custom_bouquet.get_wrapping_display }} wrap{% if item.custom_bouquet.message_card %} · with message card{% endif %} · {{ item.unit_price|rupees }} each</div>
+              <div class="cart-line-meta">{{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.get_flowers_display|lower }} stem{{ item.custom_bouquet.flower_count|pluralize }} · {{ item.custom_bouquet.get_wrapping_display }} wrap{% if item.custom_bouquet.message_card %} · with message card{% endif %} · {{ item.unit_price|rupees }} each</div>
             {% endif %}
             <div class="cart-line-actions">
               <form method="post" action="{% url 'update_cart' %}" class="stepper" aria-label="Quantity">

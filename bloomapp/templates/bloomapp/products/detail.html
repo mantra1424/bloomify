@@ -262,7 +262,7 @@
 </div>
 
 {% if product.is_in_stock %}
-<div class="buy-bar" id="buy-bar" aria-hidden="false">
+<div class="buy-bar" id="buy-bar">
   <span class="bb-price"><strong>{{ product.price|rupees }}</strong><span>{{ product.name|truncatechars:28 }}</span></span>
   <button type="submit" form="add-form" class="btn btn-primary btn-lg">Add to cart</button>
 </div>
@@ -296,7 +296,7 @@
   if (bar && mainBtn && 'IntersectionObserver' in window) {
     new IntersectionObserver(([entry]) => {
       bar.classList.toggle('hidden-bar', entry.isIntersecting);
-      bar.setAttribute('aria-hidden', String(entry.isIntersecting));
+      bar.inert = entry.isIntersecting;  // hidden bar: not focusable or read out
     }).observe(mainBtn);
   }
 })();

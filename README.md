@@ -3,7 +3,7 @@
 [![CI](https://github.com/mantra1424/bloomify/actions/workflows/ci.yml/badge.svg)](https://github.com/mantra1424/bloomify/actions/workflows/ci.yml)
 ![Python 3.14](https://img.shields.io/badge/python-3.14-blue)
 ![Django 6.1](https://img.shields.io/badge/django-6.1-0C4B33)
-![Coverage 86%](https://img.shields.io/badge/coverage-86%25-brightgreen)
+![Coverage 90%](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
 A full-stack Django e-commerce app for a florist: customers browse and order bouquets
 (or design their own), pay online with Razorpay or cash on delivery, pick a delivery slot
@@ -40,8 +40,42 @@ stock alerts, order management, coupons and sales reports.
 - Concurrency-safe stock, coupon and slot booking (conditional updates inside transactions)
 - Security: Django auth with email login, brute-force lockout (django-axes), password strength rules,
   CSRF on every form, open-redirect protection, CSV formula-injection guard, HTTPS/HSTS in production
-- 153 automated tests (86% coverage), Ruff lint/format, GitHub Actions CI on PostgreSQL
+- 218 automated tests (90% coverage), Ruff lint/format, GitHub Actions CI on PostgreSQL
 - Docker image, docker-compose, one-click Render blueprint
+
+## Design
+
+The storefront was redesigned as a modern florist boutique: warm ivory, deep wine and sage,
+Fraunces headings with Inter body text, real photography and line icons instead of emoji.
+It is built mobile-first with 44px touch targets, a slide-in cart, a 3-step checkout
+and an accessible bouquet builder.
+
+| Before | After |
+| --- | --- |
+| ![Home page before the redesign](docs/screenshots/before-home-desktop.jpg) | ![Home page after the redesign](docs/screenshots/after-home-desktop.jpg) |
+| ![Shop page before](docs/screenshots/before-shop-desktop.jpg) | ![Shop page after](docs/screenshots/after-shop-desktop.jpg) |
+| ![Product page before](docs/screenshots/before-product-desktop.jpg) | ![Product page after](docs/screenshots/after-product-desktop.jpg) |
+
+<p>
+  <img src="docs/screenshots/before-home-phone.jpg" alt="Home page on a phone, before" width="200"/>
+  <img src="docs/screenshots/after-home-phone.jpg" alt="Home page on a phone, after" width="200"/>
+  <img src="docs/screenshots/before-product-phone.jpg" alt="Product page on a phone, before" width="200"/>
+  <img src="docs/screenshots/after-product-phone.jpg" alt="Product page on a phone, after" width="200"/>
+</p>
+
+**Lighthouse (mobile, production settings):**
+
+| Page | Performance | Accessibility | Best practices | SEO |
+| --- | --- | --- | --- | --- |
+| Home | 99 | 100 | 96\* | 100 |
+| Shop | 100 | 100 | 96\* | 100 |
+| Product | 100 | 100 | 96\* | 100 |
+| FAQs, contact, log in, sign up | 100 | 100 | 100 | 100 |
+
+\* Measured locally, where a few product photos uploaded through the admin panel were not served (404s in the console).
+
+Signed-in pages (cart, checkout, account, order tracking, bouquet builder) were checked with
+axe-core against WCAG 2.1 AA with no violations.
 
 ## Tech stack
 
@@ -132,7 +166,7 @@ To receive webhooks locally, expose your server (e.g. with a tunnel), add
 ## Tests and code quality
 
 ```bash
-pytest                       # 153 tests
+pytest                       # 218 tests
 pytest --cov                 # with coverage report
 ruff check . && ruff format --check .
 pre-commit install           # run lint/format on every commit

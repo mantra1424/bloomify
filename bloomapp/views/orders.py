@@ -9,10 +9,10 @@ from bloomapp.models import Order
 from bloomapp.services import orders as order_service
 
 TRACKING_STEPS = [
-    ('placed', 'Order Placed', 'Your order has been confirmed.'),
-    ('packed', 'Packed', 'Your bouquet is being carefully packed.'),
-    ('out_for_delivery', 'Out for Delivery', 'On the way to you!'),
-    ('delivered', 'Delivered', 'Enjoy your beautiful flowers! 🌸'),
+    ('placed', 'Order placed', 'We have your order and the florist has it on their list.'),
+    ('packed', 'Hand-tied and packed', 'Your bouquet is made and wrapped.'),
+    ('out_for_delivery', 'Out for delivery', 'Our delivery partner is on the way.'),
+    ('delivered', 'Delivered', 'Enjoy your flowers.'),
 ]
 
 
@@ -24,7 +24,9 @@ def order_success(request, pk):
 
 @login_required
 def order_tracking(request, pk):
-    order = get_object_or_404(Order, pk=pk, user=request.user)
+    order = get_object_or_404(
+        Order.objects.select_related('delivery_slot', 'coupon', 'payment'), pk=pk, user=request.user
+    )
     return render(
         request,
         'bloomapp/orders/tracking.html',

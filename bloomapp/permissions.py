@@ -30,7 +30,7 @@ def admin_role_required(view_fn):
         if not request.user.is_admin():
             if request.path.startswith('/admin-panel/api/'):
                 return JsonResponse({'error': 'Forbidden'}, status=403)
-            messages.error(request, '🚫 Admin access required.')
+            messages.error(request, 'Admin access required.')
             return redirect('admin_dashboard')
         return view_fn(request, *args, **kwargs)
 

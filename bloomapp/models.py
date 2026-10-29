@@ -341,6 +341,13 @@ class Order(models.Model):
         return dict(ORDER_STATUS).get(self.status, self.status)
 
     @property
+    def is_paid(self):
+        try:
+            return self.payment.status == 'completed'
+        except Payment.DoesNotExist:
+            return False
+
+    @property
     def status_step(self):
         steps = ['placed', 'packed', 'out_for_delivery', 'delivered']
         try:

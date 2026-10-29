@@ -1,611 +1,225 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
-{% block title %}Custom Bouquet Builder – Bloomify{% endblock %}
+{% load bloom static %}
+{% block title %}Design your own bouquet – Bloomify{% endblock %}
 
 {% block extra_css %}
 <style>
-/* ── Hero ── */
-.builder-hero {
-  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
-  padding: 3rem 0 2rem;
-  text-align: center;
-  border-bottom: 1px solid #fce7f3;
-}
-.builder-hero h1 { font-family:var(--font-display); font-size:2.2rem; color:var(--gray-900); margin-bottom:0.5rem; }
-.builder-hero p  { color:var(--gray-500); font-size:0.95rem; }
+.bb { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 2.5rem; align-items: start; padding-bottom: 4rem; }
+.bb-part { border: 0; padding: 0; margin: 0; min-width: 0; }
+.bb-part + .bb-part { margin-top: 2.25rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+.bb-part legend { float: left; width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0; margin-bottom: 0.4rem; font-family: var(--font-display); font-size: var(--text-2xl); color: var(--ink); }
+.bb-num { width: 2rem; height: 2rem; border-radius: var(--radius-full); background: var(--accent); color: #fff; font-family: var(--font-body); font-size: var(--text-sm); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.bb-hint { margin-bottom: 1rem; }
+.bb-part legend + * { clear: both; }
 
-/* ── Progress stepper ── */
-.progress-stepper {
-  display: flex; align-items: center; justify-content: center;
-  gap: 0; margin: 2rem auto 2.5rem; max-width: 480px;
-}
-.ps-step { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; }
-.ps-dot {
-  width: 40px; height: 40px; border-radius: 50%;
-  border: 2.5px solid var(--gray-300);
-  background: white; color: var(--gray-400);
-  font-weight: 700; font-size: 0.9rem;
-  display: flex; align-items: center; justify-content: center;
-  position: relative; z-index: 2; transition: all 0.35s;
-}
-.ps-dot.active { border-color: var(--pink-500); background: var(--pink-500); color: white;
-  box-shadow: 0 0 0 5px rgba(236,72,153,0.15); }
-.ps-dot.done   { border-color: #16a34a; background: #16a34a; color: white; }
-.ps-label { font-size: 0.72rem; font-weight: 700; margin-top: 0.4rem;
-  color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.4px; }
-.ps-label.active { color: var(--pink-600); }
-.ps-label.done   { color: #16a34a; }
-.ps-line {
-  position: absolute; top: 20px; left: 50%; width: 100%;
-  height: 2.5px; background: var(--gray-200); z-index: 1; transition: background 0.35s;
-}
-.ps-line.done { background: #16a34a; }
-.ps-step:last-child .ps-line { display: none; }
+/* Tiles built on real radio buttons, so keyboard and screen readers work. */
+.tile { position: relative; display: block; cursor: pointer; }
+.tile input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.tile > span { display: block; height: 100%; border: 1.5px solid var(--line); border-radius: var(--radius-md); background: var(--surface); transition: border-color var(--transition), box-shadow var(--transition); }
+.tile:hover > span { border-color: var(--line-strong); }
+.tile input:checked + span { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+.tile input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-/* ── Layout ── */
-.builder-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; align-items: start; }
+.flowers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; }
+.flowers .tile > span { overflow: hidden; }
+.flowers img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; background: var(--accent-tint); }
+.flowers .t-text { display: block; padding: 0.6rem 0.75rem 0.7rem; }
+.t-name { display: block; font-weight: 600; color: var(--ink); }
+.t-sub { display: block; font-size: var(--text-sm); color: var(--muted); }
 
-/* ── Step panel ── */
-.step-panel { display: none; animation: fadeSlideUp 0.35s ease; }
-.step-panel.active { display: block; }
-@keyframes fadeSlideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.stems { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; }
+.stem-stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-full); background: var(--surface); }
+.stem-stepper button { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-full); color: var(--ink); }
+.stem-stepper button:hover { background: var(--gray-100); }
+.stem-stepper button:disabled { color: var(--line-strong); background: none; cursor: not-allowed; }
+.stem-stepper input { width: 4rem; border: 0; background: none; text-align: center; font-size: var(--text-xl); font-weight: 600; color: var(--ink); -moz-appearance: textfield; }
+.stem-stepper input::-webkit-outer-spin-button, .stem-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.presets { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.presets button { min-height: var(--tap); padding: 0 1rem; border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface); font-size: var(--text-sm); font-weight: 500; color: var(--ink-soft); }
+.presets button:hover { border-color: var(--line-strong); color: var(--ink); }
+.presets button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
 
-.step-card {
-  background: white; border-radius: var(--radius-xl);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06); padding: 2rem;
-}
-.step-card h3 {
-  font-family: var(--font-display); font-size: 1.25rem;
-  color: var(--gray-900); margin-bottom: 0.35rem;
-}
-.step-card .step-sub { font-size: 0.82rem; color: var(--gray-400); margin-bottom: 1.5rem; }
+.wraps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.wraps .tile > span { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 0.85rem; align-items: center; padding: 0.85rem 1rem; }
+.swatch { width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid rgba(43, 30, 28, 0.12); }
+.t-price { font-weight: 600; color: var(--ink); font-size: var(--text-sm); }
 
-/* ── Option grid ── */
-.option-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.85rem; margin-bottom: 1.5rem; }
-.option-card {
-  border: 2px solid var(--gray-200); border-radius: var(--radius-lg);
-  padding: 1.25rem 0.85rem; text-align: center; cursor: pointer;
-  transition: all 0.2s; background: white; position: relative;
-}
-.option-card:hover { border-color: var(--pink-300); background: #fdf2f8; transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(236,72,153,0.12); }
-.option-card.selected {
-  border-color: var(--pink-500); background: #fdf2f8;
-  box-shadow: 0 0 0 4px rgba(236,72,153,0.12);
-}
-.option-card.selected::after {
-  content: '✓'; position: absolute; top: -10px; right: -10px;
-  width: 22px; height: 22px; background: var(--pink-500); color: white;
-  border-radius: 50%; font-size: 0.7rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 8px rgba(236,72,153,0.35);
-}
-.option-card input[type=radio] { display: none; }
+.msg-wrap { position: relative; }
+.msg-count { text-align: right; font-size: var(--text-xs); color: var(--muted); margin-top: 0.3rem; }
 
-/* Flower card image area */
-.flower-icon-wrap {
-  width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 0.85rem;
-  overflow: hidden; transition: transform 0.25s;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  border: 3px solid white;
-  outline: 3px solid transparent;
-}
-.option-card.selected .flower-icon-wrap { outline-color: var(--pink-400); }
-.flower-icon-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
-.option-card:hover .flower-icon-wrap { transform: scale(1.1); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
-.option-card .o-name  { font-weight: 700; font-size: 0.88rem; color: var(--gray-900); }
-.option-card .o-price { font-size: 0.72rem; color: var(--gray-400); margin-top: 0.2rem; }
-.option-card .o-badge {
-  display: inline-block; margin-top: 0.4rem;
-  background: var(--pink-100); color: var(--pink-700);
-  font-size: 0.62rem; font-weight: 700; padding: 2px 7px;
-  border-radius: var(--radius-full);
-}
+.bb-sum { position: sticky; top: 96px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.bb-sum img { width: 100%; aspect-ratio: 16 / 11; object-fit: cover; display: block; background: var(--accent-tint); }
+.bb-sum-body { padding: 1.25rem 1.5rem 1.5rem; }
+.bb-sum h2 { font-size: var(--text-2xl); margin-bottom: 0.75rem; }
+.s-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; color: var(--ink-soft); font-size: var(--text-sm); }
+.s-row span:last-child { color: var(--ink); text-align: right; }
+.s-total { display: flex; justify-content: space-between; margin: 0.6rem 0 1.1rem; padding-top: 0.85rem; border-top: 1px solid var(--line); font-size: var(--text-xl); font-weight: 600; color: var(--ink); }
+.bb-note { margin-top: 0.75rem; font-size: var(--text-sm); color: var(--muted); display: flex; gap: 0.4rem; align-items: center; }
+.bb-bar { display: none; }
 
-/* ── Count step ── */
-.count-wrap { text-align:center; padding: 2.5rem 0; }
-.count-track { display:flex; align-items:center; justify-content:center; gap: 1.5rem; margin-bottom: 1rem; }
-.count-btn {
-  width: 52px; height: 52px; border-radius: 50%;
-  border: 2px solid var(--gray-300); background: white;
-  font-size: 1.5rem; cursor: pointer; transition: all 0.2s;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gray-700);
+@media (max-width: 1100px) { .flowers { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 960px) {
+  .bb { grid-template-columns: 1fr; }
+  .bb-sum { position: static; }
+  .bb-sum img { display: none; }
+  /* Total and Add stay in reach while choosing. */
+  .bb-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 80; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem var(--gutter) calc(0.75rem + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -6px 18px rgba(43, 30, 28, 0.08); }
+  .bb-bar strong { font-size: var(--text-xl); color: var(--ink); }
+  .bb-bar small { display: block; font-size: var(--text-xs); color: var(--muted); }
+  body.has-bb-bar .back-to-top { display: none; }
+  body.has-bb-bar .footer { padding-bottom: 5rem; }
 }
-.count-btn:hover { border-color: var(--pink-500); background: var(--pink-50); color: var(--pink-600); }
-.count-btn.plus { background: var(--pink-500); border-color: var(--pink-500); color: white; }
-.count-btn.plus:hover { background: var(--pink-700); }
-.count-num { font-size: 3rem; font-weight: 800; color: var(--pink-600); min-width: 80px; line-height:1; }
-.count-presets { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-top: 1.25rem; }
-.count-preset {
-  padding: 0.35rem 1rem; border-radius: var(--radius-full);
-  border: 1.5px solid var(--gray-200); font-size: 0.8rem;
-  font-weight: 600; cursor: pointer; transition: all 0.2s; background: white;
-}
-.count-preset:hover, .count-preset.active { border-color: var(--pink-500); background: var(--pink-50); color: var(--pink-600); }
-
-/* ── Wrapping ── */
-.wrap-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; margin-bottom: 1.5rem; }
-.wrap-card {
-  border: 2px solid var(--gray-200); border-radius: var(--radius-lg);
-  padding: 1.25rem; cursor: pointer; transition: all 0.2s;
-  display: flex; align-items: center; gap: 1rem; background: white;
-}
-.wrap-card:hover { border-color: var(--pink-300); background: #fdf2f8; }
-.wrap-card.selected { border-color: var(--pink-500); background: #fdf2f8; box-shadow: 0 0 0 4px rgba(236,72,153,0.1); }
-.wrap-icon { width: 52px; height: 52px; border-radius: var(--radius-md);
-  display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; }
-.wrap-info .w-name  { font-weight: 700; font-size: 0.9rem; color: var(--gray-900); }
-.wrap-info .w-desc  { font-size: 0.75rem; color: var(--gray-400); margin-top: 0.15rem; }
-.wrap-info .w-price { font-size: 0.8rem; font-weight: 700; color: var(--pink-600); margin-top:0.3rem; }
-.wrap-card input[type=radio] { display: none; }
-
-/* ── Message step ── */
-.msg-note-box {
-  background: linear-gradient(135deg, #fdf2f8, #fce7f3);
-  border-radius: var(--radius-lg); padding: 1.25rem;
-  margin-bottom: 1rem; text-align: center;
-}
-.msg-note-box .micon { font-size: 2rem; margin-bottom: 0.35rem; }
-
-/* ── Nav buttons ── */
-.nav-btns { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 1rem; }
-.btn-back {
-  padding: 0.7rem 1.5rem; border-radius: var(--radius-full);
-  border: 1.5px solid var(--gray-300); background: white;
-  font-weight: 600; cursor: pointer; color: var(--gray-600); transition: all 0.2s;
-}
-.btn-back:hover { border-color: var(--gray-500); color: var(--gray-900); }
-.btn-next {
-  padding: 0.7rem 2rem; border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--pink-500), var(--pink-700));
-  color: white; font-weight: 700; border: none; cursor: pointer;
-  transition: all 0.2s; box-shadow: 0 4px 14px rgba(180,40,100,0.3);
-}
-.btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(180,40,100,0.4); }
-
-/* ── Preview card ── */
-.preview-card {
-  background: white; border-radius: var(--radius-xl);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-  padding: 1.75rem; position: sticky; top: 100px;
-  border: 1px solid #fce7f3;
-}
-.preview-card h4 { font-family:var(--font-display); font-size:1rem;
-  text-align:center; margin-bottom:1.25rem; color:var(--gray-700); }
-.preview-display {
-  background: linear-gradient(135deg, #fdf2f8, #fce7f3);
-  border-radius: var(--radius-lg); padding: 1.75rem;
-  text-align: center; font-size: 4.5rem; margin-bottom: 1.25rem;
-  animation: float 4s ease-in-out infinite;
-}
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-
-.p-row { display:flex; justify-content:space-between; align-items:center;
-  padding: 0.55rem 0; border-bottom: 1px solid var(--gray-100); font-size:0.84rem; }
-.p-row:last-of-type { border-bottom: none; }
-.p-label { color: var(--gray-500); }
-.p-value { font-weight: 600; color: var(--gray-900); }
-.p-total { display:flex; justify-content:space-between; align-items:center;
-  padding: 0.85rem 0; margin-top: 0.5rem;
-  border-top: 2px solid var(--pink-100); font-weight: 800; font-size: 1.1rem; }
-.p-total .p-label { color: var(--gray-700); font-weight: 700; }
-.p-total .p-value { color: var(--pink-600); font-size: 1.25rem; }
-
-/* responsive */
-@media(max-width:768px) {
-  .builder-layout { grid-template-columns:1fr; }
-  .preview-card { position:static; }
-  .option-grid, .wrap-grid { grid-template-columns: repeat(2,1fr); }
+@media (max-width: 600px) {
+  .flowers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wraps { grid-template-columns: 1fr; }
 }
 </style>
 {% endblock %}
 
+{% block body_class %}has-bb-bar{% endblock %}
+
 {% block content %}
-<!-- Hero -->
-<div class="builder-hero">
-  <div class="container">
-    <h1>🎨 Custom Bouquet Builder</h1>
-    <p>Craft your perfect bouquet in 4 simple steps — handmade with love 🌸</p>
-  </div>
+<div class="container page-head">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a><span aria-hidden="true">/</span><span class="current" aria-current="page">Design your own</span>
+  </nav>
+  <h1>Design your own bouquet</h1>
+  <p class="lead">Choose the flower, how many stems and the wrapping. Our florist hand-ties it on the day of delivery.</p>
 </div>
 
-<section class="section-sm">
-  <div class="container">
+<div class="container">
+  <form method="post" id="bouquet-form" class="bb">
+    {% csrf_token %}
+    <div>
+      <fieldset class="bb-part">
+        <legend><span class="bb-num" aria-hidden="true">1</span>Flower</legend>
+        <p class="bb-hint">Each stem is {{ bouquet_pricing.per_stem|rupees }}, plus any extra shown.</p>
+        <div class="flowers">
+          {% for f in flower_options %}
+          <label class="tile">
+            <input type="radio" name="flowers" value="{{ f.key }}" data-label="{{ f.label }}" data-img="{% static f.image %}"{% if forloop.first %} checked{% endif %}/>
+            <span>
+              <img src="{% static f.image %}" alt="" width="200" height="250" loading="lazy"/>
+              <span class="t-text"><span class="t-name">{{ f.label }}</span><span class="t-sub">{% if f.extra %}+{{ f.extra|rupees }} a stem{% else %}No extra{% endif %}</span></span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </fieldset>
 
-    <!-- Progress stepper -->
-    <div class="progress-stepper">
-      <div class="ps-step">
-        <div class="ps-line" id="conn-1"></div>
-        <div class="ps-dot active" id="dot-1">1</div>
-        <div class="ps-label active" id="lbl-1">Flowers</div>
-      </div>
-      <div class="ps-step">
-        <div class="ps-line" id="conn-2"></div>
-        <div class="ps-dot" id="dot-2">2</div>
-        <div class="ps-label" id="lbl-2">Quantity</div>
-      </div>
-      <div class="ps-step">
-        <div class="ps-line" id="conn-3"></div>
-        <div class="ps-dot" id="dot-3">3</div>
-        <div class="ps-label" id="lbl-3">Wrapping</div>
-      </div>
-      <div class="ps-step">
-        <div class="ps-dot" id="dot-4">4</div>
-        <div class="ps-label" id="lbl-4">Message</div>
-      </div>
-    </div>
-
-    <div class="builder-layout">
-      <!-- ── Left: steps ── -->
-      <div>
-        <form method="post" id="bouquet-form">
-          {% csrf_token %}
-
-          <!-- Step 1: Flowers -->
-          <div class="step-panel active" id="step-1">
-            <div class="step-card">
-              <h3>🌸 Choose Your Flower</h3>
-              <p class="step-sub">Select the flower that speaks to your heart</p>
-
-              <div class="option-grid" id="flower-grid">
-                {% for val, label, emoji, price_add in flower_options %}
-                <div class="option-card" onclick="selectOption(this,'flowers','{{ val }}')">
-                  <div class="flower-icon-wrap" style="background:var(--pink-50);">{{ emoji }}</div>
-                  <div class="o-name">{{ label }}</div>
-                  <div class="o-price">+₹{{ price_add }}/flower</div>
-                  {% if price_add == 0 %}<span class="o-badge">Popular</span>{% endif %}
-                  <input type="radio" name="flowers" value="{{ val }}" id="f-{{ val }}"/>
-                </div>
-                {% endfor %}
-              </div>
-              <div id="flower-options-js"></div>
-
-              <div class="nav-btns">
-                <span></span>
-                <button type="button" class="btn-next" onclick="nextStep(1)">Next → Quantity</button>
-              </div>
-            </div>
+      <fieldset class="bb-part">
+        <legend><span class="bb-num" aria-hidden="true">2</span>Number of stems</legend>
+        <p class="bb-hint">Between {{ min_stems }} and {{ max_stems }}. A dozen is the classic choice.</p>
+        <div class="stems">
+          <div class="stem-stepper">
+            <button type="button" data-step="-1" aria-label="One stem fewer">{% icon 'minus' 18 %}</button>
+            <label class="sr-only" for="flower-count">Number of stems</label>
+            <input type="number" id="flower-count" name="flower_count" value="12" min="{{ min_stems }}" max="{{ max_stems }}" inputmode="numeric" required/>
+            <button type="button" data-step="1" aria-label="One stem more">{% icon 'plus' 18 %}</button>
           </div>
-
-          <!-- Step 2: Count -->
-          <div class="step-panel" id="step-2">
-            <div class="step-card">
-              <h3>🔢 How Many Flowers?</h3>
-              <p class="step-sub">More flowers, more love — choose your count</p>
-              <div class="count-wrap">
-                <div class="count-track">
-                  <button type="button" class="count-btn" onclick="changeCount(-1)">−</button>
-                  <div class="count-num" id="count-disp">12</div>
-                  <button type="button" class="count-btn plus" onclick="changeCount(1)">+</button>
-                </div>
-                <p style="color:var(--gray-400);font-size:0.85rem;">₹20 per flower · Base ₹150</p>
-                <div class="count-presets">
-                  <button type="button" class="count-preset" onclick="setCount(6)">6 stems</button>
-                  <button type="button" class="count-preset active" onclick="setCount(12)">12 stems</button>
-                  <button type="button" class="count-preset" onclick="setCount(18)">18 stems</button>
-                  <button type="button" class="count-preset" onclick="setCount(24)">24 stems</button>
-                  <button type="button" class="count-preset" onclick="setCount(36)">36 stems</button>
-                </div>
-                <input type="hidden" name="flower_count" id="flower-count" value="12"/>
-              </div>
-              <div class="nav-btns">
-                <button type="button" class="btn-back" onclick="prevStep(2)">← Back</button>
-                <button type="button" class="btn-next" onclick="nextStep(2)">Next → Wrapping</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 3: Wrapping -->
-          <div class="step-panel" id="step-3">
-            <div class="step-card">
-              <h3>🎁 Choose Wrapping</h3>
-              <p class="step-sub">The perfect wrapping makes it extra special</p>
-              <div class="wrap-grid">
-                <div class="wrap-card selected" id="wrap-classic" onclick="selectWrap(this,'classic')">
-                  <div class="wrap-icon" style="background:#f9fafb;">🎀</div>
-                  <div class="wrap-info">
-                    <div class="w-name">Classic White</div>
-                    <div class="w-desc">Elegant & timeless</div>
-                    <div class="w-price">Free</div>
-                  </div>
-                  <input type="radio" name="wrapping" value="classic" checked/>
-                </div>
-                <div class="wrap-card" id="wrap-rustic" onclick="selectWrap(this,'rustic')">
-                  <div class="wrap-icon" style="background:#fef3c7;">🌾</div>
-                  <div class="wrap-info">
-                    <div class="w-name">Rustic Kraft</div>
-                    <div class="w-desc">Natural & warm</div>
-                    <div class="w-price">+₹50</div>
-                  </div>
-                  <input type="radio" name="wrapping" value="rustic"/>
-                </div>
-                <div class="wrap-card" id="wrap-luxury" onclick="selectWrap(this,'luxury')">
-                  <div class="wrap-icon" style="background:#fdf4ff;">✨</div>
-                  <div class="wrap-info">
-                    <div class="w-name">Luxury Satin</div>
-                    <div class="w-desc">Premium & glamorous</div>
-                    <div class="w-price">+₹150</div>
-                  </div>
-                  <input type="radio" name="wrapping" value="luxury"/>
-                </div>
-                <div class="wrap-card" id="wrap-minimal" onclick="selectWrap(this,'minimal')">
-                  <div class="wrap-icon" style="background:#f0fdf4;">🌿</div>
-                  <div class="wrap-info">
-                    <div class="w-name">Minimal Green</div>
-                    <div class="w-desc">Fresh & eco-friendly</div>
-                    <div class="w-price">+₹30</div>
-                  </div>
-                  <input type="radio" name="wrapping" value="minimal"/>
-                </div>
-              </div>
-              <div class="nav-btns">
-                <button type="button" class="btn-back" onclick="prevStep(3)">← Back</button>
-                <button type="button" class="btn-next" onclick="nextStep(3)">Next → Message</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 4: Message -->
-          <div class="step-panel" id="step-4">
-            <div class="step-card">
-              <h3>💌 Personal Message</h3>
-              <p class="step-sub">Make it unforgettable with a heartfelt note</p>
-              <div class="msg-note-box">
-                <div class="micon">💝</div>
-                <p style="font-size:0.82rem;color:var(--pink-700);font-weight:600;margin:0;">Add a message card for just +₹30</p>
-                <p style="font-size:0.75rem;color:var(--gray-400);margin-top:0.2rem;">Leave blank to skip</p>
-              </div>
-              <div class="form-group">
-                <textarea name="message_card" id="msg-card" class="form-control" rows="4"
-                  placeholder="e.g. Happy Birthday! Wishing you a day as beautiful as these flowers 🌸"
-                  oninput="updatePreview()"></textarea>
-              </div>
-              <div class="nav-btns">
-                <button type="button" class="btn-back" onclick="prevStep(4)">← Back</button>
-                <button type="submit" class="btn-next" style="padding:0.85rem 2rem;font-size:1rem;">
-                  🛒 Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <!-- ── Right: LivePreview ── -->
-      <div>
-        <div class="preview-card">
-          <h4>✨ Your Bouquet Preview</h4>
-          <div class="preview-display" id="preview-img-wrap" style="display:flex;align-items:center;justify-content:center;">
-            <!-- SVG injected by JS -->
-          </div>
-
-          <div class="p-row">
-            <span class="p-label">Flower</span>
-            <span class="p-value" id="prev-flower">Rose</span>
-          </div>
-          <div class="p-row">
-            <span class="p-label">Quantity</span>
-            <span class="p-value" id="prev-count">12 stems</span>
-          </div>
-          <div class="p-row">
-            <span class="p-label">Wrapping</span>
-            <span class="p-value" id="prev-wrap">Classic White</span>
-          </div>
-          <div class="p-row">
-            <span class="p-label">Message Card</span>
-            <span class="p-value" id="prev-msg">Not added</span>
-          </div>
-          <div class="p-row">
-            <span class="p-label">Base price</span>
-            <span class="p-value">₹{{ bouquet_pricing.base }}</span>
-          </div>
-          <div class="p-row">
-            <span class="p-label">Flowers cost</span>
-            <span class="p-value" id="prev-flower-cost">₹240</span>
-          </div>
-          <div class="p-row">
-            <span class="p-label">Wrapping</span>
-            <span class="p-value" id="prev-wrap-cost">₹0</span>
-          </div>
-          <div class="p-total">
-            <span class="p-label">Total</span>
-            <span class="p-value" id="prev-total">₹390</span>
+          <div class="presets" role="group" aria-label="Quick choices">
+            {% for n in stem_presets %}<button type="button" data-preset="{{ n }}" aria-pressed="{% if n == 12 %}true{% else %}false{% endif %}">{{ n }} stems</button>{% endfor %}
           </div>
         </div>
-      </div>
+      </fieldset>
+
+      <fieldset class="bb-part">
+        <legend><span class="bb-num" aria-hidden="true">3</span>Wrapping</legend>
+        <div class="wraps">
+          {% for w in wrap_options %}
+          <label class="tile">
+            <input type="radio" name="wrapping" value="{{ w.key }}" data-label="{{ w.label }}"{% if forloop.first %} checked{% endif %}/>
+            <span>
+              <span class="swatch" style="background: {{ w.swatch }};" aria-hidden="true"></span>
+              <span><span class="t-name">{{ w.label }}</span><span class="t-sub">{{ w.desc }}</span></span>
+              <span class="t-price">{% if w.cost %}+{{ w.cost|rupees }}{% else %}Included{% endif %}</span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <fieldset class="bb-part">
+        <legend><span class="bb-num" aria-hidden="true">4</span>Message card <span class="t-sub" style="font-family: var(--font-body); font-size: var(--text-base);">(optional)</span></legend>
+        <p class="bb-hint">We handwrite it on a card for {{ bouquet_pricing.message_card|rupees }}. Leave it blank to skip.</p>
+        <label class="sr-only" for="msg-card">Message for the card</label>
+        <textarea name="message_card" id="msg-card" class="form-control" rows="4" maxlength="300" placeholder="Happy birthday, Riya! Love, Aarav" aria-describedby="msg-count"></textarea>
+        <p class="msg-count" id="msg-count" aria-live="polite"><span data-count>0</span> / 300</p>
+      </fieldset>
     </div>
 
-  </div>
-</section>
+    <aside class="bb-sum" aria-labelledby="sum-title">
+      <img src="{% static flower_options.0.image %}" alt="" width="352" height="242" id="sum-img"/>
+      <div class="bb-sum-body">
+        <h2 id="sum-title">Your bouquet</h2>
+        <div class="s-row"><span>Flower</span><span data-out="flower">{{ flower_options.0.label }}</span></div>
+        <div class="s-row"><span>Stems</span><span data-out="stems">12 × {{ bouquet_pricing.per_stem|rupees }}</span></div>
+        <div class="s-row"><span>Wrapping</span><span data-out="wrap">{{ wrap_options.0.label }}</span></div>
+        <div class="s-row"><span>Message card</span><span data-out="card">None</span></div>
+        <div class="s-row"><span>Arrangement</span><span>{{ bouquet_pricing.base|rupees }}</span></div>
+        <div class="s-total"><span>Total</span><span data-out="total" aria-live="polite">–</span></div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Add to cart</button>
+        <p class="bb-note">{% icon 'truck' 16 %} Delivery is worked out at checkout.</p>
+      </div>
+    </aside>
+
+    <div class="bb-bar" aria-hidden="true">
+      <div><small>Your bouquet</small><strong data-out="total">–</strong></div>
+      <button type="submit" class="btn btn-primary" tabindex="-1">Add to cart</button>
+    </div>
+  </form>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 {{ bouquet_pricing|json_script:"bouquet-pricing" }}
 <script>
-// Prices come from the server (bloomapp/services/pricing.py), so the preview always matches the charge.
-const PRICING = JSON.parse(document.getElementById('bouquet-pricing').textContent);
-const flowerEmojis = { rose:'🌹', lily:'🌷', tulip:'🌺', sunflower:'🌻', orchid:'💜' };
-const wrapCosts    = PRICING.wrapping;
-const wrapNames    = { classic:'Classic White', rustic:'Rustic Kraft', luxury:'Luxury Satin', minimal:'Minimal Green' };
-let state = { flowers:'rose', count:12, wrapping:'classic', message:'' };
+(function () {
+  // Prices come from the server (bloomapp/services/pricing.py), so the preview matches the charge.
+  const P = JSON.parse(document.getElementById('bouquet-pricing').textContent);
+  const form = document.getElementById('bouquet-form');
+  const count = document.getElementById('flower-count');
+  const msg = document.getElementById('msg-card');
+  const min = +count.min, max = +count.max;
+  const rupees = n => '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const out = (key, text) => form.querySelectorAll(`[data-out="${key}"]`).forEach(el => { el.textContent = text; });
 
-/* ── Inject flower cards if none from DB ── */
-(function(){
-  if (!document.querySelector('[name=flowers]')) {
-    const flowers = [
-      {val:'rose', label:'Rose', extra:PRICING.flower_surcharges.rose, badge:'Popular',
-       svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="50" cy="50" r="48" fill="#fff0f3"/>
-         <ellipse cx="50" cy="38" rx="18" ry="22" fill="#f43f5e" opacity=".9"/>
-         <ellipse cx="34" cy="52" rx="16" ry="20" fill="#fb7185" opacity=".85" transform="rotate(-40 34 52)"/>
-         <ellipse cx="66" cy="52" rx="16" ry="20" fill="#fb7185" opacity=".85" transform="rotate(40 66 52)"/>
-         <ellipse cx="50" cy="66" rx="18" ry="20" fill="#f43f5e" opacity=".9"/>
-         <ellipse cx="50" cy="50" rx="12" ry="14" fill="#e11d48"/>
-         <ellipse cx="50" cy="50" rx="7" ry="8" fill="#be123c"/>
-         <rect x="47" y="68" width="6" height="18" rx="3" fill="#16a34a"/>
-         <ellipse cx="38" cy="80" rx="9" ry="5" fill="#15803d" transform="rotate(-30 38 80)"/>
-       </svg>`},
-      {val:'lily', label:'Lily', extra:PRICING.flower_surcharges.lily, badge:'Fresh',
-       svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="50" cy="50" r="48" fill="#fdf4ff"/>
-         <ellipse cx="50" cy="28" rx="8" ry="24" fill="#e879f9" opacity=".9"/>
-         <ellipse cx="50" cy="28" rx="8" ry="24" fill="#e879f9" opacity=".9" transform="rotate(60 50 50)"/>
-         <ellipse cx="50" cy="28" rx="8" ry="24" fill="#e879f9" opacity=".9" transform="rotate(120 50 50)"/>
-         <ellipse cx="50" cy="28" rx="8" ry="24" fill="#d946ef" opacity=".85" transform="rotate(30 50 50)"/>
-         <ellipse cx="50" cy="28" rx="8" ry="24" fill="#d946ef" opacity=".85" transform="rotate(90 50 50)"/>
-         <ellipse cx="50" cy="28" rx="8" ry="24" fill="#d946ef" opacity=".85" transform="rotate(150 50 50)"/>
-         <circle cx="50" cy="50" r="8" fill="#fbbf24"/>
-         <circle cx="50" cy="50" r="4" fill="#f59e0b"/>
-       </svg>`},
-      {val:'tulip', label:'Tulip', extra:PRICING.flower_surcharges.tulip, badge:'',
-       svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="50" cy="50" r="48" fill="#fff1f2"/>
-         <ellipse cx="50" cy="42" rx="14" ry="22" fill="#fb923c" opacity=".95"/>
-         <ellipse cx="38" cy="48" rx="12" ry="20" fill="#f97316" opacity=".9" transform="rotate(-15 38 48)"/>
-         <ellipse cx="62" cy="48" rx="12" ry="20" fill="#f97316" opacity=".9" transform="rotate(15 62 48)"/>
-         <ellipse cx="50" cy="38" rx="10" ry="18" fill="#fdba74" opacity=".7"/>
-         <rect x="47" y="65" width="6" height="20" rx="3" fill="#16a34a"/>
-         <ellipse cx="38" cy="78" rx="10" ry="5" fill="#15803d" transform="rotate(-25 38 78)"/>
-         <ellipse cx="62" cy="78" rx="10" ry="5" fill="#15803d" transform="rotate(25 62 78)"/>
-       </svg>`},
-      {val:'sunflower', label:'Sunflower', extra:PRICING.flower_surcharges.sunflower, badge:'Bright',
-       svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="50" cy="50" r="48" fill="#fffbeb"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#fbbf24"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#fbbf24" transform="rotate(45 50 50)"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#fbbf24" transform="rotate(90 50 50)"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#fbbf24" transform="rotate(135 50 50)"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#f59e0b" transform="rotate(22.5 50 50)"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#f59e0b" transform="rotate(67.5 50 50)"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#f59e0b" transform="rotate(112.5 50 50)"/>
-         <ellipse cx="50" cy="22" rx="7" ry="16" fill="#f59e0b" transform="rotate(157.5 50 50)"/>
-         <circle cx="50" cy="50" r="16" fill="#92400e"/>
-         <circle cx="50" cy="50" r="10" fill="#78350f"/>
-         <rect x="47" y="66" width="6" height="18" rx="3" fill="#16a34a"/>
-       </svg>`},
-      {val:'orchid', label:'Orchid', extra:PRICING.flower_surcharges.orchid, badge:'Premium',
-       svg:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="50" cy="50" r="48" fill="#f5f3ff"/>
-         <ellipse cx="50" cy="30" rx="12" ry="20" fill="#a855f7" opacity=".9"/>
-         <ellipse cx="30" cy="50" rx="12" ry="20" fill="#9333ea" opacity=".85" transform="rotate(-70 30 50)"/>
-         <ellipse cx="70" cy="50" rx="12" ry="20" fill="#9333ea" opacity=".85" transform="rotate(70 70 50)"/>
-         <ellipse cx="36" cy="68" rx="12" ry="18" fill="#a855f7" opacity=".8" transform="rotate(30 36 68)"/>
-         <ellipse cx="64" cy="68" rx="12" ry="18" fill="#a855f7" opacity=".8" transform="rotate(-30 64 68)"/>
-         <circle cx="50" cy="50" r="9" fill="#fdf4ff" stroke="#c084fc" stroke-width="2"/>
-         <circle cx="50" cy="50" r="5" fill="#f0abfc"/>
-         <circle cx="50" cy="50" r="2.5" fill="#d946ef"/>
-       </svg>`},
-    ];
-    window._flowerImgs = {};
-    flowers.forEach(f => window._flowerImgs[f.val] = null);
-    window._flowerSvgs = {};
-    flowers.forEach(f => window._flowerSvgs[f.val] = f.svg);
-    const grid = document.getElementById('flower-grid') || document.createElement('div');
-    grid.className = 'option-grid';
-    grid.id = 'flower-grid';
-    flowers.forEach(f => {
-      const d = document.createElement('div');
-      d.className = 'option-card' + (f.val==='rose' ? ' selected' : '');
-      d.onclick = () => selectOption(d, 'flowers', f.val);
-      d.innerHTML = `
-        <div class="flower-icon-wrap">${f.svg}</div>
-        <div class="o-name">${f.label}</div>
-        <div class="o-price">+₹${f.extra}/flower</div>
-        ${f.badge ? `<span class="o-badge">${f.badge}</span>` : ''}
-        <input type="radio" name="flowers" value="${f.val}" ${f.val==='rose'?'checked':''}/>`;
-      grid.appendChild(d);
-    });
-    const placeholder = document.getElementById('flower-options-js');
-    if (placeholder) placeholder.replaceWith(grid);
-    // Show default (rose) in preview immediately
-    updatePreview();
+  function stems() {
+    const n = parseInt(count.value, 10);
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
   }
+
+  function render() {
+    const flower = form.querySelector('input[name="flowers"]:checked');
+    const wrap = form.querySelector('input[name="wrapping"]:checked');
+    const n = stems();
+    const perStem = P.per_stem + (P.flower_surcharges[flower.value] || 0);
+    const hasCard = msg.value.trim().length > 0;
+    // Same formula as the server: base + stems × (per-stem + flower extra) + wrapping + card.
+    const total = P.base + n * perStem + (P.wrapping[wrap.value] || 0) + (hasCard ? P.message_card : 0);
+
+    out('flower', flower.dataset.label);
+    out('stems', `${n} × ${rupees(perStem)}`);
+    out('wrap', wrap.dataset.label + (P.wrapping[wrap.value] ? ` (+${rupees(P.wrapping[wrap.value])})` : ''));
+    out('card', hasCard ? `Yes (+${rupees(P.message_card)})` : 'None');
+    out('total', rupees(total));
+    document.getElementById('sum-img').src = flower.dataset.img;
+
+    form.querySelector('[data-step="-1"]').disabled = n <= min;
+    form.querySelector('[data-step="1"]').disabled = n >= max;
+    form.querySelectorAll('[data-preset]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.preset === n)));
+    form.querySelector('[data-count]').textContent = msg.value.length;
+  }
+
+  form.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => {
+    count.value = stems() + +b.dataset.step; render();
+  }));
+  form.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+    count.value = b.dataset.preset; render();
+  }));
+  count.addEventListener('change', () => { count.value = stems(); render(); });
+  form.addEventListener('input', render);
+  render();
 })();
-
-function selectOption(card, field, value) {
-  card.closest('.step-panel').querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  card.querySelector('input').checked = true;
-  state[field] = value;
-  updatePreview();
-}
-
-function selectWrap(card, value) {
-  document.querySelectorAll('.wrap-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  card.querySelector('input').checked = true;
-  state.wrapping = value;
-  updatePreview();
-}
-
-function changeCount(delta) {
-  state.count = Math.max(1, Math.min(100, state.count + delta));
-  syncCount();
-}
-function setCount(n) {
-  state.count = n;
-  document.querySelectorAll('.count-preset').forEach(b => {
-    b.classList.toggle('active', parseInt(b.textContent) === n);
-  });
-  syncCount();
-}
-function syncCount() {
-  document.getElementById('count-disp').textContent = state.count;
-  document.getElementById('flower-count').value = state.count;
-  updatePreview();
-}
-
-function updatePreview() {
-  // Same formula as the server: base + stems × (per-stem price + flower surcharge) + wrapping + message card.
-  const perStem    = PRICING.per_stem + (PRICING.flower_surcharges[state.flowers] || 0);
-  const flowerCost = state.count * perStem;
-  const wrapCost   = wrapCosts[state.wrapping] || 0;
-  state.message    = document.getElementById('msg-card')?.value || '';
-  const hasMessage = state.message.trim().length > 0;
-  const msgCost    = hasMessage ? PRICING.message_card : 0;
-  const total      = PRICING.base + flowerCost + wrapCost + msgCost;
-  document.getElementById('prev-flower').textContent      = (state.flowers||'rose').replace(/^./,c=>c.toUpperCase());
-  document.getElementById('prev-count').textContent       = state.count + ' stems';
-  document.getElementById('prev-wrap').textContent        = wrapNames[state.wrapping] || 'Classic White';
-  document.getElementById('prev-msg').textContent         = hasMessage ? `Added (+₹${PRICING.message_card})` : 'Not added';
-  document.getElementById('prev-flower-cost').textContent = `₹${flowerCost} (₹${perStem}/stem)`;
-  document.getElementById('prev-wrap-cost').textContent   = `₹${wrapCost}`;
-  document.getElementById('prev-total').textContent       = `₹${total}`;
-  // Update preview SVG
-  const prevWrap = document.getElementById('preview-img-wrap');
-  if (prevWrap && window._flowerSvgs && window._flowerSvgs[state.flowers]) {
-    prevWrap.innerHTML = window._flowerSvgs[state.flowers];
-    prevWrap.querySelector('svg').style.cssText = 'width:110px;height:110px;border-radius:50%;display:block;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
-  }
-}
-
-function nextStep(from) {
-  document.getElementById(`step-${from}`).classList.remove('active');
-  document.getElementById(`step-${from+1}`).classList.add('active');
-  document.getElementById(`dot-${from}`).classList.add('done');
-  document.getElementById(`dot-${from}`).classList.remove('active');
-  document.getElementById(`lbl-${from}`).classList.add('done');
-  document.getElementById(`lbl-${from}`).classList.remove('active');
-  document.getElementById(`dot-${from+1}`).classList.add('active');
-  document.getElementById(`lbl-${from+1}`).classList.add('active');
-  if (from<3) document.getElementById(`conn-${from}`).classList.add('done');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-function prevStep(from) {
-  document.getElementById(`step-${from}`).classList.remove('active');
-  document.getElementById(`step-${from-1}`).classList.add('active');
-  document.getElementById(`dot-${from}`).classList.remove('active');
-  document.getElementById(`lbl-${from}`).classList.remove('active');
-  document.getElementById(`dot-${from-1}`).classList.remove('done');
-  document.getElementById(`dot-${from-1}`).classList.add('active');
-  document.getElementById(`lbl-${from-1}`).classList.remove('done');
-  document.getElementById(`lbl-${from-1}`).classList.add('active');
-  if (from<=3) document.getElementById(`conn-${from-1}`)?.classList.remove('done');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// Show server-calculated prices as soon as the page loads.
-updatePreview();
 </script>
 {% endblock %}

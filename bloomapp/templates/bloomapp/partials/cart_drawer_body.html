@@ -10,7 +10,7 @@
           <img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="64" height="80"/>
         {% endif %}
         <div class="drawer-item-info">
-          <span class="drawer-item-name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet · {{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.flowers }}{% endif %}</span>
+          <span class="drawer-item-name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet · {{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.get_flowers_display|lower }} stem{{ item.custom_bouquet.flower_count|pluralize }}{% endif %}</span>
           <span class="drawer-item-meta">Qty {{ item.quantity }} · {{ item.unit_price|rupees }} each</span>
         </div>
         <span class="drawer-item-price">{{ item.subtotal|rupees }}</span>

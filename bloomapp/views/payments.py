@@ -58,7 +58,7 @@ def _report_payment_result(request, order, result, payment_id):
     if result == 'refund_due':
         messages.error(
             request,
-            f'⚠️ Your payment for Order #{order.id} arrived after the order expired. '
+            f'Your payment for Order #{order.id} arrived after the order expired. '
             f'We will refund it — please contact support with payment ID {payment_id}.',
         )
         return redirect('dashboard')

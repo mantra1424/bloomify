@@ -1,224 +1,226 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
-{% block title %}My Account – Bloomify{% endblock %}
+{% load bloom %}
+{% block title %}Your account – Bloomify{% endblock %}
+
 {% block extra_css %}
 <style>
-.dashboard-layout { display:grid; grid-template-columns:240px 1fr; gap:2rem; align-items:start; }
-.dash-sidebar { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); overflow:hidden; position:sticky; top:90px; }
-.dash-user-card { background:linear-gradient(135deg,var(--pink-500),var(--pink-700)); padding:2rem; text-align:center; }
-.dash-avatar { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.25);
-  color:white; font-size:1.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; }
-.dash-user-name { color:white; font-size:1.05rem; font-weight:700; }
-.dash-user-email { color:rgba(255,255,255,0.8); font-size:0.78rem; margin-top:0.2rem; }
-.dash-nav a { display:flex; align-items:center; gap:0.75rem; padding:0.9rem 1.5rem;
-  font-size:0.875rem; font-weight:500; color:var(--gray-600);
-  border-left:3px solid transparent; transition:all var(--transition); }
-.dash-nav a:hover { color:var(--pink-600); background:var(--pink-50); }
-.dash-nav a.active { color:var(--pink-600); background:var(--pink-50); border-left-color:var(--pink-500); }
-.dash-content-card { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:2rem; }
-.dash-content-card h2 { font-size:1.1rem; margin-bottom:1.5rem; }
-.order-card { border:1.5px solid var(--gray-200); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; transition:all var(--transition); }
-.order-card:hover { border-color:var(--pink-300); box-shadow:var(--shadow-sm); }
-.order-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem; }
-.order-card-id { font-weight:700; font-size:0.9rem; }
-.order-card-date { font-size:0.78rem; color:var(--gray-400); }
-.order-card-items { font-size:0.82rem; color:var(--gray-500); margin-bottom:0.75rem; }
-.order-card-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; }
-.address-card { border:1.5px solid var(--gray-200); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; }
-.address-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; }
-.address-label { display:inline-flex; align-items:center; gap:0.4rem; background:var(--pink-100); color:var(--pink-600); padding:0.2rem 0.75rem; border-radius:var(--radius-full); font-size:0.75rem; font-weight:700; }
-@media(max-width:768px) {
-  .dashboard-layout { grid-template-columns:1fr; }
-  .dash-sidebar { position:static; }
+.acct { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 2rem; align-items: start; }
+.acct > * { min-width: 0; }
+.acct-nav { position: sticky; top: 96px; }
+.acct-who { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+.acct-avatar { width: 44px; height: 44px; flex: none; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent); font-family: var(--font-display); font-size: var(--text-xl); display: flex; align-items: center; justify-content: center; }
+.acct-who strong { display: block; color: var(--ink); }
+.acct-who span { font-size: var(--text-sm); color: var(--muted); word-break: break-all; }
+.acct-nav ul { display: flex; flex-direction: column; gap: 0.15rem; }
+.acct-nav a, .acct-nav button { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: var(--tap); padding: 0 0.85rem; border-radius: var(--radius-sm); color: var(--ink-soft); font-weight: 500; text-align: left; }
+.acct-nav a:hover, .acct-nav button:hover { background: var(--gray-100); color: var(--ink); }
+.acct-nav a[aria-current="page"] { background: var(--accent-tint); color: var(--accent); }
+
+.order-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem 1rem; padding: 1.15rem 0; border-top: 1px solid var(--line); }
+.order-row:first-of-type { border-top: 0; padding-top: 0; }
+.order-row h3 { font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; }
+.order-meta { font-size: var(--text-sm); color: var(--muted); margin-top: 0.15rem; }
+.order-items { margin-top: 0.4rem; color: var(--ink-soft); font-size: var(--text-sm); }
+.order-side { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+.order-total { font-weight: 600; color: var(--ink); }
+.order-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; grid-column: 1 / -1; }
+
+.addr-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1rem; }
+.addr { border: 1px solid var(--line); border-radius: var(--radius-md); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.addr p { font-size: var(--text-sm); }
+.addr-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+.addr-del { display: inline-flex; align-items: center; gap: 0.3rem; min-height: var(--tap); font-size: var(--text-sm); color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.addr-del:hover { color: var(--danger); }
+.add-addr { margin-top: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius-md); }
+.add-addr > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; min-height: 52px; padding: 0 1.1rem; font-weight: 600; color: var(--accent); }
+.add-addr > summary::-webkit-details-marker { display: none; }
+.add-addr[open] > summary { border-bottom: 1px solid var(--line); }
+.add-addr form { padding: 1.1rem; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+.panel-head h2 { margin: 0; }
+.form-narrow { max-width: 30rem; }
+.form-section { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+.form-section h3 { font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; margin-bottom: 0.75rem; }
+
+@media (max-width: 860px) {
+  .acct { grid-template-columns: 1fr; gap: 1.25rem; }
+  .acct-nav { position: static; }
+  .acct-nav ul { flex-direction: row; overflow-x: auto; gap: 0.35rem; padding-bottom: 0.25rem; }
+  .acct-nav li { flex: none; }
+  .acct-nav a, .acct-nav button { border: 1px solid var(--line); border-radius: var(--radius-full); padding: 0 1rem; white-space: nowrap; }
+}
+@media (max-width: 520px) {
+  .order-row { grid-template-columns: 1fr; }
+  .order-side { text-align: left; align-items: flex-start; flex-direction: row; justify-content: space-between; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container"><h1>👤 My Account</h1></div>
+<div class="container page-head">
+  <h1>Your account</h1>
 </div>
 
-<section class="section-sm">
-  <div class="container">
-    <div class="dashboard-layout">
-      <!-- Sidebar -->
-      <aside class="dash-sidebar">
-        <div class="dash-user-card">
-          <div class="dash-avatar">{{ user.full_name|slice:":1"|upper }}</div>
-          <div class="dash-user-name">{{ user.full_name }}</div>
-          <div class="dash-user-email">{{ user.email }}</div>
-        </div>
-        <nav class="dash-nav">
-          <a href="?tab=orders" class="{% if tab == 'orders' %}active{% endif %}">📦 My Orders</a>
-          <a href="{% url 'wishlist' %}" class="">❤️ Wishlist</a>
-          <a href="?tab=profile" class="{% if tab == 'profile' %}active{% endif %}">👤 Profile</a>
-          <a href="?tab=addresses" class="{% if tab == 'addresses' %}active{% endif %}">📍 Saved Addresses</a>
-          <a href="{% url 'products' %}">🌷 Shop</a>
-          <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">🚪 Logout</a>
-        </nav>
-      </aside>
+<div class="container page-body">
+  <div class="acct">
+    <nav class="acct-nav" aria-label="Account">
+      <div class="acct-who">
+        <span class="acct-avatar" aria-hidden="true">{{ user.full_name|slice:":1"|upper }}</span>
+        <div><strong>{{ user.full_name }}</strong><span>{{ user.email }}</span></div>
+      </div>
+      <ul>
+        <li><a href="?tab=orders"{% if tab == 'orders' %} aria-current="page"{% endif %}>{% icon 'package' 18 %} Orders</a></li>
+        <li><a href="?tab=addresses"{% if tab == 'addresses' %} aria-current="page"{% endif %}>{% icon 'pin' 18 %} Addresses</a></li>
+        <li><a href="?tab=profile"{% if tab == 'profile' %} aria-current="page"{% endif %}>{% icon 'user' 18 %} Profile</a></li>
+        <li><a href="{% url 'wishlist' %}">{% icon 'heart' 18 %} Wishlist</a></li>
+        <li><button type="submit" form="logout-form">{% icon 'log-out' 18 %} Log out</button></li>
+      </ul>
+    </nav>
 
-      <!-- Content -->
-      <div>
-        <!-- My Orders Tab -->
-        {% if tab == 'orders' %}
-        <div class="dash-content-card">
-          <h2>My Orders ({{ orders|length }})</h2>
-          {% for order in orders %}
-          <div class="order-card">
-            <div class="order-card-header">
-              <div>
-                <div class="order-card-id">Order #{{ order.id }}</div>
-                <div class="order-card-date">{{ order.created_at|date:"d M Y, g:i A" }}</div>
-              </div>
-              <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}">
-                {{ order.status_display }}
-              </span>
+    <div>
+      {% if tab == 'orders' %}
+      <section class="panel" aria-labelledby="orders-title">
+        <div class="panel-head">
+          <h2 id="orders-title">Orders</h2>
+          {% if orders %}<span class="order-meta">{{ orders|length }} in total</span>{% endif %}
+        </div>
+        {% for order in orders %}
+          {% with items=order.items.all %}
+          <article class="order-row">
+            <div>
+              <h3>Order #{{ order.id }}</h3>
+              <p class="order-meta">Placed {{ order.created_at|date:"j M Y" }}{% if order.delivery_slot %} · Delivery {{ order.delivery_slot.date|date:"D j M" }}, {{ order.delivery_slot.slot_label }}{% endif %}</p>
+              <p class="order-items">
+                {% for item in items|slice:":2" %}{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %} × {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if items|length > 2 %} and {{ items|length|add:"-2" }} more{% endif %}
+              </p>
             </div>
-            <div class="order-card-items">
-              {{ order.items.count }} item{{ order.items.count|pluralize }} ·
-              {% for item in order.items.all|slice:":2" %}
-                {% if item.product %}{{ item.product.name }}{% else %}Custom Bouquet{% endif %}{% if not forloop.last %}, {% endif %}
-              {% endfor %}
-              {% if order.items.count > 2 %} +{{ order.items.count|add:"-2" }} more{% endif %}
+            <div class="order-side">
+              <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'cancelled' %}badge-red{% elif order.status == 'placed' %}badge-yellow{% else %}badge-pink{% endif %}">{{ order.status_display }}</span>
+              <span class="order-total">{{ order.total_amount|rupees }}</span>
             </div>
-            <div class="order-card-footer">
-              <span style="font-weight:700;color:var(--pink-600);">₹{{ order.total_amount }}</span>
-              <div style="display:flex;gap:0.5rem;">
-                <a href="{% url 'order_tracking' order.pk %}" class="btn btn-outline btn-sm">Track Order</a>
-                {% if order.status == 'placed' %}
-                <form method="post" action="{% url 'cancel_order' order.pk %}" onsubmit="return confirm('Cancel this order?')" style="display:inline;">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fca5a5;">✕ Cancel</button>
-                </form>
-                {% endif %}
-              </div>
+            <div class="order-actions">
+              <a href="{% url 'order_tracking' order.pk %}" class="btn btn-outline btn-sm">Track order<span class="sr-only"> #{{ order.id }}</span></a>
+              {% if order.status == 'placed' %}
+              <form method="post" action="{% url 'cancel_order' order.pk %}" data-confirm="Cancel order #{{ order.id }}? This can’t be undone.">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-sm">Cancel<span class="sr-only"> order #{{ order.id }}</span></button>
+              </form>
+              {% endif %}
             </div>
-          </div>
-          {% empty %}
-          <div class="empty-state" style="padding:3rem 1rem;">
-            <div class="emoji">📦</div>
+          </article>
+          {% endwith %}
+        {% empty %}
+          <div class="empty-state">
+            <div class="empty-mark">{% icon 'package' 26 %}</div>
             <h3>No orders yet</h3>
-            <p>Your first bouquet order will appear here.</p>
-            <a href="{% url 'products' %}" class="btn btn-primary mt-2">Shop Now 🌷</a>
+            <p>Your first bouquet order will show up here, with live tracking.</p>
+            <a href="{% url 'products' %}" class="btn btn-primary btn-lg">Shop bouquets</a>
           </div>
-          {% endfor %}
-        </div>
+        {% endfor %}
+      </section>
 
-        <!-- Profile Tab -->
-        {% elif tab == 'profile' %}
-        <div class="dash-content-card">
-          <h2>Edit Profile</h2>
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_profile"/>
-            <div class="form-group">
-              <label class="form-label">Full Name</label>
-              <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input type="email" class="form-control" value="{{ user.email }}" disabled style="opacity:0.6;"/>
-              <p style="font-size:0.75rem;color:var(--gray-400);margin-top:0.3rem;">Email cannot be changed.</p>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Phone Number</label>
-              <input type="tel" name="phone" class="form-control" value="{{ user.phone }}"/>
-            </div>
-            <hr class="divider"/>
-            <h3 style="font-size:0.95rem;margin-bottom:1rem;">Change Password</h3>
-            <div class="form-group">
-              <label class="form-label">New Password (leave blank to keep current)</label>
-              <input type="password" name="new_password" class="form-control" placeholder="Enter new password"/>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Changes ✅</button>
-          </form>
-        </div>
-
-        <!-- Addresses Tab -->
-        {% elif tab == 'addresses' %}
-        <div class="dash-content-card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
-            <h2 style="margin:0;">Saved Addresses</h2>
-            <button class="btn btn-primary btn-sm" data-modal-open="add-addr-modal">+ Add New</button>
-          </div>
-
+      {% elif tab == 'addresses' %}
+      <section class="panel" aria-labelledby="addr-title">
+        <div class="panel-head"><h2 id="addr-title">Saved addresses</h2></div>
+        {% if addresses %}
+        <div class="addr-list">
           {% for addr in addresses %}
-          <div class="address-card">
-            <div class="address-card-header">
-              <span class="address-label">📍 {{ addr.label }}</span>
-              <form method="post" style="display:inline;">
+          <div class="addr">
+            <div class="addr-head">
+              <span class="badge badge-pink">{{ addr.label }}</span>
+              <form method="post" data-confirm="Delete the {{ addr.label }} address?">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete_address"/>
                 <input type="hidden" name="address_id" value="{{ addr.id }}"/>
-                <button type="submit" class="btn btn-ghost btn-sm" onclick="return confirm('Delete this address?')">🗑️</button>
+                <button type="submit" class="addr-del">{% icon 'trash' 16 %} Delete<span class="sr-only"> {{ addr.label }} address</span></button>
               </form>
             </div>
             <strong>{{ addr.full_name }}</strong>
-            <p style="color:var(--gray-500);font-size:0.875rem;margin-top:0.3rem;">{{ addr.address }}, {{ addr.city }}, {{ addr.state }} – {{ addr.pincode }}</p>
-            <p style="color:var(--gray-400);font-size:0.8rem;">📱 {{ addr.phone }}</p>
-          </div>
-          {% empty %}
-          <div class="empty-state" style="padding:2rem;">
-            <div class="emoji">📍</div>
-            <h3>No saved addresses</h3>
-            <p>Add your delivery addresses for faster checkout.</p>
+            <p>{{ addr.address }}, {{ addr.city }}{% if addr.state %}, {{ addr.state }}{% endif %} {{ addr.pincode }}</p>
+            <p>{{ addr.phone }}</p>
           </div>
           {% endfor %}
         </div>
-
-        <!-- Add Address Modal -->
-        <div class="modal-overlay" id="add-addr-modal">
-          <div class="modal">
-            <div class="modal-header">
-              <h3>📍 Add New Address</h3>
-              <span class="modal-close" onclick="document.getElementById('add-addr-modal').classList.remove('open')">✕</span>
-            </div>
-            <form method="post">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="add_address"/>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Label</label>
-                  <select name="label" class="form-control">
-                    <option>Home</option><option>Work</option><option>Other</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Full Name</label>
-                  <input type="text" name="addr_name" class="form-control" required/>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Phone</label>
-                <input type="tel" name="addr_phone" class="form-control" required/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Street Address</label>
-                <textarea name="addr_street" class="form-control" rows="2" required></textarea>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">City</label>
-                  <input type="text" name="addr_city" class="form-control" required/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">State</label>
-                  <input type="text" name="addr_state" class="form-control" required/>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Pincode</label>
-                <input type="text" name="addr_pincode" class="form-control" maxlength="6" required/>
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Save Address</button>
-            </form>
-          </div>
-        </div>
+        {% else %}
+          <p>No saved addresses yet. Add one to fill in checkout with a single tap.</p>
         {% endif %}
-      </div>
+
+        <details class="add-addr"{% if not addresses %} open{% endif %}>
+          <summary>{% icon 'plus' 18 %} Add an address</summary>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_address"/>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="a-label">Label</label>
+                <select id="a-label" name="label" class="form-control"><option>Home</option><option>Work</option><option>Other</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="a-name">Recipient’s name</label>
+                <input type="text" id="a-name" name="addr_name" class="form-control" autocomplete="name" required/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="a-phone">Phone (10 digits)</label>
+              <input type="tel" id="a-phone" name="addr_phone" class="form-control" inputmode="numeric" maxlength="10" autocomplete="tel-national" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="a-street">House, street and area</label>
+              <textarea id="a-street" name="addr_street" class="form-control" rows="2" autocomplete="street-address" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="a-city">City</label>
+                <select id="a-city" name="addr_city" class="form-control" required>
+                  {% for name in delivery_city_names %}<option>{{ name }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="a-pin">Pincode</label>
+                <input type="text" id="a-pin" name="addr_pincode" class="form-control" inputmode="numeric" maxlength="6" autocomplete="postal-code" required/>
+              </div>
+            </div>
+            <input type="hidden" name="addr_state" value="Gujarat"/>
+            <button type="submit" class="btn btn-primary">Save address</button>
+          </form>
+        </details>
+      </section>
+
+      {% else %}
+      <section class="panel" aria-labelledby="profile-title">
+        <h2 id="profile-title">Profile</h2>
+        <form method="post" class="form-narrow">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_profile"/>
+          <div class="form-group">
+            <label class="form-label" for="p-name">Full name</label>
+            <input type="text" id="p-name" name="full_name" class="form-control" value="{{ user.full_name }}" autocomplete="name" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-email">Email</label>
+            <input type="email" id="p-email" class="form-control" value="{{ user.email }}" disabled aria-describedby="p-email-help"/>
+            <p class="form-help" id="p-email-help">Your email is your login, so it can’t be changed here.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-phone">Phone</label>
+            <input type="tel" id="p-phone" name="phone" class="form-control" value="{{ user.phone }}" inputmode="numeric" maxlength="10" autocomplete="tel-national"/>
+          </div>
+          <div class="form-section">
+            <h3>Change password</h3>
+            <div class="form-group">
+              <label class="form-label" for="p-pw">New password</label>
+              <div class="pw-wrap">
+                <input type="password" id="p-pw" name="new_password" class="form-control" autocomplete="new-password" aria-describedby="p-pw-help"/>
+                {% include 'bloomapp/auth/_pw_toggle.html' %}
+              </div>
+              <p class="form-help" id="p-pw-help">Leave blank to keep your current password. At least 8 characters.</p>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+      </section>
+      {% endif %}
     </div>
   </div>
-</section>
+</div>
 {% endblock %}

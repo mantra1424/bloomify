@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -29,10 +30,11 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            messages.success(request, f'Welcome to Bloomify, {user.full_name}! 🌸')
-            return redirect('home')
-        messages.error(request, first_error(form))
-    return render(request, 'bloomapp/auth/signup.html')
+            messages.success(request, f'Welcome to Bloomify, {user.full_name}.')
+            return redirect(_safe_next(request))
+    else:
+        form = SignupForm()
+    return render(request, 'bloomapp/auth/signup.html', {'form': form})
 
 
 def login_view(request):
@@ -44,10 +46,10 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, f'Welcome back, {user.full_name}! 🌸')
+            messages.success(request, f'Welcome back, {user.full_name}.')
             return redirect(_safe_next(request))
         # Same message either way, so the form doesn't reveal which emails exist.
-        messages.error(request, 'Incorrect email or password.')
+        return render(request, 'bloomapp/auth/login.html', {'email': email, 'error': 'Incorrect email or password.'})
     return render(request, 'bloomapp/auth/login.html')
 
 
@@ -69,7 +71,7 @@ def user_dashboard(request):
             if form.is_valid():
                 form.save()
                 update_session_auth_hash(request, user)  # stay logged in after a password change
-                messages.success(request, 'Profile updated! ✅')
+                messages.success(request, 'Profile updated.')
             else:
                 messages.error(request, first_error(form))
 
@@ -77,7 +79,7 @@ def user_dashboard(request):
             form = AddressForm(request.POST)
             if form.is_valid():
                 form.save(user)
-                messages.success(request, 'Address saved! 📍')
+                messages.success(request, 'Address saved.')
             else:
                 messages.error(request, first_error(form))
 
@@ -85,14 +87,19 @@ def user_dashboard(request):
             SavedAddress.objects.filter(id=request.POST.get('address_id'), user=user).delete()
             messages.success(request, 'Address removed.')
 
-        return redirect('dashboard')
+        tab = {'update_profile': 'profile'}.get(action, 'addresses')
+        return redirect(f'{reverse("dashboard")}?tab={tab}')
 
+    tab = request.GET.get('tab', 'orders')
     return render(
         request,
         'bloomapp/dashboard/dashboard.html',
         {
-            'orders': Order.objects.filter(user=user).select_related('payment').order_by('-created_at'),
+            'orders': Order.objects.filter(user=user)
+            .select_related('delivery_slot')
+            .prefetch_related('items__product')
+            .order_by('-created_at'),
             'addresses': SavedAddress.objects.filter(user=user),
-            'tab': request.GET.get('tab', 'orders'),
+            'tab': tab if tab in ('orders', 'profile', 'addresses') else 'orders',
         },
     )

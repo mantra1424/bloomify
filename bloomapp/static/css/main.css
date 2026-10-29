@@ -522,10 +522,38 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .breadcrumb .current { color: var(--ink); font-weight: 500; }
 
 /* ── Empty State ─────────────────────────────────────────────────── */
-.empty-state { text-align: center; padding: 4rem 1.5rem; }
-.empty-state .emoji { font-size: 3rem; margin-bottom: 1rem; }
-.empty-state h3 { font-size: var(--text-2xl); margin-bottom: 0.5rem; }
+.empty-state { text-align: center; padding: 3.5rem 1.5rem; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); }
+.empty-mark { width: 56px; height: 56px; margin: 0 auto 1rem; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent); display: flex; align-items: center; justify-content: center; }
+.empty-state h2, .empty-state h3 { font-size: var(--text-2xl); margin-bottom: 0.5rem; }
 .empty-state p { max-width: 340px; margin: 0 auto 1.5rem; }
+.empty-state .btn + .btn { margin-left: 0.5rem; }
+
+/* ── Simple page head and panels (account, help and policy pages) ── */
+.page-head { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.page-head h1 { margin: 0.6rem 0 0.4rem; }
+.page-head .lead { max-width: 60ch; font-size: var(--text-lg); }
+.page-body { padding-bottom: 4rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.5rem; }
+.panel + .panel { margin-top: 1.25rem; }
+.panel h2 { font-size: var(--text-2xl); margin-bottom: 1rem; }
+.prose { max-width: 68ch; }
+.prose h2 { font-size: var(--text-2xl); margin: 2rem 0 0.6rem; }
+.prose h2:first-child { margin-top: 0; }
+.prose p, .prose li { color: var(--ink-soft); line-height: 1.7; }
+.prose p + p { margin-top: 0.75rem; }
+.prose ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.prose li + li { margin-top: 0.35rem; }
+.prose a:not(.btn) { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Password field with show/hide button ── */
+.pw-wrap { position: relative; }
+.pw-wrap .form-control { padding-right: 3rem; }
+.pw-toggle { position: absolute; right: 0; top: 0; width: var(--tap); height: var(--tap); display: inline-flex; align-items: center; justify-content: center; color: var(--muted); border-radius: var(--radius-sm); }
+.pw-toggle:hover { color: var(--ink); }
+.form-help { font-size: var(--text-xs); color: var(--muted); margin-top: 0.3rem; }
+.form-control[aria-invalid="true"] { border-color: var(--danger); }
+.form-alert { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.75rem 1rem; margin-bottom: 1.25rem; border-radius: var(--radius-md); background: var(--danger-tint); color: var(--danger); font-size: var(--text-sm); }
+.form-alert.ok { background: var(--sage-tint); color: var(--sage); }
 
 /* ── Back to top ─────────────────────────────────────────────────── */
 .back-to-top {

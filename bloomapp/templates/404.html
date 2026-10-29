@@ -1,0 +1,14 @@
+{% extends 'bloomapp/base.html' %}
+{% load bloom %}
+{% block title %}Page not found – Bloomify{% endblock %}
+{% block content %}
+<div class="container page-body" style="padding-top: 3rem;">
+  <div class="empty-state">
+    <div class="empty-mark">{% icon 'flower' 26 %}</div>
+    <h1 style="font-size: var(--text-3xl); margin-bottom: 0.5rem;">We can’t find that page</h1>
+    <p>The link may be old, or the bouquet may no longer be available.</p>
+    <a href="{% url 'products' %}" class="btn btn-primary btn-lg">Shop bouquets</a>
+    <a href="{% url 'home' %}" class="btn btn-outline btn-lg">Go to home page</a>
+  </div>
+</div>
+{% endblock %}

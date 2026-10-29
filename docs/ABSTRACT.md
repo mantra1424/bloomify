@@ -19,7 +19,7 @@ database transactions so that simultaneous orders cannot oversell.
 
 The system follows production practices: business rules are separated into a tested service
 layer, all input is validated with Django forms, and authentication uses Django's built-in system
-with brute-force protection and password reset. The project includes 153 automated tests (86%
+with brute-force protection and password reset. The project includes 218 automated tests (90%
 coverage), continuous integration on GitHub Actions with PostgreSQL, Docker packaging, and
 one-click deployment to Render.
 

@@ -173,3 +173,15 @@ def test_sold_out_product_cannot_be_added_from_card(client, product):
     html = client.get(reverse('home')).content.decode()
     assert 'Sold out' in html
     assert 'is sold out' in html
+
+
+def test_missing_page_uses_the_branded_404(client):
+    response = client.get('/no-such-page/')
+    assert response.status_code == 404
+    assert b'We can\xe2\x80\x99t find that page' in response.content
+
+
+def test_500_page_renders_without_context():
+    from django.template.loader import render_to_string
+
+    assert 'Something went wrong' in render_to_string('500.html')

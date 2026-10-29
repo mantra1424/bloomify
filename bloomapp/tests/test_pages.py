@@ -131,3 +131,45 @@ def test_seed_data_gives_every_product_a_photo(db):
     call_command('seed_data', stdout=io.StringIO())
     assert Product.objects.count() == 12
     assert not Product.objects.filter(image_url='').exists()
+
+
+def test_pincode_check_endpoint(client):
+    ok = client.get(reverse('check_pincode'), {'pincode': '390001'}).json()
+    assert ok['ok'] is True
+    assert ok['city'] == 'Vadodara'
+    nope = client.get(reverse('check_pincode'), {'pincode': '400001'}).json()
+    assert nope['ok'] is False
+    assert 'Anand' in nope['message']
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected'),
+    [(1299, '₹1,299'), ('999.00', '₹999'), ('1299.50', '₹1,299.50'), (0, '₹0'), (None, ''), ('abc', '')],
+)
+def test_rupees_filter(value, expected):
+    from bloomapp.templatetags.bloom import rupees
+
+    assert rupees(value) == expected
+
+
+def test_home_page_shows_occasions_bestsellers_and_no_fake_reviews(client, product):
+    response = client.get(reverse('home'))
+    html = response.content.decode()
+    assert response.context['occasions'][0]['category'] == product.category
+    assert product in response.context['bestsellers']
+    assert '₹700' in html and '₹800' in html  # formatted prices, no ".00"
+    assert 'Loved by Thousands' not in html
+    assert 'data-pin-check' in html
+
+
+def test_product_card_hides_stars_without_reviews(client, product):
+    html = client.get(reverse('home')).content.decode()
+    assert 'product-card-rating' not in html
+
+
+def test_sold_out_product_cannot_be_added_from_card(client, product):
+    product.stock_quantity = 0
+    product.save()
+    html = client.get(reverse('home')).content.decode()
+    assert 'Sold out' in html
+    assert 'is sold out' in html

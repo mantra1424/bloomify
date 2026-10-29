@@ -7,28 +7,52 @@ from pathlib import Path
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.db import connection
-from django.db.models import Count
+from django.db.models import Avg, Count
 from django.forms import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_POST
 
 from bloomapp.forms import ContactForm, first_error
-from bloomapp.models import Category, NewsletterSubscriber, Product
+from bloomapp.models import Category, NewsletterSubscriber, Product, Wishlist
 
 
 def home(request):
     available = Product.objects.filter(status='available').select_related('category')
+
+    # Each occasion tile shows a photo: its featured product's, else its newest product's.
+    tile_image = {}
+    for product in available.order_by('-is_featured', '-created_at'):
+        tile_image.setdefault(product.category_id, product.get_image)
+    occasions = [
+        {'category': cat, 'image': tile_image.get(cat.id)}
+        for cat in Category.objects.filter(status='available').order_by('name')
+        if cat.id in tile_image
+    ]
+
+    # Bestsellers: most ordered, then featured, then newest.
+    bestsellers = available.annotate(
+        order_count=Count('orderitem', distinct=True),
+        review_count=Count('reviews', distinct=True),
+        rating_avg=Avg('reviews__rating'),
+    ).order_by('-order_count', '-is_featured', '-created_at')[:4]
+
     return render(
         request,
         'bloomapp/index.html',
         {
-            'categories': Category.objects.filter(status='available'),
-            'featured': available.filter(is_featured=True)[:8],
-            # Trending = most ordered products.
-            'trending': available.annotate(order_count=Count('orderitem')).order_by('-order_count')[:4],
+            'occasions': occasions,
+            'bestsellers': bestsellers,
+            'wishlist_ids': _wishlist_ids(request.user),
+            'hero_image': 'bloomapp/demo/products/pink-garden-delight.jpg',
         },
     )
+
+
+def _wishlist_ids(user):
+    if not user.is_authenticated:
+        return set()
+    return set(Wishlist.objects.filter(user=user).values_list('product_id', flat=True))
 
 
 def contact_view(request):

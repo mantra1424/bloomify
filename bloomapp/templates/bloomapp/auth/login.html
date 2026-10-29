@@ -7,7 +7,7 @@
 <form method="post" novalidate>
   {% csrf_token %}
   {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}"/>{% endif %}
-  {% if error %}<p class="form-alert" role="alert">{% icon 'alert' 18 %} {{ error }}</p>{% endif %}
+  {% if error %}<p class="form-alert" role="alert">{% icon 'alert' 18 %} <span>{{ error }} Check for typos, or <a href="{% url 'password_reset' %}" style="color: inherit; text-decoration: underline; font-weight: 600;">reset your password</a>.</span></p>{% endif %}
   <div class="form-group">
     <label class="form-label" for="email">Email</label>
     <input type="email" id="email" name="email" class="form-control" value="{{ email }}" autocomplete="email" required{% if not email %} autofocus{% endif %}{% if error %} aria-invalid="true"{% endif %}/>

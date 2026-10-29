@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.templatetags.static import static
+from django.utils import timezone
 from django.utils.html import format_html
 
 # ── Choice Constants ────────────────────────────────────────────────────────────
@@ -234,6 +237,16 @@ class DeliverySlot(models.Model):
     @property
     def slots_left(self):
         return self.max_orders - self.booked_count
+
+    @property
+    def has_started(self):
+        """True once the slot's start time has passed (in the shop's time zone)."""
+        start = timezone.make_aware(datetime.combine(self.date, self.slot_start))
+        return start <= timezone.now()
+
+    @property
+    def is_bookable(self):
+        return self.is_available and not self.has_started
 
 
 # ── Coupon ────────────────────────────────────────────────────────────────────

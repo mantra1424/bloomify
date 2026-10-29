@@ -21,10 +21,17 @@ logger = logging.getLogger(__name__)
 def payment_page_context(order):
     return {
         'order': order,
-        'razorpay_order_id': order.razorpay_order_id,
-        'amount': payments.amount_in_paise(order.total_amount),
-        'key': settings.RAZORPAY_KEY_ID,
-        'currency': 'INR',
+        # Passed to the page as JSON (json_script), so customer names can't break the script.
+        'razorpay_options': {
+            'key': settings.RAZORPAY_KEY_ID,
+            'amount': payments.amount_in_paise(order.total_amount),
+            'currency': 'INR',
+            'order_id': order.razorpay_order_id,
+            'name': 'Bloomify',
+            'description': f'Order #{order.id}',
+            'prefill': {'name': order.full_name, 'email': order.email, 'contact': order.phone},
+            'theme': {'color': '#7B2D3B'},
+        },
     }
 
 
@@ -55,7 +62,7 @@ def _report_payment_result(request, order, result, payment_id):
             f'We will refund it — please contact support with payment ID {payment_id}.',
         )
         return redirect('dashboard')
-    messages.success(request, 'Payment successful! 🎉 Your order is confirmed.')
+    messages.success(request, 'Payment received. Your order is confirmed.')
     return redirect('order_success', pk=order.id)
 
 
@@ -80,7 +87,7 @@ def confirm_payment(request):
         return redirect('home')
 
     if not payments.verify_payment_signature(order.razorpay_order_id, payment_id, signature):
-        messages.error(request, '❌ Payment verification failed. Contact support.')
+        messages.error(request, 'We could not verify your payment. Please contact support with your order number.')
         return redirect('home')
 
     result = order_service.mark_order_paid(order, payment_id)

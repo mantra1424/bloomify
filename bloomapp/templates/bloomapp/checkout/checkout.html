@@ -1,918 +1,545 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
+{% load bloom static %}
+
 {% block title %}Checkout – Bloomify{% endblock %}
+
 {% block extra_css %}
 <style>
-.checkout-layout { display:grid; grid-template-columns:1fr 380px; gap:2rem; align-items:start; }
-.checkout-card { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:2rem; margin-bottom:1.5rem; }
-.checkout-card h3 { font-size:1rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.6rem; }
-.checkout-card h3 .step-num { width:26px; height:26px; border-radius:50%; background:var(--pink-500); color:white;
-  font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
-.section-divider { border:none; border-top:1px solid var(--gray-100); margin:1.5rem 0; }
-.date-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0.5rem; margin-bottom:1.25rem; }
-.date-chip { border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:0.6rem 0.3rem;
-  text-align:center; cursor:pointer; transition:all var(--transition); }
-.date-chip:hover, .date-chip.selected { border-color:var(--pink-500); background:var(--pink-50); }
-.date-chip .day  { font-size:0.65rem; color:var(--gray-400); text-transform:uppercase; }
-.date-chip .num  { font-size:1rem; font-weight:700; color:var(--gray-900); }
-.summary-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 0; border-bottom:1px solid var(--gray-100); }
-.summary-item:last-child { border-bottom:none; }
-.summary-item img { width:50px; height:50px; border-radius:var(--radius-sm); object-fit:cover; background:var(--pink-50); }
-.summary-item-info { flex:1; }
-.summary-item-name { font-size:0.85rem; font-weight:600; }
-.summary-item-cat  { font-size:0.72rem; color:var(--gray-400); }
-.coupon-row { display:flex; gap:0.75rem; }
-.coupon-row .form-control { border-radius:var(--radius-full); text-transform:uppercase; }
-.delivery-check-box {
-  display: none;
-  margin-top: 0.75rem;
-  padding: 0.85rem 1rem;
-  border-radius: var(--radius-md);
-  font-size: 0.84rem;
-  border-left: 4px solid;
-  animation: fadeIn 0.25s ease;
-}
-.delivery-check-box.available { background:#f0fdf4; border-color:#16a34a; color:#15803d; }
-.delivery-check-box.unavailable { background:#fef2f2; border-color:#ef4444; color:#dc2626; }
-.delivery-check-box .dbox-title { font-weight:700; font-size:0.88rem; margin-bottom:0.2rem; }
-.delivery-check-box .dbox-sub { font-size:0.78rem; opacity:0.85; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
-.charge-info { background:var(--green-50); border-radius:var(--radius-md); padding:0.75rem 1rem;
-  font-size:0.82rem; color:var(--green-600); margin-top:0.75rem; display:none; }
-.payment-method-tabs { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; }
-.payment-tab { border:2px solid var(--gray-200); border-radius:var(--radius-md); padding:0.75rem 1.25rem;
-  cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--gray-600); transition:all var(--transition); }
-.payment-tab.active { border-color:var(--pink-500); background:var(--pink-50); color:var(--pink-600); }
-.total-line { display:flex; justify-content:space-between; padding:0.5rem 0; font-size:0.875rem; }
-.total-final { display:flex; justify-content:space-between; padding:1rem 0; border-top:2px solid var(--pink-100);
-  font-weight:700; font-size:1.1rem; }
+.co { padding-top: 1.5rem; padding-bottom: 4rem; }
+.co h1 { margin: 0.6rem 0 1.25rem; }
+.co-progress { display: flex; gap: 0.5rem; margin-bottom: 1.75rem; counter-reset: s; }
+.co-progress li { flex: 1; display: flex; flex-direction: column; gap: 0.45rem; font-size: var(--text-sm); color: var(--muted); }
+.co-progress li::before { content: ''; height: 4px; border-radius: var(--radius-full); background: var(--line); }
+.co-progress li.done::before, .co-progress li[aria-current="step"]::before { background: var(--accent); }
+.co-progress li[aria-current="step"] { color: var(--ink); font-weight: 600; }
 
-@media(max-width:768px) {
-  .checkout-layout { grid-template-columns:1fr; }
-  .date-grid { grid-template-columns:repeat(4,1fr); }
-}
+.co-grid { display: grid; grid-template-columns: minmax(0, 1fr) 24rem; gap: 2.5rem; align-items: start; }
 
-/* ═══════════════════════════════════════════════
-   Swiggy/Zomato-style Bill Details
-   ═══════════════════════════════════════════════ */
-.bill-card {
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  padding: 0;
-  margin-top: 0.5rem;
-  overflow: hidden;
-}
-.bill-header {
-  background: #fff8f8;
-  border-bottom: 1px dashed #ffd6d6;
-  padding: 0.65rem 1rem;
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: var(--gray-800);
-  letter-spacing: 0.3px;
-}
-.bill-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid #f5f5f5;
-  font-size: 0.84rem;
-}
-.bill-row:last-of-type { border-bottom: none; }
-.bill-label { color: #555; }
-.bill-val { font-weight: 600; color: #222; }
+.co-step { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); margin-bottom: 1rem; }
+.co-step-head { display: flex; align-items: center; gap: 0.85rem; padding: 1.1rem 1.25rem; }
+.co-step-head h2 { flex: 1; font-family: var(--font-body); font-size: var(--text-lg); font-weight: 600; }
+.co-step-num { width: 30px; height: 30px; border-radius: var(--radius-full); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: var(--text-sm); font-weight: 600; background: var(--gray-100); color: var(--ink); }
+.co-step.is-done .co-step-num { background: var(--sage); color: #fff; }
+.co-step.is-active .co-step-num { background: var(--accent); color: #fff; }
+.co-step-sum { padding: 0 1.25rem 1.1rem 3.95rem; margin-top: -0.6rem; font-size: var(--text-sm); color: var(--ink-soft); display: none; }
+.co-step-edit { display: none; align-items: center; min-height: var(--tap); color: var(--accent); font-weight: 600; }
+.co-step-edit:hover { text-decoration: underline; }
+.pay-text strong { display: block; }
+.js .co-step.is-done .co-step-sum { display: block; }
+.js .co-step.is-done .co-step-edit { display: inline-flex; }
+.co-step-body { padding: 0.25rem 1.25rem 1.5rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+.js .co-step:not(.is-active) .co-step-body { display: none; }
 
-/* Delivery row — clickable */
-.bill-row-delivery {
-  cursor: pointer;
-  background: #fffbf0;
-  transition: background 0.15s;
-}
-.bill-row-delivery:hover { background: #fff3d6; }
-.bill-info-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px; border-radius: 50%;
-  background: #e0e0e0; color: #555;
-  font-size: 0.6rem; font-weight: 700;
-  margin-left: 5px; cursor: pointer;
-  font-style: normal;
-}
-
-/* Expandable delivery breakdown */
-.bill-breakdown {
-  background: #f9f9f9;
-  border-top: 1px dashed #e0e0e0;
-  border-bottom: 1px dashed #e0e0e0;
-  padding: 0.4rem 1rem 0.2rem;
-  animation: slideDown 0.2s ease;
-}
-@keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-.bk-sub-row {
-  display: flex; justify-content: space-between;
-  padding: 0.3rem 0;
-  font-size: 0.76rem;
-  color: #777;
-  border-bottom: 1px dotted #eee;
-}
-.bk-sub-row:last-child { border-bottom: none; }
-.bk-sub-row span:last-child { font-weight: 600; color: #444; }
-
-/* Coupon saving row */
-.bill-row-saving .bill-label { color: #16a34a; font-weight: 600; }
-
-/* Dotted separator */
-.bill-dotted-line {
-  border: none;
-  border-top: 1.5px dashed #ddd;
-  margin: 0.25rem 0;
-}
-
-/* To Pay row */
-.bill-topay {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0.75rem 1rem 0.5rem;
-  font-size: 1rem; font-weight: 800;
-  color: #111;
-}
-.bill-note {
-  font-size: 0.68rem; color: #aaa;
-  padding: 0 1rem 0.6rem;
-  margin: 0;
-}
-
-/* Place order button */
-.btn-place-order {
-  width: 100%; padding: 0.9rem;
-  background: linear-gradient(135deg, var(--pink-600), var(--pink-500));
-  color: white; border: none; border-radius: var(--radius-full);
-  font-size: 1rem; font-weight: 700; cursor: pointer;
-  margin-top: 1.1rem;
-  box-shadow: 0 4px 16px rgba(236,72,153,0.35);
-  transition: all 0.2s;
-  letter-spacing: 0.3px;
-}
-.btn-place-order:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236,72,153,0.4); }
-.btn-place-order:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-/* ── Delivery Type selector ── */
-.dtype-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-top:0.5rem; }
-.dtype-option {
-  border:2px solid var(--gray-200); border-radius:var(--radius-lg);
-  padding:1rem 0.75rem; text-align:center; cursor:pointer;
-  transition:all 0.2s; background:white; display:block; position:relative;
-}
-.dtype-option:hover { border-color:var(--pink-300); background:var(--pink-50); }
-.dtype-option input[type=radio] { display:none; }
-.dtype-option:has(input:checked) {
-  border-color:var(--pink-500); background:#fdf2f8;
-  box-shadow:0 0 0 4px rgba(236,72,153,0.1);
-}
-.dtype-option:has(input:checked)::after {
-  content:'✓'; position:absolute; top:-9px; right:-9px;
-  width:20px; height:20px; background:var(--pink-500); color:white;
-  border-radius:50%; font-size:0.65rem; font-weight:700;
-  display:flex; align-items:center; justify-content:center;
-}
-.dtype-icon  { font-size:1.6rem; margin-bottom:0.35rem; }
-.dtype-name  { font-weight:700; font-size:0.82rem; color:var(--gray-900); }
-.dtype-price { font-size:0.72rem; font-weight:700; color:var(--pink-600); margin-top:0.15rem; }
-.dtype-desc  { font-size:0.68rem; color:var(--gray-400); margin-top:0.1rem; }
-/* ── Delivery breakdown ── */
-.bk-row { display:flex; justify-content:space-between;
-  padding:0.3rem 0; border-bottom:1px solid var(--gray-200); font-size:0.8rem; }
-.bk-row:last-child { border-bottom:none; }
-.bk-row span:first-child { color:var(--gray-500); }
-.bk-row span:last-child  { font-weight:600; color:var(--gray-800); }
-/* Free delivery */
-.free-delivery-banner {
-  background:linear-gradient(135deg,#dcfce7,#bbf7d0);
-  border:1.5px solid #86efac; border-radius:var(--radius-md);
-  padding:0.6rem 1rem; text-align:center;
-  font-weight:700; font-size:0.85rem; color:#15803d;
-  animation:freePop 0.4s cubic-bezier(.34,1.56,.64,1) both;
-}
-@keyframes freePop { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
-@keyframes chargeFlash { 0%{background:#fce7f3} 100%{background:transparent} }
-.charge-flash { animation:chargeFlash 0.5s ease; }
-
-/* ═══════════════════════════════════════════════
-   Form Validation Styles
-   ═══════════════════════════════════════════════ */
-.form-control.is-valid {
-  border-color: #16a34a !important;
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2316a34a'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1.1rem;
-  padding-right: 2.5rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.form-control.is-invalid {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23ef4444'%3E%3Cpath fill-rule='evenodd' d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1.1rem;
-  padding-right: 2.5rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.field-error {
-  display: none;
-  font-size: 0.75rem;
-  color: #ef4444;
-  margin-top: 0.3rem;
-  font-weight: 500;
-  animation: errShake 0.3s ease;
-}
+.field-error { display: none; color: var(--danger); font-size: var(--text-sm); margin-top: 0.35rem; }
 .field-error.visible { display: block; }
-@keyframes errShake {
-  0%,100%{transform:translateX(0)}
-  25%{transform:translateX(-4px)}
-  75%{transform:translateX(4px)}
-}
+.form-control.is-invalid { border-color: var(--danger); }
+.pin-msg { margin-top: 0.4rem; font-size: var(--text-sm); display: flex; gap: 0.4rem; align-items: center; }
+.pin-msg.ok { color: var(--sage); }
+.pin-msg.no { color: var(--danger); }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 
-/* Loading state */
-.btn-place-order.loading {
-  pointer-events: none;
-  opacity: 0.75;
+/* Choice tiles (dates, slots, delivery type, payment) */
+.co fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.co fieldset + fieldset { margin-top: 1.25rem; }
+.choice-grid { display: grid; gap: 0.6rem; }
+.dates { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.slots { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin-top: 0.75rem; }
+.types, .pays { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pays { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.choice { position: relative; }
+.choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.choice > span {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem;
+  min-height: 56px; padding: 0.6rem 0.5rem; text-align: center;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-md); background: var(--surface);
+  font-size: var(--text-sm); color: var(--ink); cursor: pointer;
 }
-.btn-spinner {
-  display: inline-block;
-  width: 16px; height: 16px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-@keyframes spin { to{transform:rotate(360deg)} }
+.choice span small { color: var(--muted); font-size: var(--text-xs); }
+.choice span strong { font-weight: 600; }
+.choice input:checked + span { border: 2px solid var(--accent); background: var(--accent-tint); }
+.choice input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.choice input:disabled + span { color: var(--muted); background: var(--gray-50); cursor: not-allowed; text-decoration: line-through; }
+.pays .choice > span { flex-direction: row; justify-content: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; text-align: left; }
+.pays .choice > span .icon { color: var(--sage); }
+.label-row { display: flex; justify-content: space-between; align-items: baseline; margin: 1.25rem 0 0.6rem; }
+.label-row:first-child { margin-top: 0; }
+.label-row .form-label { margin: 0; }
+.slot-msg { font-size: var(--text-sm); margin-top: 0.6rem; }
+.coupon-row { display: flex; gap: 0.6rem; }
+.coupon-row .form-control { text-transform: uppercase; }
+.coupon-msg { margin-top: 0.5rem; font-size: var(--text-sm); }
+.coupon-msg.ok { color: var(--sage); }
+.coupon-msg.no { color: var(--danger); }
+.co-next { margin-top: 1.5rem; }
+.place-btn { margin-top: 1.5rem; }
+.secure-note { display: flex; align-items: center; gap: 0.4rem; justify-content: center; margin-top: 0.75rem; font-size: var(--text-sm); }
 
-/* Success overlay */
-.order-success-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
+/* Order summary */
+.co-summary { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); position: sticky; top: 96px; }
+.co-summary > summary { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 1.1rem 1.25rem; font-weight: 600; color: var(--ink); cursor: default; pointer-events: none; }
+.co-summary > summary::-webkit-details-marker { display: none; }
+.co-summary > summary .sum-toggle { display: none; }
+.co-summary > summary .sum-head-total { margin-left: auto; }
+.co-sum-body { padding: 0 1.25rem 1.25rem; }
+.co-items { border-top: 1px solid var(--line); }
+.co-item { display: flex; gap: 0.75rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+.co-item img { width: 52px; height: 64px; object-fit: cover; border-radius: var(--radius-sm); background: var(--accent-tint); }
+.co-item-name { flex: 1; min-width: 0; font-size: var(--text-sm); color: var(--ink); line-height: 1.3; }
+.co-item-name small { display: block; color: var(--muted); }
+.co-item-price { font-weight: 600; font-size: var(--text-sm); color: var(--ink); }
+.co-rows { padding-top: 0.75rem; }
+.co-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; font-size: 0.9375rem; color: var(--ink-soft); }
+.co-row small { display: block; font-size: var(--text-xs); color: var(--muted); }
+.co-row.saving { color: var(--sage); }
+.co-total { display: flex; justify-content: space-between; margin-top: 0.6rem; padding-top: 0.85rem; border-top: 1px solid var(--line); font-size: var(--text-xl); font-weight: 600; color: var(--ink); }
+
+@media (max-width: 960px) {
+  .co-grid { grid-template-columns: 1fr; }
+  .co-summary { position: static; order: -1; }
+  .co-summary > summary { cursor: pointer; pointer-events: auto; }
+  .co-summary > summary .sum-toggle { display: inline-flex; color: var(--accent); font-size: var(--text-sm); }
 }
-.order-success-overlay.show { display: flex; }
-.order-success-box {
-  background: white;
-  border-radius: 20px;
-  padding: 2.5rem 2rem;
-  text-align: center;
-  max-width: 360px;
-  width: 90%;
-  animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+@media (max-width: 600px) {
+  .dates { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .types { grid-template-columns: 1fr; }
+  .types .choice > span { flex-direction: row; justify-content: space-between; padding: 0.75rem 1rem; }
+  .pays { grid-template-columns: 1fr; }
+  .form-row-3 { grid-template-columns: 1fr; gap: 0; }
+  .co-step-sum { padding-left: 1.25rem; margin-top: -0.4rem; }
 }
-@keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
-.order-success-icon { font-size: 3.5rem; margin-bottom: 0.75rem; }
-.order-success-title { font-size: 1.3rem; font-weight: 800; color: #111; margin-bottom: 0.4rem; }
-.order-success-sub { font-size: 0.85rem; color: #666; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container">
-    <h1>🏠 Checkout</h1>
-    <div class="breadcrumb">
-      <a href="{% url 'cart' %}">Cart</a><span>›</span><span class="current">Checkout</span>
-    </div>
-  </div>
-</div>
+<div class="container co">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'cart' %}">Cart</a><span aria-hidden="true">/</span><span class="current" aria-current="page">Checkout</span>
+  </nav>
+  <h1>Checkout</h1>
 
-<section class="section-sm">
-  <div class="container">
-    <form method="post" action="{% url 'place_order' %}" id="checkout-form" data-subtotal="{{ subtotal }}">
-      {% csrf_token %}
-      <input type="hidden" name="slot_id" value=""/>
-      <input type="hidden" name="coupon_code" id="active-coupon"/>
-      <input type="hidden" name="payment_mode" id="payment-mode-val" value="cod"/>
-      <input type="hidden" name="delivery_charge" id="hidden-delivery-charge" value="0"/>
-      <input type="hidden" name="distance_km" id="hidden-distance" value="3"/>
+  <ol class="co-progress" aria-label="Checkout steps">
+    <li data-progress="1" aria-current="step">Address</li>
+    <li data-progress="2">Delivery</li>
+    <li data-progress="3">Payment</li>
+  </ol>
 
-      <div class="checkout-layout">
-        <div>
-          <!-- Delivery Address -->
-          <div class="checkout-card">
-            <h3><span class="step-num">1</span> Delivery Address</h3>
+  <form method="post" action="{% url 'place_order' %}" id="checkout-form" novalidate data-subtotal="{{ subtotal }}">
+    {% csrf_token %}
+    <input type="hidden" name="distance_km" value="{{ delivery_config.default_km }}"/>
+    <input type="hidden" name="coupon_code" id="coupon-code"/>
 
+    <div class="co-grid">
+      <div>
+        {# ── Step 1: address ── #}
+        <section class="co-step is-active" data-step="1" aria-labelledby="step1-title">
+          <div class="co-step-head">
+            <span class="co-step-num" aria-hidden="true">1</span>
+            <h2 id="step1-title">Delivery address</h2>
+            <button type="button" class="co-step-edit" data-edit="1">Edit<span class="sr-only"> address</span></button>
+          </div>
+          <p class="co-step-sum" data-sum="1"></p>
+          <div class="co-step-body">
             {% if addresses %}
-            <div class="form-group">
-              <label class="form-label">Use Saved Address</label>
-              <select class="form-control" id="saved-addr-select" onchange="fillAddress(this)">
-                <option value="">— Select a saved address —</option>
-                {% for addr in addresses %}
-                <option value="{{ addr.id }}"
-                  data-name="{{ addr.full_name }}" data-phone="{{ addr.phone }}"
-                  data-address="{{ addr.address }}" data-city="{{ addr.city }}"
-                  data-state="{{ addr.state }}" data-pincode="{{ addr.pincode }}">
-                  {{ addr.label }}: {{ addr.address|truncatechars:40 }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
-            <hr class="section-divider"/>
-            {% endif %}
-
-            <div class="form-row">
-              <div class="form-group"><label class="form-label">Full Name</label>
-                <input type="text" name="full_name" id="f-name" class="form-control" value="{{ user.full_name }}" required autocomplete="name"/>
-              <span class="field-error" id="err-name">⚠ Enter valid name (letters &amp; spaces only)</span>
-              </div>
-              <div class="form-group"><label class="form-label">Phone</label>
-                <input type="tel" name="phone" id="f-phone" class="form-control" value="{{ user.phone }}" required maxlength="10" autocomplete="tel"/>
-                <span class="field-error" id="err-phone">⚠ Phone must be exactly 10 digits</span>
-              </div>
-            </div>
-            <div class="form-group"><label class="form-label">Email</label>
-              <input type="email" name="email" class="form-control" value="{{ user.email }}" required/></div>
-            <div class="form-group"><label class="form-label">Street Address</label>
-              <input type="text" name="address" id="f-addr" class="form-control" placeholder="House no, Street, Area" required autocomplete="street-address"/>
-              <span class="field-error" id="err-addr">⚠ Use letters, numbers and , . / - # ' ( ) &amp; : only</span>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label class="form-label">City</label>
-                <select name="city" id="f-city" class="form-control" required
-                        onchange="calculateDelivery(); validateCity();">
-                  <option value="">— Select City —</option>
-                  {% for key, city in delivery_cities.items %}
-                  <option value="{{ city.name }}">{{ city.name }}</option>
+              <div class="form-group">
+                <label class="form-label" for="saved-addr">Use a saved address</label>
+                <select class="form-control" id="saved-addr">
+                  <option value="">Choose…</option>
+                  {% for addr in addresses %}
+                    <option value="{{ addr.id }}" data-name="{{ addr.full_name }}" data-phone="{{ addr.phone }}"
+                            data-address="{{ addr.address }}" data-city="{{ addr.city }}"
+                            data-state="{{ addr.state }}" data-pincode="{{ addr.pincode }}">{{ addr.label }}: {{ addr.address|truncatechars:40 }}</option>
                   {% endfor %}
                 </select>
-                <span class="field-error" id="err-city">⚠ Service not available in your city</span>
               </div>
-              <div class="form-group"><label class="form-label">State</label>
-                <input type="text" name="state" id="f-state" class="form-control" value="Gujarat" required/></div>
-            </div>
-            <!-- Delivery availability box -->
-            <div class="delivery-check-box" id="delivery-avail-box">
-              <div class="dbox-title" id="dbox-title"></div>
-              <div class="dbox-sub" id="dbox-sub"></div>
+            {% endif %}
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-name">Recipient’s name</label>
+                <input type="text" name="full_name" id="f-name" class="form-control" value="{{ user.full_name }}" required autocomplete="name" aria-describedby="err-name"/>
+                <p class="field-error" id="err-name">Enter a name using letters and spaces.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-phone">Recipient’s phone</label>
+                <input type="tel" name="phone" id="f-phone" class="form-control" value="{{ user.phone }}" required inputmode="numeric" maxlength="10" autocomplete="tel-national" aria-describedby="err-phone"/>
+                <p class="field-error" id="err-phone">Enter a 10-digit phone number.</p>
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Pincode</label>
-              <input type="text" name="pincode" id="f-pincode" class="form-control"
-                placeholder="6-digit pincode" maxlength="6" required
-                oninput="lookupPincode(this.value); validatePincode(this.value)"/>
-              <span class="field-error" id="err-pincode">⚠ Pincode must be exactly 6 digits</span>
-              <div class="charge-info" id="delivery-charge-info">📍 Delivery zone detected</div>
+              <label class="form-label" for="f-email">Your email (for the order confirmation)</label>
+              <input type="email" name="email" id="f-email" class="form-control" value="{{ user.email }}" required autocomplete="email" aria-describedby="err-email"/>
+              <p class="field-error" id="err-email">Enter a valid email address.</p>
             </div>
             <div class="form-group">
-              <label class="form-label">Special Note (optional)</label>
-              <textarea name="special_note" class="form-control" rows="2" placeholder="e.g. Leave at door, fragile item..."></textarea>
+              <label class="form-label" for="f-addr">House, street and area</label>
+              <input type="text" name="address" id="f-addr" class="form-control" required autocomplete="street-address" placeholder="e.g. B-12, Shiv Apartments, Station Rd." aria-describedby="err-addr"/>
+              <p class="field-error" id="err-addr">Use letters, numbers and , . / - # ' ( ) &amp; : only.</p>
             </div>
-          </div>
-
-
-          <!-- Delivery Schedule -->
-          <div class="checkout-card">
-            <h3><span class="step-num">2</span> Delivery Schedule</h3>
-
-            <!-- Date picker -->
-            <label class="form-label">Select Delivery Date</label>
-            <div class="date-grid">
-              {% for d in available_dates %}
-              <div class="date-chip" data-date="{{ d|date:'Y-m-d' }}" onclick="selectDate(this.dataset.date, this)">
-                <div class="day">{{ d|date:"D" }}</div>
-                <div class="num">{{ d|date:"d" }}</div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label" for="f-pincode">Pincode</label>
+                <input type="text" name="pincode" id="f-pincode" class="form-control" required inputmode="numeric" maxlength="6" autocomplete="postal-code" aria-describedby="pin-msg"/>
+                <p class="pin-msg" id="pin-msg" role="status" aria-live="polite"></p>
               </div>
-              {% endfor %}
+              <div class="form-group">
+                <label class="form-label" for="f-city">City</label>
+                <select name="city" id="f-city" class="form-control" required aria-describedby="err-city">
+                  <option value="">Choose…</option>
+                  {% for key, city in delivery_cities.items %}<option value="{{ city.name }}">{{ city.name }}</option>{% endfor %}
+                </select>
+                <p class="field-error" id="err-city">Choose the city for this pincode.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-state">State</label>
+                <input type="text" name="state" id="f-state" class="form-control" value="Gujarat" autocomplete="address-level1"/>
+              </div>
             </div>
-
-            <!-- Divider -->
-            <div style="border-top:1.5px dashed var(--gray-200);margin:1.25rem 0;"></div>
-
-            <!-- Delivery Type -->
-            <label class="form-label">
-              Delivery Type
-              <span style="font-weight:400;color:var(--gray-400);font-size:0.75rem;margin-left:6px;">affects charge</span>
-            </label>
-            <div class="dtype-grid">
-              <label class="dtype-option" id="dtype-normal">
-                <input type="radio" name="delivery_type" value="normal" checked onchange="calculateDelivery()"/>
-                <div class="dtype-icon">🚚</div>
-                <div class="dtype-name">Normal</div>
-                <div class="dtype-price">+₹0</div>
-                <div class="dtype-desc">2–4 hrs</div>
-              </label>
-              <label class="dtype-option" id="dtype-sameday">
-                <input type="radio" name="delivery_type" value="sameday" onchange="calculateDelivery()"/>
-                <div class="dtype-icon">⚡</div>
-                <div class="dtype-name">Same-Day</div>
-                <div class="dtype-price">+₹50</div>
-                <div class="dtype-desc">Within today</div>
-              </label>
-              <label class="dtype-option" id="dtype-midnight">
-                <input type="radio" name="delivery_type" value="midnight" onchange="calculateDelivery()"/>
-                <div class="dtype-icon">🌙</div>
-                <div class="dtype-name">Midnight</div>
-                <div class="dtype-price">+₹120</div>
-                <div class="dtype-desc">11 PM – 1 AM</div>
-              </label>
-            </div>
+            <button type="button" class="btn btn-dark btn-lg co-next" data-next="1">Continue to delivery</button>
           </div>
+        </section>
 
-          <!-- Coupon -->
-          <div class="checkout-card">
-            <h3><span class="step-num">3</span> Coupon &amp; Promo</h3>
+        {# ── Step 2: delivery ── #}
+        <section class="co-step" data-step="2" aria-labelledby="step2-title">
+          <div class="co-step-head">
+            <span class="co-step-num" aria-hidden="true">2</span>
+            <h2 id="step2-title">Delivery date and time</h2>
+            <button type="button" class="co-step-edit" data-edit="2">Edit<span class="sr-only"> delivery</span></button>
+          </div>
+          <p class="co-step-sum" data-sum="2"></p>
+          <div class="co-step-body">
+            <fieldset>
+              <legend class="form-label">Date</legend>
+              <div class="choice-grid dates">
+                {% for d in available_dates %}
+                  <label class="choice">
+                    <input type="radio" name="delivery_date" value="{{ d|date:'Y-m-d' }}" data-label="{{ d|date:'D j M' }}"{% if forloop.first %} checked{% endif %}/>
+                    <span><small>{% if forloop.first %}Today{% elif forloop.counter == 2 %}Tomorrow{% else %}{{ d|date:"D" }}{% endif %}</small><strong>{{ d|date:"j M" }}</strong></span>
+                  </label>
+                {% endfor %}
+              </div>
+            </fieldset>
 
+            <fieldset>
+              <div class="label-row"><legend class="form-label">Time slot</legend></div>
+              <div class="choice-grid slots" id="slot-list" aria-live="polite"></div>
+              <p class="slot-msg" id="slot-msg">Choose a date to see the time slots.</p>
+            </fieldset>
+
+            <fieldset>
+              <div class="label-row"><legend class="form-label">Delivery speed</legend></div>
+              <div class="choice-grid types">
+                <label class="choice"><input type="radio" name="delivery_type" value="normal" checked/>
+                  <span><strong>Normal</strong><small>In your slot · +₹0</small></span></label>
+                <label class="choice"><input type="radio" name="delivery_type" value="sameday"/>
+                  <span><strong>Same-day express</strong><small>+{{ delivery_config.time_charges.sameday|rupees }}</small></span></label>
+                <label class="choice"><input type="radio" name="delivery_type" value="midnight"/>
+                  <span><strong>Midnight</strong><small>11 PM – 1 AM · +{{ delivery_config.time_charges.midnight|rupees }}</small></span></label>
+              </div>
+            </fieldset>
+
+            <div class="form-group" style="margin-top: 1.25rem;">
+              <label class="form-label" for="f-note">Note for the delivery person (optional)</label>
+              <textarea name="special_note" id="f-note" class="form-control" rows="2" maxlength="500" placeholder="e.g. Call before arriving, leave with security"></textarea>
+            </div>
+            <button type="button" class="btn btn-dark btn-lg co-next" data-next="2">Continue to payment</button>
+          </div>
+        </section>
+
+        {# ── Step 3: payment ── #}
+        <section class="co-step" data-step="3" aria-labelledby="step3-title">
+          <div class="co-step-head">
+            <span class="co-step-num" aria-hidden="true">3</span>
+            <h2 id="step3-title">Payment</h2>
+          </div>
+          <div class="co-step-body">
+            <label class="form-label" for="coupon-input">Coupon code (optional)</label>
             <div class="coupon-row">
-              <input type="text" id="coupon-input" class="form-control" placeholder="Enter coupon code"/>
-              <button type="button" class="btn btn-pink" onclick="applyCoupon()" style="background:var(--pink-500);color:white;padding:0.7rem 1.5rem;border-radius:var(--radius-full);font-weight:600;">Apply</button>
+              <input type="text" id="coupon-input" class="form-control" autocomplete="off" aria-describedby="coupon-msg"/>
+              <button type="button" class="btn btn-ghost" id="coupon-apply">Apply</button>
             </div>
-            <div id="coupon-result" style="margin-top:0.75rem;font-size:0.82rem;"></div>
+            <p class="coupon-msg" id="coupon-msg" role="status" aria-live="polite"></p>
+
+            <fieldset style="margin-top: 1.25rem;">
+              <legend class="form-label">How would you like to pay?</legend>
+              <div class="choice-grid pays">
+                <label class="choice"><input type="radio" name="payment_mode" value="online"/>
+                  <span>{% icon 'shield' 22 %}<span class="pay-text"><strong>Pay online</strong><small>UPI, cards, netbanking via Razorpay</small></span></span></label>
+                <label class="choice"><input type="radio" name="payment_mode" value="cod" checked/>
+                  <span>{% icon 'gift' 22 %}<span class="pay-text"><strong>Cash on delivery</strong><small>Pay when the flowers arrive</small></span></span></label>
+              </div>
+            </fieldset>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block place-btn" id="place-btn">Place order · <span data-total>{{ subtotal|rupees }}</span></button>
+            <p class="secure-note">{% icon 'shield' 16 %} Payments are processed securely by Razorpay.</p>
           </div>
-
-          <!-- Payment Method -->
-          <div class="checkout-card">
-            <h3><span class="step-num">4</span> Payment Method</h3>
-            <div class="payment-method-tabs">
-              <div class="payment-tab active" id="tab-cod" onclick="setPayment('cod', this)">
-                <span style="font-size:1.4rem;">💵</span>
-                <div style="font-weight:700;margin-top:0.3rem;">Cash on Delivery</div>
-                <div style="font-size:0.72rem;color:var(--gray-400);">Pay when delivered</div>
-              </div>
-              <div class="payment-tab" id="tab-online" onclick="setPayment('online', this)">
-                <span style="font-size:1.4rem;">⚡</span>
-                <div style="font-weight:700;margin-top:0.3rem;">Pay Online</div>
-                <div style="font-size:0.72rem;color:var(--gray-400);">UPI · Card · Net Banking</div>
-              </div>
-            </div>
-            <p id="payment-hint" style="font-size:0.82rem;color:var(--gray-400);margin-top:0.5rem;">Pay in cash when your order is delivered.</p>
-
-          </div>
-        </div>
-
-        <!-- Order Summary Sidebar -->
-        <div>
-          <div class="checkout-card" style="position:sticky;top:90px;">
-            <h3>Your Order</h3>
-            {% for item in items %}
-            <div class="summary-item">
-              {% if item.product %}
-                <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}"/>
-              {% else %}
-                <div style="width:50px;height:50px;background:var(--pink-50);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🌸</div>
-              {% endif %}
-              <div class="summary-item-info">
-                <div class="summary-item-name">{% if item.product %}{{ item.product.name|truncatechars:28 }}{% else %}Custom Bouquet{% endif %}</div>
-                <div class="summary-item-cat">Qty: {{ item.quantity }}</div>
-              </div>
-              <span style="font-weight:700;font-size:0.9rem;">₹{{ item.subtotal }}</span>
-            </div>
-            {% endfor %}
-
-            <hr class="section-divider"/>
-
-            <!-- ── Swiggy-style Bill Details ── -->
-            <div class="bill-card">
-              <div class="bill-header">
-                <span>🧭 Bill Details</span>
-              </div>
-
-              <!-- Item total -->
-              <div class="bill-row">
-                <span class="bill-label">Item Total</span>
-                <span class="bill-val" id="bill-subtotal">₹{{ subtotal }}</span>
-              </div>
-
-              <!-- Delivery fee row (clickable to expand) -->
-              <div class="bill-row bill-row-delivery" onclick="toggleDeliveryBreakdown()" id="delivery-fee-row">
-                <span class="bill-label">
-                  Delivery Fee
-                  <span class="bill-info-icon" title="Click to see breakdown">ⓘ</span>
-                </span>
-                <span class="bill-val" id="display-charge">—</span>
-              </div>
-
-              <!-- Expandable breakdown (hidden by default) -->
-              <div id="delivery-breakdown" class="bill-breakdown" style="display:none;">
-                <div class="bk-sub-row"><span>City base</span><span id="bk-city">—</span></div>
-                <div class="bk-sub-row"><span>Distance charge</span><span id="bk-dist">—</span></div>
-                <div class="bk-sub-row"><span>Delivery type</span><span id="bk-time">—</span></div>
-                <div class="bk-sub-row" id="bk-disc-row" style="display:none;color:#16a34a;">
-                  <span>Order discount</span><span id="bk-disc">—</span>
-                </div>
-              </div>
-
-              <!-- Coupon savings -->
-              <div class="bill-row bill-row-saving" id="discount-line" style="display:none;">
-                <span class="bill-label">🎉 Coupon Savings</span>
-                <span class="bill-val" id="display-discount" style="color:#16a34a;">—</span>
-              </div>
-
-              <!-- Free delivery banner -->
-              <div id="free-delivery-banner" style="display:none;" class="free-delivery-banner">
-                🎉 Yay! You get FREE delivery on this order!
-              </div>
-
-              <!-- Dotted separator -->
-              <div class="bill-dotted-line"></div>
-
-              <!-- To Pay -->
-              <div class="bill-topay">
-                <span>To Pay</span>
-                <span id="display-total">₹{{ subtotal }}</span>
-              </div>
-
-              <p class="bill-note">ℹ️ Inclusive of all applicable charges</p>
-            </div>
-
-            <button type="submit" class="btn-place-order" id="place-btn">
-              Place Order 🌸
-            </button>
-            <p style="font-size:0.72rem;color:var(--gray-400);text-align:center;margin-top:0.75rem;">
-              🔒 100% secure &amp; encrypted
-            </p>
-          </div>
-        </div>
+        </section>
       </div>
-    </form>
-  </div>
-</section>
-{% endblock %}
 
-<!-- Success overlay -->
-<div class="order-success-overlay" id="order-success-overlay">
-  <div class="order-success-box">
-    <div class="order-success-icon">🌸</div>
-    <div class="order-success-title">Order Placed!</div>
-    <p class="order-success-sub">Your bouquet is on its way. You'll receive a confirmation shortly.</p>
-  </div>
+      {# ── Order summary ── #}
+      <details class="co-summary" id="co-summary" open>
+        <summary>
+          {% icon 'bag' 20 %} Order summary
+          <span class="sum-toggle" data-sum-toggle>Show</span>
+          <span class="sum-head-total" data-total>{{ subtotal|rupees }}</span>
+        </summary>
+        <div class="co-sum-body">
+          <ul class="co-items">
+            {% for item in items %}
+              <li class="co-item">
+                {% if item.product %}<img src="{{ item.product.get_image }}" alt="" width="52" height="64"/>
+                {% else %}<img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="52" height="64"/>{% endif %}
+                <span class="co-item-name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %}<small>Qty {{ item.quantity }}</small></span>
+                <span class="co-item-price">{{ item.subtotal|rupees }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          <div class="co-rows">
+            <div class="co-row"><span>Items</span><span>{{ subtotal|rupees }}</span></div>
+            <div class="co-row"><span>Delivery<small data-delivery-note>Enter your pincode</small></span><span data-delivery>—</span></div>
+            <div class="co-row saving" data-discount-row hidden><span>Coupon <span data-coupon-label></span></span><span data-discount></span></div>
+            <div class="co-total"><span>Total</span><span data-total>{{ subtotal|rupees }}</span></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </form>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 {{ delivery_config|json_script:"delivery-config" }}
 <script>
-// Delivery cities and charges come from the server (bloomapp/services/pricing.py).
-const DELIVERY_CONFIG = JSON.parse(document.getElementById('delivery-config').textContent);
 (function () {
-const subtotal = parseFloat(document.getElementById('checkout-form').dataset.subtotal) || 0;
-let deliveryCharge = 0;   // current delivery fee (already includes any delivery discount)
-let discountAmount = 0;   // coupon discount
-
-function updateTotal() {
-  // Same formula as the server: items + delivery fee − coupon discount.
-  const total = subtotal + deliveryCharge - discountAmount;
-  document.getElementById('display-total').textContent = `₹${total.toFixed(0)}`;
-}
-
-async function lookupPincode(pin) {
-  if (pin.length === 6) {
-    const el = document.getElementById('delivery-charge-info');
-    el.style.display = 'block';
-    el.textContent = '📍 Pincode recognised — delivery zone applied';
-    // Recalculate full charge (city + distance + type)
-    calculateDelivery();
-  }
-}
-
-function selectDate(dateStr, chip) {
-  document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected'));
-  chip.classList.add('selected');
-}
-
-async function applyCoupon() {
-  const code = document.getElementById('coupon-input').value.trim();
-  if (!code) return;
-  const r = await fetch(`/checkout/apply-coupon/?code=${code}`);
-  const d = await r.json();
-  const result = document.getElementById('coupon-result');
-  if (d.valid) {
-    discountAmount = d.discount_amount;
-    document.getElementById('active-coupon').value = code;
-    document.getElementById('discount-line').style.display = 'flex';
-    document.getElementById('display-discount').textContent = `-₹${d.discount_amount.toFixed(0)}`;
-    result.innerHTML = `<span style="color:var(--green-500);">✅ ${d.message}</span>`;
-    updateTotal();
-  } else {
-    result.innerHTML = `<span style="color:#ef4444;">❌ ${d.message}</span>`;
-  }
-}
-
-function setPayment(mode, el) {
-  document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('payment-mode-val').value = mode;
-  const hints = {
-    online: 'You will be redirected to Razorpay to complete the payment securely.',
-    cod:    'Pay in cash when your order is delivered.'
-  };
-  document.getElementById('payment-hint').textContent = hints[mode] || '';
-}
-
-// ── Delivery Calculation Engine ────────────────────────────
-const ALLOWED_CITIES = Object.keys(DELIVERY_CONFIG.cities);
-const CITY_CHARGES = Object.fromEntries(ALLOWED_CITIES.map(k => [k, DELIVERY_CONFIG.cities[k].charge]));
-const CITY_ETA = Object.fromEntries(ALLOWED_CITIES.map(k => [k, DELIVERY_CONFIG.cities[k].eta]));
-const CITY_NAMES = ALLOWED_CITIES.map(k => DELIVERY_CONFIG.cities[k].name);
-
-// Distance-based charge
-function distanceCharge(km) {
-  if (km <= 5)  return 30;
-  if (km <= 10) return 60;
-  return 100;
-}
-
-// Time/type charge
-const TIME_CHARGES = DELIVERY_CONFIG.time_charges;
-
-function calculateDelivery() {
-  const cityVal  = (document.getElementById('f-city')?.value || '').trim();
-  const cityKey  = cityVal.toLowerCase();
-  const km       = parseFloat(document.getElementById('hidden-distance')?.value || '3');
-  const typeEl   = document.querySelector('input[name="delivery_type"]:checked');
-  const dtype    = typeEl ? typeEl.value : 'normal';
-
-  // Validate city
-  checkCityAvailability(cityVal);
-
-  if (!ALLOWED_CITIES.includes(cityKey)) {
-    // No valid city — show a hint in the delivery fee row
-    document.getElementById('delivery-breakdown').style.display = 'none';
-    const chargeEl = document.getElementById('display-charge');
-    chargeEl.innerHTML = '<span style="color:#aaa;font-size:0.75rem;">Select city first</span>';
-    document.getElementById('hidden-delivery-charge').value = 0;
-    deliveryCharge = 0;
-    updateTotal();
-    return;
-  }
-
-  const cityC = CITY_CHARGES[cityKey] || 0;
-  const distC = distanceCharge(km);
-  const timeC = TIME_CHARGES[dtype]   || 0;
-  let   gross = cityC + distC + timeC;
-
-  // Order-value discount
-  let disc = 0;
-  const isFree = subtotal >= 1000;
-  if (isFree) {
-    disc  = gross;
-    gross = 0;
-  } else if (subtotal >= 500) {
-    disc  = Math.min(30, gross);
-    gross = Math.max(0, gross - disc);
-  }
-
-  // Populate and AUTO-OPEN breakdown rows
-  document.getElementById('bk-city').textContent = `₹${cityC} (${cityVal})`;
-  document.getElementById('bk-dist').textContent = `₹${distC} (${km} km)`;
-  document.getElementById('bk-time').textContent = dtype === 'normal' ? 'Free (+₹0)' : `₹${timeC}`;
-  const discRow = document.getElementById('bk-disc-row');
-  if (disc > 0) {
-    discRow.style.display = 'flex';
-    document.getElementById('bk-disc').textContent = isFree ? 'FREE 🎉' : `-₹${disc}`;
-  } else {
-    discRow.style.display = 'none';
-  }
-
-  // Auto-open breakdown so user can see the detail
-  const bkPanel = document.getElementById('delivery-breakdown');
-  bkPanel.style.display = 'block';
-  const infoIcon = document.querySelector('.bill-info-icon');
-  if (infoIcon) infoIcon.textContent = '▲';
-
-  // Free delivery banner
-  const freeBanner = document.getElementById('free-delivery-banner');
-  if (freeBanner) freeBanner.style.display = isFree ? 'block' : 'none';
-
-  // Animate delivery fee display
-  const chargeEl = document.getElementById('display-charge');
-  chargeEl.classList.remove('charge-flash');
-  void chargeEl.offsetWidth;
-  chargeEl.classList.add('charge-flash');
-  if (isFree) {
-    chargeEl.innerHTML = '<span style="color:#16a34a;font-weight:700;">FREE 🎉</span>';
-  } else {
-    chargeEl.textContent = `₹${gross}`;
-  }
-
-  document.getElementById('hidden-delivery-charge').value = gross;
-  deliveryCharge = gross;
-  updateTotal();
-}
-
-// Toggle the delivery breakdown accordion
-function toggleDeliveryBreakdown() {
-  const panel = document.getElementById('delivery-breakdown');
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  const infoIcon = document.querySelector('.bill-info-icon');
-  if (infoIcon) infoIcon.textContent = isOpen ? 'ⓘ' : '▲';
-}
-
-function checkCityAvailability(city) {
-  const val  = city.trim();
-  const key  = val.toLowerCase();
-  const box  = document.getElementById('delivery-avail-box');
-  const btn  = document.getElementById('place-btn');
-  if (!val) { box.style.display = 'none'; btn.disabled = false; return; }
-  // Don't show error while still typing (wait for at least 4 chars)
-  if (val.length < 4) { box.style.display = 'none'; btn.disabled = false; return; }
-  if (ALLOWED_CITIES.includes(key)) {
-    box.className = 'delivery-check-box available';
-    document.getElementById('dbox-title').textContent = '✅ Delivery available in ' + val;
-    document.getElementById('dbox-sub').textContent   = '🚚 Est. delivery: ' + (CITY_ETA[key] || '');
-    box.style.display = 'block';
-    btn.disabled = false; btn.style.opacity = '1';
-  } else {
-    box.className = 'delivery-check-box unavailable';
-    document.getElementById('dbox-title').textContent = '❌ We don\'t deliver to "' + val + '" yet';
-    document.getElementById('dbox-sub').textContent   = 'We serve ' + CITY_NAMES.join(', ') + '.';
-    box.style.display = 'block';
-    btn.disabled = true; btn.style.opacity = '0.5';
-  }
-}
-
-// Dropdown fires calculateDelivery directly via onchange attribute
-// (no debounce needed for a select element)
-
-function selectCity(city, tile) {
-  document.getElementById('f-city').value = city;
-  calculateDelivery();
-}
-
-function fillAddress(sel) {
-  const o = sel.options[sel.selectedIndex];
-  if (!o.value) return;
-  document.getElementById('f-name').value    = o.dataset.name;
-  document.getElementById('f-phone').value   = o.dataset.phone;
-  document.getElementById('f-addr').value    = o.dataset.address;
-  // Match city in the select dropdown
-  const citySelect = document.getElementById('f-city');
-  const savedCity  = (o.dataset.city || '').toLowerCase();
-  for (let opt of citySelect.options) {
-    if (opt.value.toLowerCase() === savedCity) { citySelect.value = opt.value; break; }
-  }
-  document.getElementById('f-state').value   = o.dataset.state;
-  document.getElementById('f-pincode').value = o.dataset.pincode;
-  lookupPincode(o.dataset.pincode);
-  calculateDelivery();
-}
-
-// Expose
-window.selectDate              = selectDate;
-window.applyCoupon             = applyCoupon;
-window.setPayment              = setPayment;
-window.fillAddress             = fillAddress;
-window.lookupPincode           = lookupPincode;
-window.calculateDelivery       = calculateDelivery;
-window.checkCityAvailability   = checkCityAvailability;
-window.toggleDeliveryBreakdown = toggleDeliveryBreakdown;
-
-updateTotal();
-calculateDelivery();
-})();
-
-/* ═══════════════════════════════════════════════
-   Checkout Form Validation System
-   ═══════════════════════════════════════════════ */
-(function () {
-  // ── Regex rules ─────────────────────────────
-  const RULES = {
-    name:    { re: /^[a-zA-Z\s]+$/,    msg: 'err-name'    },
-    phone:   { re: /^[0-9]{10}$/,      msg: 'err-phone'   },
-    address: { re: /^[A-Za-z0-9\s,.\/#'()&:-]+$/, msg: 'err-addr' },
-    pincode: { re: /^[0-9]{6}$/,       msg: 'err-pincode' },
-  };
-
-  // ── Field refs ──────────────────────────────
-  const fName    = document.getElementById('f-name');
-  const fPhone   = document.getElementById('f-phone');
-  const fAddr    = document.getElementById('f-addr');
-  const fPincode = document.getElementById('f-pincode');
-  const fCity    = document.getElementById('f-city');
-  const placeBtn = document.getElementById('place-btn');
-
-  // ── Helpers ─────────────────────────────────
-  function setValid(el) {
-    el.classList.remove('is-invalid');
-    el.classList.add('is-valid');
-  }
-  function setInvalid(el) {
-    el.classList.remove('is-valid');
-    el.classList.add('is-invalid');
-  }
-  function clearState(el) {
-    el.classList.remove('is-valid', 'is-invalid');
-  }
-  function showErr(id) {
-    const e = document.getElementById(id);
-    if (e) { e.classList.add('visible'); }
-  }
-  function hideErr(id) {
-    const e = document.getElementById(id);
-    if (e) { e.classList.remove('visible'); }
-  }
-
-  // ── Individual validators ────────────────────
-  function validateField(el, ruleKey) {
-    const val = el.value.trim();
-    const { re, msg } = RULES[ruleKey];
-    if (!val) { clearState(el); hideErr(msg); return null; }
-    if (re.test(val)) { setValid(el); hideErr(msg); return true; }
-    setInvalid(el); showErr(msg); return false;
-  }
-
-  window.validatePincode = function(val) {
-    validateField(fPincode, 'pincode');
-    syncButton();
-  };
-
-  window.validateCity = function() {
-    const val = fCity.value.trim();
-    if (!val) { clearState(fCity); hideErr('err-city'); syncButton(); return; }
-    if (ALLOWED_CITIES.includes(val.toLowerCase())) {
-      setValid(fCity); hideErr('err-city');
-    } else {
-      setInvalid(fCity); showErr('err-city');
-    }
-    syncButton();
-  };
-
-  // ── Button enable/disable ────────────────────
-  function syncButton() {
-    const nameOk    = RULES.name.re.test(fName.value.trim());
-    const phoneOk   = RULES.phone.re.test(fPhone.value.trim());
-    const addrOk    = RULES.address.re.test(fAddr.value.trim());
-    const pincodeOk = RULES.pincode.re.test(fPincode.value.trim());
-    const cityOk    = ALLOWED_CITIES.includes((fCity.value || '').toLowerCase());
-    const allOk = nameOk && phoneOk && addrOk && pincodeOk && cityOk;
-    placeBtn.disabled = !allOk;
-    placeBtn.style.opacity = allOk ? '1' : '0.5';
-    placeBtn.style.cursor  = allOk ? 'pointer' : 'not-allowed';
-  }
-
-  // ── Attach real-time listeners ───────────────
-  fName.addEventListener('input', function () {
-    validateField(this, 'name'); syncButton();
-  });
-  fPhone.addEventListener('input', function () {
-    // Strip non-digits while typing
-    this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    validateField(this, 'phone'); syncButton();
-  });
-  fAddr.addEventListener('input', function () {
-    validateField(this, 'address'); syncButton();
-  });
-  fPincode.addEventListener('input', function () {
-    this.value = this.value.replace(/\D/g, '').slice(0, 6);
-    validateField(this, 'pincode'); syncButton();
-  });
-  fCity.addEventListener('change', function () {
-    window.validateCity(); syncButton();
-  });
-
-  // ── Submit guard + loading state ────────────
+  // Pricing rules come from the server (bloomapp/services/pricing.py) so this preview matches the charge.
+  const CFG = JSON.parse(document.getElementById('delivery-config').textContent);
   const form = document.getElementById('checkout-form');
-  form.addEventListener('submit', function (e) {
-    // Final validation pass
-    const nameOk    = validateField(fName, 'name');
-    const phoneOk   = validateField(fPhone, 'phone');
-    const addrOk    = validateField(fAddr, 'address');
-    const pincodeOk = validateField(fPincode, 'pincode');
-    window.validateCity();
-    const cityOk = ALLOWED_CITIES.includes((fCity.value || '').toLowerCase());
+  const subtotal = parseFloat(form.dataset.subtotal) || 0;
+  const $ = id => document.getElementById(id);
+  const money = n => '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const RULES = {
+    name: /^[A-Za-z][A-Za-z .'-]*$/,
+    phone: /^[0-9]{10}$/,
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    address: /^[A-Za-z0-9\s,./#'()&:-]+$/,
+    pincode: /^[1-9][0-9]{5}$/,
+  };
+  let step = 1;
+  let delivery = null;   // current delivery fee, or null until a city is known
+  let discount = 0;
 
-    if (!nameOk || !phoneOk || !addrOk || !pincodeOk || !cityOk) {
-      e.preventDefault();
-      syncButton();
-      // Scroll to first error
-      const firstErr = document.querySelector('.is-invalid');
-      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
+  /* ── Totals ── */
+  function cityKey() { return ($('f-city').value || '').trim().toLowerCase(); }
+  function deliveryType() { return form.querySelector('input[name="delivery_type"]:checked').value; }
+
+  function computeDelivery() {
+    const city = CFG.cities[cityKey()];
+    if (!city) { delivery = null; return; }
+    const km = CFG.default_km;
+    const dist = km <= 5 ? 30 : km <= 10 ? 60 : 100;
+    let fee = city.charge + dist + (CFG.time_charges[deliveryType()] || 0);
+    let note = `${city.name} · ${city.eta}`;
+    if (subtotal >= CFG.free_above) { fee = 0; note = `Free over ${money(CFG.free_above)}`; }
+    else if (subtotal >= CFG.discount_above) { fee = Math.max(0, fee - CFG.discount); note += ` · ${money(CFG.discount)} off`; }
+    delivery = fee;
+    document.querySelector('[data-delivery-note]').textContent = note;
+  }
+
+  function render() {
+    computeDelivery();
+    document.querySelector('[data-delivery]').textContent = delivery === null ? '—' : (delivery === 0 ? 'Free' : money(delivery));
+    if (delivery === null) document.querySelector('[data-delivery-note]').textContent = 'Enter your pincode';
+    const total = subtotal + (delivery || 0) - discount;
+    document.querySelectorAll('[data-total]').forEach(n => { n.textContent = money(total); });
+  }
+
+  /* ── Field validation ── */
+  function check(input, ok, errId) {
+    input.classList.toggle('is-invalid', !ok);
+    input.setAttribute('aria-invalid', String(!ok));
+    if (errId) $(errId).classList.toggle('visible', !ok);
+    return ok;
+  }
+
+  function checkPincode(showErrors) {
+    const pin = $('f-pincode').value.trim();
+    const msg = $('pin-msg');
+    msg.textContent = ''; msg.className = 'pin-msg';
+    if (!RULES.pincode.test(pin)) {
+      if (showErrors) { msg.className = 'pin-msg no'; msg.textContent = 'Enter a 6-digit pincode.'; check($('f-pincode'), false); }
+      return false;
     }
+    const key = CFG.pincode_areas[pin.slice(0, 3)];
+    if (!key) {
+      msg.className = 'pin-msg no';
+      msg.textContent = `We don’t deliver to ${pin} yet. We deliver in ${Object.values(CFG.cities).map(c => c.name).join(', ')}.`;
+      check($('f-pincode'), false);
+      return false;
+    }
+    const city = CFG.cities[key];
+    $('f-city').value = city.name;        // pincode decides the city
+    check($('f-city'), true, 'err-city');
+    check($('f-pincode'), true);
+    msg.className = 'pin-msg ok';
+    msg.textContent = `Delivers to ${city.name} in ${city.eta}`;
+    render();
+    return true;
+  }
 
-    // Show loading state on button
-    placeBtn.innerHTML = '<span class="btn-spinner"></span> Placing Order…';
-    placeBtn.classList.add('loading');
+  function validateStep1() {
+    const results = [
+      check($('f-name'), RULES.name.test($('f-name').value.trim()), 'err-name'),
+      check($('f-phone'), RULES.phone.test($('f-phone').value.trim()), 'err-phone'),
+      check($('f-email'), RULES.email.test($('f-email').value.trim()), 'err-email'),
+      check($('f-addr'), RULES.address.test($('f-addr').value.trim()), 'err-addr'),
+      checkPincode(true),
+    ];
+    const pinKey = CFG.pincode_areas[$('f-pincode').value.trim().slice(0, 3)];
+    results.push(check($('f-city'), !!CFG.cities[cityKey()] && (!pinKey || CFG.cities[pinKey].name === $('f-city').value), 'err-city'));
+    return results.every(Boolean);
+  }
+
+  function validateStep2() {
+    const slots = form.querySelectorAll('input[name="slot_id"]');
+    if (slots.length && !form.querySelector('input[name="slot_id"]:checked')) {
+      $('slot-msg').textContent = 'Choose a time slot.';
+      $('slot-msg').style.color = 'var(--danger)';
+      return false;
+    }
+    return true;
+  }
+
+  /* ── Steps ── */
+  function summaries() {
+    form.querySelector('[data-sum="1"]').textContent =
+      `${$('f-name').value.trim()}, ${$('f-addr').value.trim()}, ${$('f-city').value} ${$('f-pincode').value.trim()} · ${$('f-phone').value.trim()}`;
+    const date = form.querySelector('input[name="delivery_date"]:checked');
+    const slot = form.querySelector('input[name="slot_id"]:checked');
+    const type = form.querySelector('input[name="delivery_type"]:checked').closest('.choice').querySelector('strong').textContent;
+    form.querySelector('[data-sum="2"]').textContent =
+      `${date ? date.dataset.label : ''}${slot ? ', ' + slot.dataset.label : ''} · ${type}`;
+  }
+
+  function go(next, focus = true) {
+    step = next;
+    form.querySelectorAll('.co-step').forEach(s => {
+      const n = +s.dataset.step;
+      s.classList.toggle('is-active', n === step);
+      s.classList.toggle('is-done', n < step);
+    });
+    document.querySelectorAll('[data-progress]').forEach(li => {
+      const n = +li.dataset.progress;
+      li.classList.toggle('done', n < step);
+      if (n === step) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+    });
+    summaries();
+    if (step === 2 && !form.querySelector('#slot-list input')) loadSlots();
+    if (focus) {
+      const section = form.querySelector(`.co-step[data-step="${step}"]`);
+      section.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      const first = section.querySelector('.co-step-body input:not([type="hidden"]), .co-step-body select');
+      if (first) setTimeout(() => first.focus({ preventScroll: true }), 300);
+    }
+  }
+
+  form.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', () => {
+    const n = +btn.dataset.next;
+    const ok = n === 1 ? validateStep1() : validateStep2();
+    if (ok) go(n + 1);
+    else { const bad = form.querySelector(`.co-step[data-step="${n}"] .is-invalid`); if (bad) bad.focus(); }
+  }));
+  form.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => go(+btn.dataset.edit)));
+
+  /* ── Slots for the chosen date ── */
+  async function loadSlots() {
+    const date = form.querySelector('input[name="delivery_date"]:checked');
+    const list = $('slot-list');
+    const msg = $('slot-msg');
+    list.textContent = '';
+    msg.style.color = '';
+    msg.textContent = 'Loading time slots…';
+    try {
+      const data = await (await fetch(`{% url 'get_slots' %}?date=${encodeURIComponent(date.value)}`)).json();
+      let firstFree = null;
+      data.slots.forEach(s => {
+        const label = document.createElement('label'); label.className = 'choice';
+        const input = document.createElement('input');
+        Object.assign(input, { type: 'radio', name: 'slot_id', value: s.id, disabled: !s.available });
+        input.dataset.label = s.label;
+        const box = document.createElement('span');
+        const strong = document.createElement('strong'); strong.textContent = s.label;
+        const small = document.createElement('small'); small.textContent = s.available ? `${s.slots_left} left` : (s.closed ? 'Closed' : 'Full');
+        box.append(strong, small); label.append(input, box); list.appendChild(label);
+        input.addEventListener('change', () => { msg.textContent = ''; summaries(); });
+        if (s.available && !firstFree) firstFree = input;
+      });
+      if (firstFree) { firstFree.checked = true; msg.textContent = ''; }
+      else msg.textContent = data.slots.length ? 'No slots left on this day. Please pick another date.' : 'No slots on this day.';
+      summaries();
+    } catch (e) {
+      msg.textContent = 'Could not load time slots. You can still place the order and we’ll call to confirm a time.';
+    }
+  }
+  form.querySelectorAll('input[name="delivery_date"]').forEach(r => r.addEventListener('change', loadSlots));
+  form.querySelectorAll('input[name="delivery_type"]').forEach(r => r.addEventListener('change', () => { render(); summaries(); }));
+
+  /* ── Address inputs ── */
+  $('f-phone').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); });
+  $('f-pincode').addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    if (e.target.value.length === 6) checkPincode(true); else { $('pin-msg').textContent = ''; }
+  });
+  $('f-city').addEventListener('change', () => { check($('f-city'), true, 'err-city'); render(); });
+  const saved = $('saved-addr');
+  if (saved) saved.addEventListener('change', () => {
+    const o = saved.options[saved.selectedIndex];
+    if (!o.value) return;
+    $('f-name').value = o.dataset.name; $('f-phone').value = o.dataset.phone;
+    $('f-addr').value = o.dataset.address; $('f-state').value = o.dataset.state || 'Gujarat';
+    $('f-pincode').value = o.dataset.pincode;
+    checkPincode(true);
+  });
+  // Pincode already checked elsewhere on the site? Start from it.
+  try {
+    const remembered = JSON.parse(localStorage.getItem('bloomify_pincode') || 'null');
+    if (remembered && !$('f-pincode').value) { $('f-pincode').value = remembered.pincode; checkPincode(false); }
+  } catch (e) { /* storage blocked: nothing to prefill */ }
+
+  /* ── Coupon ── */
+  $('coupon-apply').addEventListener('click', async () => {
+    const code = $('coupon-input').value.trim().toUpperCase();
+    const msg = $('coupon-msg');
+    if (!code) { msg.className = 'coupon-msg no'; msg.textContent = 'Enter a coupon code.'; return; }
+    try {
+      const d = await (await fetch(`{% url 'apply_coupon' %}?code=${encodeURIComponent(code)}`)).json();
+      msg.className = 'coupon-msg ' + (d.valid ? 'ok' : 'no');
+      msg.textContent = d.message;
+      discount = d.valid ? d.discount_amount : 0;
+      $('coupon-code').value = d.valid ? code : '';
+      document.querySelector('[data-discount-row]').hidden = !d.valid;
+      document.querySelector('[data-coupon-label]').textContent = d.valid ? code : '';
+      document.querySelector('[data-discount]').textContent = d.valid ? '−' + money(d.discount_amount) : '';
+      render();
+    } catch (e) { msg.className = 'coupon-msg no'; msg.textContent = 'Could not check the coupon. Please try again.'; }
+  });
+  $('coupon-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('coupon-apply').click(); } });
+
+  /* ── Summary toggle on phones ── */
+  const details = $('co-summary');
+  const phone = window.matchMedia('(max-width: 960px)');
+  const syncSummary = () => { details.open = !phone.matches; };
+  syncSummary(); phone.addEventListener('change', syncSummary);
+  details.addEventListener('toggle', () => { document.querySelector('[data-sum-toggle]').textContent = details.open ? 'Hide' : 'Show'; });
+
+  /* ── Submit ── */
+  form.addEventListener('submit', e => {
+    if (!validateStep1()) { e.preventDefault(); go(1); return; }
+    if (!validateStep2()) { e.preventDefault(); go(2); return; }
+    const btn = $('place-btn');
+    btn.disabled = true;
+    btn.textContent = 'Placing your order…';
   });
 
-  // ── Re-validate after fillAddress ───────────
-  const origFill = window.fillAddress;
-  window.fillAddress = function(sel) {
-    origFill(sel);
-    setTimeout(function () {
-      validateField(fName, 'name');
-      validateField(fPhone, 'phone');
-      validateField(fAddr, 'address');
-      validateField(fPincode, 'pincode');
-      window.validateCity();
-      syncButton();
-    }, 50);
-  };
-
-  // ── Initial sync (pre-filled user data) ─────
-  setTimeout(syncButton, 100);
+  render();
 })();
 </script>
 {% endblock %}

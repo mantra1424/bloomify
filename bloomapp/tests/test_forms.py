@@ -23,7 +23,7 @@ def test_addresses_with_unsafe_characters_are_rejected(address):
 
 
 def test_city_is_normalised_to_its_display_name():
-    form = checkout(city='  vadodara ')
+    form = checkout(city='  vadodara ', pincode='390001')
     assert form.is_valid()
     assert form.cleaned_data['city'] == 'Vadodara'
 

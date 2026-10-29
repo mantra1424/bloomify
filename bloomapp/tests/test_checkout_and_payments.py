@@ -140,7 +140,7 @@ class AbandonedOrderTests(BaseShopTest):
             code='SAVE10', discount_percent=10, expiry=timezone.now().date() + timedelta(days=5)
         )
         slot = DeliverySlot.objects.create(
-            date=timezone.now().date(), slot_label='AM', slot_start='09:00', slot_end='11:00'
+            date=timezone.localdate() + timedelta(days=1), slot_label='AM', slot_start='09:00', slot_end='11:00'
         )
         self.buy(self.pricey, qty=2, payment_mode='online', coupon_code='save10', slot_id=slot.id)
         order = Order.objects.get()

@@ -19,6 +19,15 @@ def rupees(value):
     return f'₹{amount:,.2f}'
 
 
+@register.filter
+def sub(value, arg):
+    """value − arg, for amounts: {{ free_delivery_above|sub:subtotal }}."""
+    try:
+        return Decimal(str(value)) - Decimal(str(arg))
+    except (InvalidOperation, TypeError, ValueError):
+        return ''
+
+
 @register.inclusion_tag('bloomapp/partials/icon.html')
 def icon(name, size=20, label=''):
     """Inline line icon: {% icon 'truck' 20 %}. Decorative unless a label is given."""

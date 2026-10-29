@@ -36,7 +36,7 @@
       <button type="submit" class="wl-btn" aria-pressed="false" aria-label="Save {{ product.name }} to wishlist">{% icon 'heart' 20 %}</button>
     {% endif %}
   </form>
-  <form method="post" action="{% url 'add_to_cart' product.pk %}">
+  <form method="post" action="{% url 'add_to_cart' product.pk %}" data-ajax-cart>
     {% csrf_token %}
     <input type="hidden" name="quantity" value="1"/>
     <button type="submit" class="card-add" {% if not product.is_in_stock %}disabled{% endif %}

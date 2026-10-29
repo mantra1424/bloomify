@@ -1,151 +1,127 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
-{% block title %}Cart – Bloomify{% endblock %}
+{% load bloom static %}
+
+{% block title %}Your cart – Bloomify{% endblock %}
+
 {% block extra_css %}
 <style>
-.cart-layout { display:grid; grid-template-columns:1fr 360px; gap:2rem; align-items:start; }
-.cart-table { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); overflow:hidden; }
-.cart-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--gray-100);
-  display:flex; align-items:center; justify-content:space-between; }
-.cart-header h2 { font-size:1.1rem; }
-.cart-item { display:grid; grid-template-columns:80px 1fr auto auto;
-  gap:1.25rem; align-items:center; padding:1.25rem 1.5rem;
-  border-bottom:1px solid var(--gray-100); }
-.cart-item:last-child { border-bottom:none; }
-.cart-item-img { width:80px; height:80px; border-radius:var(--radius-md); object-fit:cover; background:var(--pink-50); }
-.cart-item-name { font-weight:600; font-size:0.9rem; color:var(--gray-900); margin-bottom:0.25rem; }
-.cart-item-cat  { font-size:0.75rem; color:var(--gray-400); }
-.cart-item-price { font-size:0.95rem; font-weight:700; color:var(--pink-600); }
-.cart-btn-remove { color:var(--gray-300); font-size:1.1rem; transition:color var(--transition); padding:0.3rem; }
-.cart-btn-remove:hover { color:#ef4444; }
-.qty-mini { display:flex; align-items:center; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); overflow:hidden; }
-.qty-mini button { width:34px; height:34px; background:var(--gray-50); transition:background var(--transition); }
-.qty-mini button:hover { background:var(--pink-100); color:var(--pink-600); }
-.qty-mini input { width:42px; text-align:center; border:none; border-left:1px solid var(--gray-200); border-right:1px solid var(--gray-200); font-size:0.85rem; font-weight:700; outline:none; padding:0 0.2rem; }
-.order-summary { background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:1.75rem; position:sticky; top:90px; }
-.order-summary h3 { margin-bottom:1.25rem; font-size:1.05rem; }
-.summary-row { display:flex; justify-content:space-between; padding:0.65rem 0;
-  border-bottom:1px solid var(--gray-100); font-size:0.875rem; }
-.summary-row:last-of-type { border-bottom:none; }
-.summary-total { display:flex; justify-content:space-between; padding:1rem 0;
-  margin-top:0.5rem; border-top:2px solid var(--pink-100); font-weight:700; font-size:1.1rem; }
-.summary-total .amount { color:var(--pink-600); }
-@media(max-width:768px) {
-  .cart-layout { grid-template-columns:1fr; }
-  .order-summary { position:static; }
-  .cart-item { grid-template-columns:60px 1fr; }
-  .cart-item .qty-mini, .cart-item-price { grid-column:2; }
-  .cart-btn-remove { grid-column:2; justify-self:end; }
+.cart-page { padding-top: 1.5rem; padding-bottom: 4rem; }
+.cart-page h1 { margin: 0.6rem 0 1.5rem; }
+.cart-grid { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 2.5rem; align-items: start; }
+.cart-line { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 1rem 1.25rem; padding: 1.25rem 0; border-bottom: 1px solid var(--line); }
+.cart-line:first-child { border-top: 1px solid var(--line); }
+.cart-line img { width: 96px; height: 120px; object-fit: cover; border-radius: var(--radius-md); background: var(--accent-tint); }
+.cart-line-name { font-family: var(--font-display); font-size: var(--text-xl); color: var(--ink); line-height: 1.25; }
+.cart-line-name a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cart-line-meta { font-size: var(--text-sm); color: var(--muted); margin-top: 0.2rem; }
+.cart-line-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.85rem; flex-wrap: wrap; }
+.cart-line-price { font-weight: 600; font-size: var(--text-lg); color: var(--ink); text-align: right; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-full); background: var(--surface); }
+.stepper button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-full); color: var(--ink); }
+.stepper button:hover { background: var(--gray-100); }
+.stepper button:disabled { color: var(--line-strong); cursor: not-allowed; background: none; }
+.stepper output { min-width: 2rem; text-align: center; font-weight: 600; }
+.remove-btn { display: inline-flex; align-items: center; min-height: var(--tap); font-size: var(--text-sm); color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.remove-btn:hover { color: var(--danger); }
+
+.summary { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.5rem; position: sticky; top: 96px; }
+.summary h2 { font-size: var(--text-2xl); margin-bottom: 1rem; }
+.sum-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; color: var(--ink-soft); }
+.sum-total { display: flex; justify-content: space-between; padding: 0.85rem 0 1.1rem; margin-top: 0.4rem; border-top: 1px solid var(--line); font-size: var(--text-lg); font-weight: 600; color: var(--ink); }
+.free-meter { margin: 0.75rem 0 1rem; font-size: var(--text-sm); color: var(--sage); }
+.free-meter .bar { height: 6px; border-radius: var(--radius-full); background: var(--sage-tint); margin-top: 0.4rem; overflow: hidden; }
+.free-meter .bar span { display: block; height: 100%; background: var(--sage); }
+.summary .btn + .btn { margin-top: 0.6rem; }
+.cart-empty { text-align: center; padding: 4rem 1rem; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); }
+.cart-empty h2 { margin-bottom: 0.5rem; }
+.cart-empty p { margin-bottom: 1.5rem; }
+.cart-empty .btn + .btn { margin-left: 0.5rem; }
+
+@media (max-width: 900px) {
+  .cart-grid { grid-template-columns: 1fr; }
+  .summary { position: static; }
+}
+@media (max-width: 520px) {
+  .cart-line { grid-template-columns: 80px minmax(0, 1fr); }
+  .cart-line img { width: 80px; height: 100px; }
+  .cart-line-price { grid-column: 2; text-align: left; }
+  .cart-empty .btn { display: flex; margin: 0.5rem 0 0 !important; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container">
-    <h1>🛒 Your Cart</h1>
-    <div class="breadcrumb">
-      <a href="{% url 'home' %}">Home</a><span>›</span><span class="current">Cart</span>
-    </div>
-  </div>
-</div>
-
-<section class="section-sm">
-  <div class="container">
+<div class="container cart-page">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a><span aria-hidden="true">/</span><span class="current" aria-current="page">Cart</span>
+  </nav>
+  <h1>Your cart</h1>
 
   {% if items %}
-  <div class="cart-layout">
-    <!-- Items -->
-    <div>
-      <div class="cart-table">
-        <div class="cart-header">
-          <h2>Cart Items ({{ items|length }})</h2>
-          <span style="font-size:0.8rem;color:var(--gray-400);">🌸 Free delivery on orders ₹999+</span>
-        </div>
-
+  <div class="cart-grid">
+    <section aria-label="Items in your cart">
+      <ul>
         {% for item in items %}
-        <div class="cart-item">
+        <li class="cart-line">
           {% if item.product %}
-            <img class="cart-item-img" src="{{ item.product.get_image }}" alt="{{ item.product.name }}"/>
+            <img src="{{ item.product.get_image }}" alt="" width="96" height="120"/>
           {% else %}
-            <div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:2rem;">
-              {% if item.custom_bouquet %}🎨{% else %}🌸{% endif %}
-            </div>
+            <img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="96" height="120"/>
           {% endif %}
-
           <div>
-            <div class="cart-item-name">
-              {% if item.product %}{{ item.product.name }}
-              {% elif item.custom_bouquet %}Custom Bouquet ({{ item.custom_bouquet.flowers|title }})
-              {% endif %}
-            </div>
-            <div class="cart-item-cat">
-              {% if item.product %}{{ item.product.category.name }}
-              {% elif item.custom_bouquet %}{{ item.custom_bouquet.get_wrapping_display }}{% endif %}
-            </div>
-            <div style="margin-top:0.5rem;font-size:0.85rem;color:var(--pink-600);font-weight:700;">
-              ₹{{ item.unit_price }} each
+            {% if item.product %}
+              <div class="cart-line-name"><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></div>
+              <div class="cart-line-meta">{{ item.product.category.name }} · {{ item.unit_price|rupees }} each</div>
+            {% else %}
+              <div class="cart-line-name">Custom bouquet</div>
+              <div class="cart-line-meta">{{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.flowers }} · {{ item.custom_bouquet.get_wrapping_display }} wrap{% if item.custom_bouquet.message_card %} · with message card{% endif %} · {{ item.unit_price|rupees }} each</div>
+            {% endif %}
+            <div class="cart-line-actions">
+              <form method="post" action="{% url 'update_cart' %}" class="stepper" aria-label="Quantity">
+                {% csrf_token %}
+                <input type="hidden" name="item_id" value="{{ item.id }}"/>
+                <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" aria-label="One less"{% if item.quantity <= 1 %} disabled{% endif %}>{% icon 'minus' 16 %}</button>
+                <output aria-live="polite">{{ item.quantity }}</output>
+                <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" aria-label="One more"
+                        {% if item.product and item.quantity >= item.product.stock_quantity %} disabled{% endif %}>{% icon 'plus' 16 %}</button>
+              </form>
+              <form method="post" action="{% url 'remove_from_cart' item.id %}">
+                {% csrf_token %}
+                <button type="submit" class="remove-btn">Remove<span class="sr-only"> {% if item.product %}{{ item.product.name }}{% else %}custom bouquet{% endif %}</span></button>
+              </form>
             </div>
           </div>
-
-          <form method="post" action="{% url 'update_cart' %}">
-            {% csrf_token %}
-            <input type="hidden" name="item_id" value="{{ item.id }}"/>
-            <div class="qty-mini">
-              <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}">−</button>
-              <input type="number" value="{{ item.quantity }}" min="1" max="99" readonly/>
-              <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}">+</button>
-            </div>
-          </form>
-
-          <div>
-            <div class="cart-item-price" style="text-align:right;">₹{{ item.subtotal }}</div>
-            <form method="POST" action="{% url 'remove_from_cart' item.id %}" style="text-align:right;margin-top:0.4rem;">
-              {% csrf_token %}
-              <button type="submit" class="cart-btn-remove" aria-label="Remove item"
-                      onclick="return confirm('Remove this item?')"
-                      style="background:none;border:none;cursor:pointer;padding:0;font:inherit;">🗑️</button>
-            </form>
-          </div>
-        </div>
+          <div class="cart-line-price">{{ item.subtotal|rupees }}</div>
+        </li>
         {% endfor %}
-      </div>
+      </ul>
+      <p style="margin-top: 1rem;"><a class="link" href="{% url 'products' %}">Continue shopping</a></p>
+    </section>
 
-      <div style="margin-top:1rem;display:flex;gap:1rem;">
-        <a href="{% url 'products' %}" class="btn btn-ghost">← Continue Shopping</a>
-      </div>
-    </div>
-
-    <!-- Summary -->
-    <div class="order-summary">
-      <h3>Order Summary</h3>
-      <div class="summary-row"><span>Subtotal ({{ items|length }} items)</span><span>₹{{ subtotal }}</span></div>
-      <div class="summary-row"><span>Delivery</span><span style="color:var(--green-500);">Calculated at checkout</span></div>
-      <div class="summary-row"><span>Discount</span><span style="color:var(--green-500);">—</span></div>
-      <div class="summary-total">
-        <span>Estimated Total</span>
-        <span class="amount">₹{{ subtotal }}</span>
-      </div>
-      <a href="{% url 'checkout' %}" class="btn btn-primary btn-block btn-lg" style="margin-top:1.25rem;">
-        Proceed to Checkout →
-      </a>
-      <div style="margin-top:1rem;text-align:center;">
-        <p style="font-size:0.75rem;color:var(--gray-400);">🔒 Secure checkout · Free returns</p>
-      </div>
-    </div>
+    <aside class="summary" aria-labelledby="summary-title">
+      <h2 id="summary-title">Summary</h2>
+      <div class="sum-row"><span>Items ({{ items|length }})</span><span>{{ subtotal|rupees }}</span></div>
+      <div class="sum-row"><span>Delivery</span><span>{% if subtotal >= free_delivery_above %}Free{% else %}From your pincode{% endif %}</span></div>
+      <div class="sum-total"><span>Subtotal</span><span>{{ subtotal|rupees }}</span></div>
+      {% if subtotal < free_delivery_above %}
+        <div class="free-meter">
+          Add {{ free_delivery_above|sub:subtotal|rupees }} more for free delivery
+          <div class="bar" aria-hidden="true"><span style="width: {% widthratio subtotal free_delivery_above 100 %}%;"></span></div>
+        </div>
+      {% else %}
+        <p class="free-meter">{% icon 'check-circle' 16 %} Your order gets free delivery</p>
+      {% endif %}
+      <a href="{% url 'checkout' %}" class="btn btn-primary btn-lg btn-block">Checkout</a>
+    </aside>
   </div>
 
   {% else %}
-  <!-- Empty State -->
-  <div class="empty-state">
-    <div style="font-size:5rem;margin-bottom:1.25rem;">🛒</div>
-    <h3>Your cart is empty</h3>
-    <p>Looks like you haven't added any beautiful blooms yet!</p>
-    <a href="{% url 'products' %}" class="btn btn-primary btn-lg" style="margin-top:1rem;">🌷 Shop Bouquets</a>
-    <a href="{% url 'custom_bouquet' %}" class="btn btn-outline btn-lg" style="margin-top:1rem;margin-left:0.75rem;">🎨 Create Custom</a>
+  <div class="cart-empty">
+    <h2>Your cart is empty</h2>
+    <p>Pick a bouquet, or design your own.</p>
+    <a href="{% url 'products' %}" class="btn btn-primary btn-lg">Shop bouquets</a>
+    <a href="{% url 'custom_bouquet' %}" class="btn btn-outline btn-lg">Design your own</a>
   </div>
   {% endif %}
-
-  </div>
-</section>
+</div>
 {% endblock %}

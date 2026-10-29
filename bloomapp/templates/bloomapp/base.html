@@ -167,6 +167,18 @@
   </div>
 </footer>
 
+{% if user.is_authenticated %}
+<div class="drawer-backdrop" data-cart-close hidden></div>
+<aside class="cart-drawer" id="cart-drawer" aria-labelledby="cart-drawer-title" hidden>
+  <div class="drawer-head">
+    <h2 id="cart-drawer-title">Your cart</h2>
+    <button type="button" class="nav-icon-btn" data-cart-close aria-label="Close cart">{% icon 'x' 22 %}</button>
+  </div>
+  <p class="drawer-status" role="status" aria-live="polite"></p>
+  <div class="drawer-body" data-cart-body></div>
+</aside>
+{% endif %}
+
 <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
 
 <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top">{% icon 'chevron-up' 20 %}</button>

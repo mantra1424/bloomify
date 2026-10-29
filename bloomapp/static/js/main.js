@@ -253,3 +253,69 @@ function changeQty(inputId, delta) {
   input.value = Math.max(1, Math.min(99, (parseInt(input.value, 10) || 1) + delta));
 }
 window.changeQty = changeQty;
+
+/* ─── Slide-in cart: "Add" without leaving the page ──────────── */
+(function () {
+  const drawer = document.getElementById('cart-drawer');
+  const backdrop = document.querySelector('.drawer-backdrop');
+  let lastFocus = null;
+
+  function setCount(n) {
+    document.querySelectorAll('.cart-btn').forEach(link => {
+      let badge = link.querySelector('.cart-badge');
+      if (!n) { if (badge) badge.remove(); }
+      else {
+        if (!badge) { badge = el('span', { class: 'cart-badge', 'aria-hidden': 'true' }); link.appendChild(badge); }
+        badge.textContent = n;
+      }
+      link.setAttribute('aria-label', n ? `Cart, ${n} item${n === 1 ? '' : 's'}` : 'Cart');
+    });
+  }
+
+  function open(message, ok) {
+    lastFocus = document.activeElement;
+    const status = drawer.querySelector('.drawer-status');
+    status.textContent = '';
+    status.className = 'drawer-status' + (ok ? '' : ' error');
+    if (message) { status.appendChild(iconClone(ok ? 'success' : 'error')); status.appendChild(el('span', {}, message)); }
+    drawer.hidden = false; backdrop.hidden = false;
+    drawer.setAttribute('role', 'dialog'); drawer.setAttribute('aria-modal', 'true');
+    drawer.querySelector('[data-cart-close]').focus();
+  }
+  function close() {
+    drawer.hidden = true; backdrop.hidden = true;
+    if (lastFocus) lastFocus.focus();
+  }
+
+  document.addEventListener('submit', async e => {
+    const form = e.target.closest('form[data-ajax-cart]');
+    if (!form || !drawer) return;          // logged out: let the form post and redirect to log in
+    e.preventDefault();
+    const btn = e.submitter || form.querySelector('[type="submit"]');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST', body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+      });
+      if (res.redirected || !(res.headers.get('content-type') || '').includes('json')) {
+        window.location.href = res.url;      // e.g. session expired → login page
+        return;
+      }
+      const data = await res.json();
+      // Server-rendered partial (Django escapes all data in it).
+      drawer.querySelector('[data-cart-body]').innerHTML = data.html;
+      setCount(data.cart_count);
+      open(data.message, data.ok);
+    } catch (err) {
+      form.submit();                          // network hiccup: fall back to a normal post
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  if (drawer) {
+    document.querySelectorAll('[data-cart-close]').forEach(b => b.addEventListener('click', close));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) close(); });
+  }
+})();

@@ -31,8 +31,12 @@ address_validator = RegexValidator(
 
 def first_error(form):
     """The first error message on a form, for showing as a flash message."""
-    for errors in form.errors.values():
+    for name, errors in form.errors.items():
         if errors:
+            field = form.fields.get(name)
+            if field is not None and errors[0] == str(field.error_messages['required']):
+                label = field.label or name.replace('_', ' ').capitalize()
+                return f'{label} is required.'
             return errors[0]
     return 'Please check the form and try again.'
 
@@ -138,6 +142,19 @@ class CheckoutForm(forms.Form):
             cities = ', '.join(pricing.serviceable_city_names())
             raise forms.ValidationError(f'Sorry, we don\'t deliver to "{city}" yet. We serve {cities}.')
         return pricing.DELIVERY_CITIES[pricing.city_key(city)]['name']
+
+    def clean(self):
+        data = super().clean()
+        city, pincode = data.get('city'), data.get('pincode')
+        if city and pincode:
+            pin_city = pricing.city_for_pincode(pincode)
+            if pin_city is None:
+                self.add_error('pincode', f'We don’t deliver to pincode {pincode} yet.')
+            elif pricing.DELIVERY_CITIES[pin_city]['name'] != city:
+                self.add_error(
+                    'pincode', f'Pincode {pincode} is in {pricing.DELIVERY_CITIES[pin_city]["name"]}, not {city}.'
+                )
+        return data
 
     def to_details(self):
         d = self.cleaned_data

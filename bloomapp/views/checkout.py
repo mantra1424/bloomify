@@ -1,12 +1,13 @@
 """Checkout page, its AJAX helpers, and placing the order."""
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from bloomapp.forms import CheckoutForm, first_error
@@ -33,7 +34,7 @@ def checkout_view(request):
     if not items.exists():
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart')
-    today = date.today()
+    today = timezone.localdate()
     return render(
         request,
         'bloomapp/checkout/checkout.html',
@@ -45,7 +46,12 @@ def checkout_view(request):
             'delivery_cities': pricing.DELIVERY_CITIES,
             'delivery_config': {
                 'cities': pricing.DELIVERY_CITIES,
+                'pincode_areas': pricing.PINCODE_AREAS,
                 'time_charges': pricing.TIME_CHARGES,
+                'default_km': 3,
+                'free_above': pricing.FREE_DELIVERY_ABOVE,
+                'discount_above': pricing.DELIVERY_DISCOUNT_ABOVE,
+                'discount': pricing.DELIVERY_DISCOUNT,
             },
         },
     )
@@ -58,7 +64,7 @@ def get_slots_ajax(request):
         day = datetime.strptime(request.GET.get('date') or '', '%Y-%m-%d').date()
     except ValueError:
         return JsonResponse({'slots': []})
-    today = date.today()
+    today = timezone.localdate()
     if not today <= day < today + timedelta(days=BOOKING_WINDOW_DAYS):
         return JsonResponse({'slots': []})
 
@@ -76,7 +82,8 @@ def get_slots_ajax(request):
                 {
                     'id': s.id,
                     'label': s.slot_label,
-                    'available': s.is_available,
+                    'available': s.is_bookable,
+                    'closed': s.has_started,
                     'slots_left': s.slots_left,
                 }
                 for s in slots
@@ -152,29 +159,28 @@ def place_order(request):
 
     form = CheckoutForm(request.POST)
     if not form.is_valid():
-        messages.error(request, f'❌ {first_error(form)}')
+        messages.error(request, first_error(form))
         return redirect('checkout')
 
     for item in items:
         if item.product and item.product.stock_quantity < item.quantity:
             messages.error(
                 request,
-                f'❌ "{item.product.name}" only has {item.product.stock_quantity} left in stock. '
-                'Please update your cart.',
+                f'"{item.product.name}" only has {item.product.stock_quantity} left in stock. Please update your cart.',
             )
             return redirect('cart')
 
     try:
         order = order_service.place_order(request.user, items, form.to_details())
     except order_service.OutOfStock as exc:
-        messages.error(request, f'❌ "{exc.product.name}" just sold out. Please update your cart.')
+        messages.error(request, f'"{exc.product.name}" just sold out. Please update your cart.')
         return redirect('cart')
     except order_service.PaymentStartError:
-        messages.error(request, '❌ Could not start online payment. Please try again or choose Cash on Delivery.')
+        messages.error(request, 'Could not start online payment. Please try again or choose Cash on Delivery.')
         return redirect('cart')
 
     if order.payment_mode not in order_service.ONLINE_PAYMENT_MODES:
-        messages.success(request, 'Order placed successfully! 🌸')
+        messages.success(request, 'Order placed. We’ve emailed your confirmation.')
         return redirect('order_success', pk=order.id)
 
     request.session['pending_order_id'] = order.id

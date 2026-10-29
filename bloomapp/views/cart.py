@@ -2,7 +2,9 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from bloomapp.models import CartItem, Product
@@ -14,6 +16,21 @@ MAX_QTY_PER_ITEM = 100
 
 def cart_items_for(user):
     return CartItem.objects.filter(user=user).select_related('product', 'custom_bouquet')
+
+
+def wants_json(request):
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def cart_drawer_reply(request, ok, message, status=200):
+    """JSON for the slide-in cart: a message, the new count and the drawer's contents."""
+    items = list(cart_items_for(request.user))
+    html = render_to_string(
+        'bloomapp/partials/cart_drawer_body.html',
+        {'items': items, 'subtotal': sum(i.subtotal for i in items)},
+        request=request,
+    )
+    return JsonResponse({'ok': ok, 'message': message, 'cart_count': len(items), 'html': html}, status=status)
 
 
 @login_required
@@ -38,14 +55,20 @@ def add_to_cart(request, pk):
     back = back_url(request, 'products')
 
     if product.stock_quantity <= 0:
-        messages.error(request, f'❌ "{product.name}" is out of stock.')
+        msg = f'"{product.name}" is sold out.'
+        if wants_json(request):
+            return cart_drawer_reply(request, False, msg, status=409)
+        messages.error(request, msg)
         return redirect(back)
 
     item = CartItem.objects.filter(user=request.user, product=product).first()
     in_cart = item.quantity if item else 0
     qty = min(qty, product.stock_quantity - in_cart)
     if qty <= 0:
-        messages.warning(request, f'⚠️ You already have the maximum available stock of "{product.name}" in your cart.')
+        msg = f'You already have all {product.stock_quantity} of "{product.name}" in your cart.'
+        if wants_json(request):
+            return cart_drawer_reply(request, False, msg, status=409)
+        messages.warning(request, msg)
         return redirect(back)
 
     if item:
@@ -53,7 +76,10 @@ def add_to_cart(request, pk):
         item.save(update_fields=['quantity'])
     else:
         CartItem.objects.create(user=request.user, product=product, quantity=qty)
-    messages.success(request, f'"{product.name}" added to cart! 🛒')
+    msg = f'"{product.name}" added to your cart.'
+    if wants_json(request):
+        return cart_drawer_reply(request, True, msg)
+    messages.success(request, msg)
     return redirect(back)
 
 
@@ -66,7 +92,7 @@ def update_cart(request):
     if item:
         if item.product and qty > item.product.stock_quantity:
             qty = item.product.stock_quantity
-            messages.warning(request, f'⚠️ Only {qty} of "{item.product.name}" in stock.')
+            messages.warning(request, f'Only {qty} of "{item.product.name}" in stock.')
         if qty <= 0:
             item.delete()
         else:

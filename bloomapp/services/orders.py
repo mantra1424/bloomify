@@ -79,7 +79,9 @@ def _book_slot(slot_id):
     if not slot_id:
         return None
     slot = DeliverySlot.objects.filter(id=slot_id).first()
-    if slot and DeliverySlot.objects.filter(pk=slot.pk, booked_count__lt=F('max_orders')).update(
+    if slot is None or slot.has_started:
+        return None
+    if DeliverySlot.objects.filter(pk=slot.pk, booked_count__lt=F('max_orders')).update(
         booked_count=F('booked_count') + 1
     ):
         return slot

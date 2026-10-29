@@ -159,7 +159,7 @@
         <p class="pd-stock low">{% icon 'clock' 18 %} Only {{ product.stock_quantity }} left</p>
       {% endif %}
 
-      <form id="add-form" class="pd-buy" method="post" action="{% url 'add_to_cart' product.pk %}">
+      <form id="add-form" class="pd-buy" method="post" action="{% url 'add_to_cart' product.pk %}" data-ajax-cart>
         {% csrf_token %}
         <div class="pd-buy-row">
           {% if product.is_in_stock %}

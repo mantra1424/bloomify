@@ -1,7 +1,8 @@
 {% load bloom %}
-{% comment %}Pincode checker. main.js handles submit → /delivery/check/. Context: field_id (unique per page).{% endcomment %}
-<form class="pin-check" data-pin-check action="{% url 'check_pincode' %}" method="get" novalidate>
-  <label for="{{ field_id }}">Check delivery to your area</label>
+{% comment %}Pincode checker. main.js handles submit → /delivery/check/.
+Context: field_id (unique per page), label (optional), auto (check a saved pincode on page load).{% endcomment %}
+<form class="pin-check" data-pin-check{% if auto %} data-pin-auto{% endif %} action="{% url 'check_pincode' %}" method="get" novalidate>
+  <label for="{{ field_id }}">{{ label|default:"Check delivery to your area" }}</label>
   <div class="pin-row">
     <input id="{{ field_id }}" name="pincode" inputmode="numeric" autocomplete="postal-code"
            maxlength="6" pattern="[1-9][0-9]{5}" placeholder="6-digit pincode" aria-describedby="{{ field_id }}-result"/>

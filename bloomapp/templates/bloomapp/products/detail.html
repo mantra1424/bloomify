@@ -1,377 +1,304 @@
 {% extends 'bloomapp/base.html' %}
-{% load static %}
+{% load bloom %}
+
 {% block title %}{{ product.name }} – Bloomify{% endblock %}
+{% block meta_desc %}{{ product.name }}: {{ product.description|truncatewords:25 }}{% endblock %}
+{% block body_class %}has-buy-bar{% endblock %}
+
 {% block extra_css %}
 <style>
-.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:3.5rem; align-items:start; }
-.gallery-main { border-radius:var(--radius-xl); overflow:hidden; aspect-ratio:1/1; background:var(--pink-50); }
-.gallery-main img { width:100%; height:100%; object-fit:cover; }
-.gallery-thumbs { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-top:0.75rem; }
-.gallery-thumb { border-radius:var(--radius-md); overflow:hidden; aspect-ratio:1/1; cursor:pointer;
-  border:2px solid transparent; transition:border-color var(--transition); }
-.gallery-thumb.active, .gallery-thumb:hover { border-color:var(--pink-400); }
-.gallery-thumb img { width:100%; height:100%; object-fit:cover; }
-.product-info-panel { position:sticky; top:100px; }
-.product-category-tag { display:inline-flex; align-items:center; gap:0.4rem;
-  background:var(--pink-100); color:var(--pink-600);
-  padding:0.3rem 0.8rem; border-radius:var(--radius-full); font-size:0.75rem; font-weight:600; margin-bottom:1rem; }
-.product-title { font-size:1.75rem; margin-bottom:0.75rem; }
-.product-rating-row { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; }
-.product-price-row { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:1.5rem; }
-.product-price-current { font-size:2rem; font-weight:700; color:var(--pink-600); }
-.product-price-original { font-size:1.1rem; color:var(--gray-400); text-decoration:line-through; }
-.product-desc { font-size:0.9rem; line-height:1.8; color:var(--gray-500); margin-bottom:1.5rem; }
-.product-tags { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.5rem; }
-.qty-control { display:flex; align-items:center; gap:0; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); overflow:hidden; width:fit-content; }
-.qty-btn { width:40px; height:40px; background:var(--gray-50); font-size:1.1rem; font-weight:700;
-  transition:background var(--transition); display:flex; align-items:center; justify-content:center; }
-.qty-btn:hover { background:var(--pink-100); color:var(--pink-600); }
-.qty-input { width:50px; text-align:center; border:none; border-left:1px solid var(--gray-200);
-  border-right:1px solid var(--gray-200); font-size:0.95rem; font-weight:600; outline:none; }
-.add-cart-row { display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap; }
-.stock-badge { display:inline-flex; align-items:center; gap:0.3rem; }
-.reviews-section { border-top:1px solid var(--gray-200); padding-top:3rem; margin-top:3rem; }
-.review-card { background:var(--gray-50); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1rem; }
-.review-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; }
-.reviewer-name { font-weight:600; font-size:0.9rem; }
-.review-date { font-size:0.75rem; color:var(--gray-400); }
-.review-stars { color:#fbbf24; font-size:0.85rem; margin-bottom:0.5rem; }
-.review-text { font-size:0.875rem; line-height:1.7; }
-.write-review { background:white; border:1.5px solid var(--gray-200); border-radius:var(--radius-lg); padding:1.75rem; margin-top:2rem; }
-.write-review h3 { margin-bottom:1.25rem; font-size:1.05rem; }
+.pd { padding-top: 1.25rem; padding-bottom: 3rem; } /* keep .container's side padding */
+.pd-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(2rem, 1rem + 4vw, 4rem); align-items: start; margin-top: 1.25rem; }
 
-@media(max-width:768px) {
-  .detail-grid { grid-template-columns:1fr; }
-  .product-info-panel { position:static; }
-}
+/* Gallery */
+.gallery-main { border-radius: var(--radius-xl); overflow: hidden; background: var(--accent-tint); }
+.gallery-main img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.gallery-thumbs { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+.gallery-thumb { width: 80px; border-radius: var(--radius-md); overflow: hidden; border: 2px solid transparent; padding: 0; }
+.gallery-thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.gallery-thumb[aria-pressed="true"] { border-color: var(--ink); }
 
-/* ── You May Also Like ───────────────────────────── */
-.rec-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
+/* Info column */
+.pd-info { position: sticky; top: 96px; }
+.pd-info h1 { font-size: clamp(2rem, 1.5rem + 1.6vw, 2.75rem); margin: 0.5rem 0 0.75rem; }
+.pd-rating { display: inline-flex; align-items: center; gap: 0.4rem; font-size: var(--text-sm); color: var(--muted); }
+.pd-rating .icon { color: #B7791F; }
+.pd-rating .icon path { fill: currentColor; }
+.pd-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.25rem 0.75rem; margin: 1rem 0 0.4rem; }
+.pd-price .now { font-size: var(--text-3xl); font-weight: 600; color: var(--ink); }
+.pd-price .was { font-size: var(--text-lg); color: var(--muted); text-decoration: line-through; }
+.pd-price .off { font-weight: 600; color: var(--accent); }
+.pd-tax { font-size: var(--text-sm); }
+.pd-stock { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.75rem; font-size: var(--text-sm); font-weight: 600; }
+.pd-stock.low { color: var(--warning); }
+.pd-stock.out { color: var(--danger); }
+
+.pd-buy { margin-top: 1.5rem; display: grid; gap: 0.75rem; }
+.pd-buy-row { display: flex; gap: 0.75rem; align-items: stretch; }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-full); background: var(--surface); }
+.qty button { width: 48px; height: 52px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); border-radius: var(--radius-full); }
+.qty button:hover { background: var(--gray-100); }
+.qty input { width: 2.5rem; text-align: center; border: 0; background: transparent; font-weight: 600; font-size: var(--text-base); -moz-appearance: textfield; }
+.qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.pd-buy-row .btn-primary { flex: 1; }
+.pd-wish { width: 52px; height: 52px; padding: 0; border-radius: var(--radius-full); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; }
+.pd-wish:hover, .pd-wish[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+.pd-wish[aria-pressed="true"] .icon path { fill: currentColor; }
+.pd-alt { font-size: var(--text-sm); color: var(--muted); }
+
+.pd-delivery { margin-top: 1.5rem; background: var(--sage-tint); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; }
+.pd-delivery .pin-check input { background: var(--surface); }
+.pd-delivery ul { margin-top: 0.85rem; display: grid; gap: 0.45rem; font-size: var(--text-sm); color: var(--ink-soft); }
+.pd-delivery li { display: flex; align-items: center; gap: 0.55rem; }
+.pd-delivery li .icon { color: var(--sage); }
+
+.pd-details { margin-top: 1.75rem; border-top: 1px solid var(--line); }
+.pd-details p { color: var(--ink-soft); line-height: 1.75; padding: 1.25rem 0; }
+.pd-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1.5rem; padding-bottom: 1.25rem; font-size: var(--text-sm); }
+.pd-facts dt { color: var(--muted); }
+.pd-facts dd { color: var(--ink); text-transform: capitalize; }
+.share { display: inline-flex; align-items: center; gap: 0.5rem; font-size: var(--text-sm); font-weight: 600; color: var(--ink); min-height: var(--tap); }
+.share:hover { color: var(--accent); }
+
+/* Reviews */
+.reviews { margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; }
+.review { padding: 1.25rem 0; border-bottom: 1px solid var(--line); }
+.review-head { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.review-name { font-weight: 600; color: var(--ink); }
+.review-date { font-size: var(--text-sm); color: var(--muted); }
+.stars { display: inline-flex; gap: 2px; color: #B7791F; margin: 0.35rem 0 0.5rem; }
+.stars .on path { fill: currentColor; }
+.stars .off { color: var(--line-strong); }
+.review p { color: var(--ink-soft); }
+.write-review { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.5rem; align-self: start; }
+.write-review h3 { font-family: var(--font-body); font-weight: 600; font-size: var(--text-lg); margin-bottom: 1rem; }
+.rate { border: 0; margin-bottom: 1rem; }
+.rate legend { font-size: var(--text-sm); font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; }
+.rate-options { display: inline-flex; flex-direction: row-reverse; }
+.rate-options input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rate-options label { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: var(--line-strong); cursor: pointer; }
+.rate-options label:hover, .rate-options label:hover ~ label,
+.rate-options input:checked ~ label { color: #B7791F; }
+.rate-options label:hover .icon path, .rate-options label:hover ~ label .icon path,
+.rate-options input:checked ~ label .icon path { fill: currentColor; }
+.rate-options input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.more { margin-top: 4rem; }
+
+/* Phone: sticky buy bar */
+.buy-bar { display: none; }
+@media (max-width: 860px) {
+  .pd-grid, .reviews { grid-template-columns: 1fr; }
+  .pd-info { position: static; }
+  .gallery-main { border-radius: var(--radius-lg); }
+  .gallery-main img { aspect-ratio: 1; }
 }
-.rec-card {
-  background: white;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
-  display: flex;
-  flex-direction: column;
+@media (max-width: 768px) {
+  .buy-bar {
+    display: flex; align-items: center; gap: 0.75rem;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+    padding: 0.75rem var(--gutter) calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -6px 18px rgba(43, 30, 28, 0.08);
+    transition: transform 0.2s ease;
+  }
+  .buy-bar.hidden-bar { transform: translateY(110%); }
+  .buy-bar .bb-price { line-height: 1.2; }
+  .buy-bar .bb-price strong { display: block; font-size: var(--text-lg); color: var(--ink); }
+  .buy-bar .bb-price span { font-size: var(--text-xs); color: var(--muted); }
+  .buy-bar .btn { flex: 1; }
+  .has-buy-bar main { padding-bottom: 5rem; }
+  .has-buy-bar .back-to-top { bottom: 5.5rem; }
 }
-.rec-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-}
-.rec-card-img {
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
-  background: var(--pink-50);
-  flex-shrink: 0;
-}
-.rec-card-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s ease;
-}
-.rec-card:hover .rec-card-img img { transform: scale(1.06); }
-.rec-card-body {
-  padding: 0.9rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  flex: 1;
-}
-.rec-card-name {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.rec-card-price {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--pink-600);
-}
-.rec-card-body .btn { margin-top: auto; font-size: 0.78rem; padding: 0.4rem 0.75rem; }
-@media(max-width:1024px) { .rec-grid { grid-template-columns: repeat(2,1fr); } }
-@media(max-width:480px)  { .rec-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container">
-    <div class="breadcrumb">
-      <a href="{% url 'home' %}">Home</a><span>›</span>
-      <a href="{% url 'products' %}">Shop</a><span>›</span>
-      <a href="{% url 'products' %}?category={{ product.category.slug }}">{{ product.category.name }}</a><span>›</span>
-      <span class="current">{{ product.name }}</span>
-    </div>
-  </div>
-</div>
+<div class="container pd">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a><span aria-hidden="true">/</span>
+    <a href="{% url 'products' %}">Shop</a><span aria-hidden="true">/</span>
+    <a href="{% url 'products' %}?category={{ product.category.slug }}">{{ product.category.name }}</a><span aria-hidden="true">/</span>
+    <span class="current" aria-current="page">{{ product.name }}</span>
+  </nav>
 
-<section class="section-sm">
-  <div class="container">
-    <div class="detail-grid">
-      <!-- Gallery -->
-      <div>
-        <div class="gallery-main">
-          <img src="{{ product.get_image }}"
-            alt="{{ product.name }}" id="main-image"/>
-        </div>
-        {% if product.image_2 or product.image_3 %}
-        <div class="gallery-thumbs">
-          <div class="gallery-thumb active" data-img="{{ product.get_image }}" onclick="setMain(this.dataset.img, this)">
-            <img src="{{ product.get_image }}" alt="main"/>
-          </div>
-          {% if product.image_2 %}
-          <div class="gallery-thumb" onclick="setMain('{{ product.image_2.url }}', this)">
-            <img src="{{ product.image_2.url }}" alt="image2"/>
-          </div>
-          {% endif %}
-          {% if product.image_3 %}
-          <div class="gallery-thumb" onclick="setMain('{{ product.image_3.url }}', this)">
-            <img src="{{ product.image_3.url }}" alt="image3"/>
-          </div>
-          {% endif %}
-        </div>
-        {% endif %}
+  <div class="pd-grid">
+    <div class="gallery">
+      <div class="gallery-main">
+        <img id="gallery-main" src="{{ gallery.0 }}" alt="{{ product.name }}" width="800" height="1000" fetchpriority="high"/>
       </div>
-
-      <!-- Info -->
-      <div class="product-info-panel">
-        <span class="product-category-tag">{{ product.category.icon }} {{ product.category.name }}</span>
-        <h1 class="product-title">{{ product.name }}</h1>
-
-        <div class="product-rating-row">
-          <div>
-            {% for i in "12345" %}
-              <span class="star {% if forloop.counter > avg_rating %}empty{% endif %}">★</span>
-            {% endfor %}
-          </div>
-          <span style="font-size:0.85rem;color:var(--gray-500);">{{ avg_rating }}  ({{ reviews.count }} review{{ reviews.count|pluralize }})</span>
-          {% if product.is_in_stock %}
-            <span class="badge badge-green">✓ In Stock</span>
-          {% else %}
-            <span class="badge badge-red">✗ Out of Stock</span>
-          {% endif %}
-        </div>
-
-        <div class="product-price-row">
-          <span class="product-price-current">₹{{ product.price }}</span>
-          {% if product.original_price != product.price %}
-            <span class="product-price-original">₹{{ product.original_price }}</span>
-            <span class="badge badge-yellow">{{ product.discount_percent }}% OFF</span>
-          {% endif %}
-        </div>
-
-        {% if product.is_in_stock and product.stock_quantity <= 5 %}
-          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:1rem;font-size:0.82rem;font-weight:700;color:#ea580c;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea580c;animation:pulse-dot 1.2s infinite;"></span>
-            Only {{ product.stock_quantity }} left — order soon!
-          </div>
-        {% endif %}
-
-        <p class="product-desc">{{ product.description|default:"A beautiful handcrafted bouquet made with the freshest blooms, perfect for any occasion." }}</p>
-
-        {% if product.flowers %}
-        <div class="product-tags">
-          <strong style="font-size:0.8rem;color:var(--gray-500);">Flowers:</strong>
-          {% for flower in product.flowers.split %}
-            <span class="badge badge-pink">🌸 {{ flower }}</span>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if product.occasion_tags %}
-        <div class="product-tags">
-          <strong style="font-size:0.8rem;color:var(--gray-500);">Occasions:</strong>
-          {% for tag in product.occasion_tags.split %}
-            <span class="badge badge-green">{{ tag|title }}</span>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if product.is_in_stock %}
-        <form method="post" action="{% url 'add_to_cart' product.pk %}">
-          {% csrf_token %}
-          <div style="margin-bottom:1rem;">
-            <label class="form-label">Quantity</label>
-            <div class="qty-control">
-              <button type="button" class="qty-btn" onclick="changeQty('qty', -1)">−</button>
-              <input type="number" id="qty" name="quantity" class="qty-input" value="1" min="1" max="{{ product.stock_quantity }}"/>
-              <button type="button" class="qty-btn" onclick="changeQty('qty', 1)">+</button>
-            </div>
-          </div>
-          <div class="add-cart-row">
-            <button type="submit" class="btn btn-primary btn-lg" style="flex:1;">🛒 Add to Cart</button>
-            <a href="{% url 'custom_bouquet' %}" class="btn btn-outline btn-lg">🎨 Customize</a>
-            {% if user.is_authenticated %}
-            <button type="button" id="detail-wl-btn"
-              class="btn btn-lg {% if in_wishlist %}wl-active{% endif %}"
-              data-pk="{{ product.pk }}"
-              data-url="{% url 'toggle_wishlist' product.pk %}"
-              style="width:52px;height:52px;padding:0;border-radius:50%;border:2px solid var(--pink-300);background:{% if in_wishlist %}var(--pink-100){% else %}white{% endif %};color:{% if in_wishlist %}#dc2626{% else %}var(--gray-400){% endif %};flex-shrink:0;"
-              title="{% if in_wishlist %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                   fill="{% if in_wishlist %}currentColor{% else %}none{% endif %}"
-                   stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
+      {% if gallery|length > 1 %}
+        <div class="gallery-thumbs" aria-label="Photos">
+          {% for src in gallery %}
+            <button type="button" class="gallery-thumb" data-src="{{ src }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Show photo {{ forloop.counter }} of {{ gallery|length }}">
+              <img src="{{ src }}" alt="" width="80" height="80" loading="lazy"/>
             </button>
-            {% endif %}
-          </div>
-        </form>
-        {% else %}
-          <div class="badge badge-red" style="padding:0.75rem 1.25rem;font-size:0.9rem;margin-top:1rem;">Out of Stock</div>
-        {% endif %}
-
-        <div style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.5rem;">
-          <span style="font-size:0.82rem;color:var(--gray-400);">🚚 Free delivery on orders above ₹999</span>
-          <span style="font-size:0.82rem;color:var(--gray-400);">🌸 Fresh flowers guaranteed</span>
-          <span style="font-size:0.82rem;color:var(--gray-400);">💳 Multiple payment options</span>
-        </div>
-
-        <!-- WhatsApp Share -->
-        <a href="https://wa.me/?text={{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'product_detail' product.pk %}%20%F0%9F%8C%B8%20Check%20out%20{{ product.name|urlencode }}%20on%20Bloomify!"
-           target="_blank" rel="noopener"
-           style="margin-top:1rem;display:inline-flex;align-items:center;gap:0.5rem;
-                  background:#25d366;color:white;padding:0.55rem 1.25rem;
-                  border-radius:var(--radius-full);font-size:0.82rem;font-weight:600;
-                  text-decoration:none;transition:opacity 0.2s;"
-           onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-          </svg>
-          Share on WhatsApp
-        </a>
-      </div>
-    </div>
-
-    <!-- Reviews -->
-    <div class="reviews-section">
-      <h2 style="margin-bottom:1.5rem;">Customer Reviews ({{ reviews.count }})</h2>
-
-      {% for review in reviews %}
-      <div class="review-card">
-        <div class="review-header">
-          <div style="display:flex;align-items:center;gap:0.6rem;">
-            <div class="author-avatar" style="width:36px;height:36px;font-size:0.8rem;">{{ review.user.full_name|slice:":1" }}</div>
-            <div>
-              <div class="reviewer-name">{{ review.user.full_name }}</div>
-              <div class="review-date">{{ review.created_at|date:"d M Y" }}</div>
-            </div>
-          </div>
-          <div class="review-stars">
-            {% for i in "12345" %}★{% endfor %}
-          </div>
-        </div>
-        <p class="review-text">{{ review.comment }}</p>
-      </div>
-      {% empty %}
-        <p style="color:var(--gray-400);margin-bottom:2rem;">No reviews yet. Be the first to review!</p>
-      {% endfor %}
-
-      <!-- Write Review Form -->
-      {% if user.is_authenticated %}
-      <div class="write-review">
-        <h3>✍️ Write a Review</h3>
-        <form method="post" action="{% url 'submit_review' product.pk %}">
-          {% csrf_token %}
-          <div class="form-group">
-            <label class="form-label">Your Rating</label>
-            <div class="star-input-group">
-              {% for i in "54321" %}
-                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if forloop.first %}checked{% endif %}/>
-                <label for="star{{ i }}">★</label>
-              {% endfor %}
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Your Review</label>
-            <textarea name="comment" class="form-control" placeholder="Share your experience with this bouquet..." required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Submit Review 🌸</button>
-        </form>
-      </div>
-      {% else %}
-        <div style="text-align:center;padding:2rem;background:var(--pink-50);border-radius:var(--radius-lg);">
-          <p><a href="{% url 'login' %}" style="color:var(--pink-600);font-weight:600;">Login</a> to write a review.</p>
+          {% endfor %}
         </div>
       {% endif %}
     </div>
 
-    <!-- Recommendations -->
-    {% if recommendations %}
-    <div style="margin-top:3rem;border-top:1px solid var(--gray-200);padding-top:2.5rem;">
-      <h2 style="margin-bottom:1.5rem;">🌺 You May Also Like</h2>
-      <div class="rec-grid">
-        {% for p in recommendations %}
-        <div class="rec-card glow-on-hover">
-          <div class="rec-card-img">
-            <img src="{{ p.get_image }}" alt="{{ p.name }}" loading="lazy"/>
-          </div>
-          <div class="rec-card-body">
-            <div class="rec-card-name">{{ p.name }}</div>
-            <div class="rec-card-price">₹{{ p.price }}</div>
-            <a href="{% url 'product_detail' p.pk %}" class="btn btn-outline btn-sm btn-block">View Details</a>
-          </div>
+    <div class="pd-info">
+      <a class="eyebrow" href="{% url 'products' %}?category={{ product.category.slug }}">{{ product.category.name }}</a>
+      <h1>{{ product.name }}</h1>
+      {% if reviews %}
+        <a class="pd-rating" href="#reviews">{% icon 'star' 16 %} {{ rating_avg }}<span class="sr-only"> out of 5</span> · {{ reviews|length }} review{{ reviews|length|pluralize }}</a>
+      {% endif %}
+
+      <div class="pd-price">
+        <span class="now">{{ product.price|rupees }}</span>
+        {% if product.original_price > product.price %}
+          <span class="was"><span class="sr-only">was </span>{{ product.original_price|rupees }}</span>
+          <span class="off">{{ product.discount_percent }}% off</span>
+        {% endif %}
+      </div>
+      <p class="pd-tax">Delivery charge shown after you enter your pincode.</p>
+
+      {% if not product.is_in_stock %}
+        <p class="pd-stock out">{% icon 'alert' 18 %} Sold out</p>
+      {% elif product.stock_quantity <= 5 %}
+        <p class="pd-stock low">{% icon 'clock' 18 %} Only {{ product.stock_quantity }} left</p>
+      {% endif %}
+
+      <form id="add-form" class="pd-buy" method="post" action="{% url 'add_to_cart' product.pk %}">
+        {% csrf_token %}
+        <div class="pd-buy-row">
+          {% if product.is_in_stock %}
+            <div class="qty" role="group" aria-label="Quantity">
+              <button type="button" data-qty="-1" aria-label="One less">{% icon 'minus' 18 %}</button>
+              <label for="qty" class="sr-only">Quantity</label>
+              <input type="number" id="qty" name="quantity" value="1" min="1" max="{{ max_qty }}" inputmode="numeric"/>
+              <button type="button" data-qty="1" aria-label="One more">{% icon 'plus' 18 %}</button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" id="add-main">Add to cart</button>
+          {% else %}
+            <button type="button" class="btn btn-ghost btn-lg" disabled style="flex: 1;">Sold out</button>
+          {% endif %}
+          <button type="submit" form="wish-form" class="pd-wish" aria-pressed="{% if in_wishlist %}true{% else %}false{% endif %}"
+                  aria-label="{% if in_wishlist %}Remove from wishlist{% else %}Save to wishlist{% endif %}">{% icon 'heart' 22 %}</button>
         </div>
-        {% endfor %}
+        <p class="pd-alt">Want something different? <a class="link" href="{% url 'custom_bouquet' %}">Design your own bouquet</a></p>
+      </form>
+      <form id="wish-form" method="post" action="{% url 'toggle_wishlist' product.pk %}" hidden>{% csrf_token %}</form>
+
+      <div class="pd-delivery">
+        {% include 'bloomapp/partials/pin_check.html' with field_id='pd-pin' label='Delivery to your area' auto=True %}
+        <ul>
+          <li>{% icon 'clock' 18 %} Same-day and midnight slots at checkout</li>
+          <li>{% icon 'truck' 18 %} Free delivery over {{ free_delivery_above|rupees }}</li>
+          <li>{% icon 'shield' 18 %} Pay online or cash on delivery</li>
+        </ul>
+      </div>
+
+      <div class="pd-details">
+        <p>{{ product.description|default:"A hand-tied bouquet made to order." }}</p>
+        <dl class="pd-facts">
+          {% if product.flowers %}<dt>Flowers</dt><dd>{{ product.flowers }}</dd>{% endif %}
+          {% if product.occasion_tags %}<dt>Good for</dt><dd>{{ product.occasion_tags }}</dd>{% endif %}
+        </dl>
+        <a class="share" target="_blank" rel="noopener"
+           href="https://wa.me/?text={{ product.name|urlencode }}%20on%20Bloomify%3A%20{{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'product_detail' product.pk %}">
+          {% icon 'whatsapp' 18 %} Share on WhatsApp
+        </a>
       </div>
     </div>
-    {% endif %}
   </div>
-</section>
+
+  <section class="reviews" id="reviews" aria-labelledby="reviews-title">
+    <div>
+      <h2 id="reviews-title">Reviews{% if reviews %} <span class="sr-only">({{ reviews|length }})</span>{% endif %}</h2>
+      {% for review in reviews %}
+        <article class="review">
+          <div class="review-head">
+            <span class="review-name">{{ review.user.full_name }}</span>
+            <time class="review-date" datetime="{{ review.created_at|date:'Y-m-d' }}">{{ review.created_at|date:"j M Y" }}</time>
+          </div>
+          <div class="stars" role="img" aria-label="{{ review.rating }} out of 5 stars">
+            {% for i in "12345" %}<span class="{% if forloop.counter <= review.rating %}on{% else %}off{% endif %}">{% icon 'star' 16 %}</span>{% endfor %}
+          </div>
+          <p>{{ review.comment }}</p>
+        </article>
+      {% empty %}
+        <p style="margin-top: 1rem;">No reviews yet.</p>
+      {% endfor %}
+    </div>
+
+    {% if user.is_authenticated %}
+      <form class="write-review" method="post" action="{% url 'submit_review' product.pk %}">
+        {% csrf_token %}
+        <h3>Write a review</h3>
+        <fieldset class="rate">
+          <legend>Your rating</legend>
+          <div class="rate-options">
+            {% for i in "54321" %}
+              <input type="radio" id="rate-{{ i }}" name="rating" value="{{ i }}"{% if forloop.first %} checked{% endif %}/>
+              <label for="rate-{{ i }}">{% icon 'star' 26 %}<span class="sr-only">{{ i }} star{% if i != "1" %}s{% endif %}</span></label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <div class="form-group">
+          <label class="form-label" for="review-text">Your review</label>
+          <textarea id="review-text" name="comment" class="form-control" maxlength="2000" required placeholder="How did the flowers look and arrive?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-dark">Post review</button>
+      </form>
+    {% else %}
+      <div class="write-review">
+        <h3>Bought this bouquet?</h3>
+        <p><a class="link" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in</a> to write a review.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if recommendations %}
+    <section class="more" aria-labelledby="more-title">
+      <div class="section-head"><h2 id="more-title">You may also like</h2></div>
+      <div class="product-grid">
+        {% for product in recommendations %}
+          {% include 'bloomapp/partials/product_card.html' %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+
+{% if product.is_in_stock %}
+<div class="buy-bar" id="buy-bar" aria-hidden="false">
+  <span class="bb-price"><strong>{{ product.price|rupees }}</strong><span>{{ product.name|truncatechars:28 }}</span></span>
+  <button type="submit" form="add-form" class="btn btn-primary btn-lg">Add to cart</button>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function setMain(src, thumb) {
-  document.getElementById('main-image').src = src;
-  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-  thumb.classList.add('active');
-}
-
-// Wishlist toggle on detail page
-(function(){
-  const btn = document.getElementById('detail-wl-btn');
-  if (!btn) return;
-  const CSRF = document.cookie.split(';').map(c=>c.trim())
-    .find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
-  btn.addEventListener('click', async function(){
-    try {
-      const res = await fetch(this.dataset.url, {
-        method:'POST',
-        headers:{'X-CSRFToken':CSRF,'X-Requested-With':'XMLHttpRequest'}
-      });
-      const data = await res.json();
-      const svg = this.querySelector('svg');
-      if (data.in_wishlist) {
-        this.classList.add('wl-active');
-        svg.setAttribute('fill','currentColor');
-        this.style.color='#dc2626';
-        this.style.background='var(--pink-100)';
-        this.title='Remove from wishlist';
-      } else {
-        this.classList.remove('wl-active');
-        svg.setAttribute('fill','none');
-        this.style.color='var(--gray-400)';
-        this.style.background='white';
-        this.title='Add to wishlist';
-      }
-    } catch { window.location.href='/login/'; }
+(function () {
+  // Gallery
+  const main = document.getElementById('gallery-main');
+  document.querySelectorAll('.gallery-thumb').forEach(btn => {
+    btn.addEventListener('click', () => {
+      main.src = btn.dataset.src;
+      document.querySelectorAll('.gallery-thumb').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    });
   });
+
+  // Quantity stepper
+  const qty = document.getElementById('qty');
+  document.querySelectorAll('[data-qty]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const max = parseInt(qty.max, 10) || 10;
+      qty.value = Math.max(1, Math.min(max, (parseInt(qty.value, 10) || 1) + parseInt(btn.dataset.qty, 10)));
+    });
+  });
+
+  // Phone buy bar: hide it while the main "Add to cart" button is on screen
+  const bar = document.getElementById('buy-bar');
+  const mainBtn = document.getElementById('add-main');
+  if (bar && mainBtn && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      bar.classList.toggle('hidden-bar', entry.isIntersecting);
+      bar.setAttribute('aria-hidden', String(entry.isIntersecting));
+    }).observe(mainBtn);
+  }
 })();
 </script>
 {% endblock %}

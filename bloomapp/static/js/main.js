@@ -185,9 +185,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* Pincode checkers (header panel, home hero, …) */
-  applySavedPin(storage('get'));
+  const savedPin = storage('get');
+  applySavedPin(savedPin);
   document.querySelectorAll('[data-pin-check]').forEach(form => {
     form.addEventListener('submit', e => { e.preventDefault(); checkPincode(form); });
+    if (savedPin && form.hasAttribute('data-pin-auto')) checkPincode(form);
   });
 
   setupSearch();

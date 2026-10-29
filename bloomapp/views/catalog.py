@@ -2,23 +2,37 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from bloomapp.forms import CustomBouquetForm, first_error
-from bloomapp.models import CartItem, Category, CustomBouquet, Product, Review, Wishlist
+from bloomapp.models import FLOWER_CHOICES, CartItem, Category, CustomBouquet, Product, Review, Wishlist
 from bloomapp.services import pricing
 from bloomapp.utils import back_url, parse_float, parse_int
 
-OCCASIONS = ['birthday', 'anniversary', 'love', 'wedding', 'graduation', 'sympathy']
 SORTS = {
-    'price_asc': ('price',),
-    'price_desc': ('-price',),
-    'newest': ('-created_at',),
+    'popular': ('Most popular', ('-order_count', '-is_featured', '-created_at')),
+    'newest': ('Newest', ('-created_at',)),
+    'price_asc': ('Price: low to high', ('price',)),
+    'price_desc': ('Price: high to low', ('-price',)),
 }
+PRICE_BANDS = {
+    'under-1000': ('Under ₹1,000', None, 999.99),
+    '1000-2000': ('₹1,000 – ₹2,000', 1000, 2000),
+    'over-2000': ('Over ₹2,000', 2000.01, None),
+}
+
+
+def with_ratings(products):
+    """Add order and review counts so cards can show ratings and sort by popularity."""
+    return products.annotate(
+        order_count=Count('orderitem', distinct=True),
+        review_count=Count('reviews', distinct=True),
+        rating_avg=Avg('reviews__rating'),
+    )
 
 
 def _wishlist_ids(user):
@@ -28,44 +42,72 @@ def _wishlist_ids(user):
 
 
 def products_list(request):
-    products = Product.objects.filter(status='available').select_related('category')
+    params = request.GET
+    base = Product.objects.filter(status='available').select_related('category')
 
-    cat_slug = request.GET.get('category', '')
-    min_price = parse_float(request.GET.get('min_price'), None, min_value=0)
-    max_price = parse_float(request.GET.get('max_price'), None, min_value=0)
-    q = request.GET.get('q', '').strip()
-    occasion = request.GET.get('occasion', '')
-    sort = request.GET.get('sort', 'newest')
+    category = Category.objects.filter(slug=params.get('category', ''), status='available').first()
+    q = params.get('q', '').strip()[:100]
+    price = params.get('price', '')
+    flowers = [f for f in params.getlist('flower') if f in dict(FLOWER_CHOICES)]
+    sort = params.get('sort') if params.get('sort') in SORTS else 'popular'
 
-    if cat_slug:
-        products = products.filter(Q(category__slug=cat_slug) | Q(extra_categories__slug=cat_slug)).distinct()
-    if min_price is not None:
-        products = products.filter(price__gte=min_price)
-    if max_price is not None:
-        products = products.filter(price__lte=max_price)
+    if category:
+        base = base.filter(Q(category=category) | Q(extra_categories=category)).distinct()
     if q:
-        products = products.filter(Q(name__icontains=q) | Q(description__icontains=q) | Q(flowers__icontains=q))
-    if occasion:
-        products = products.filter(occasion_tags__icontains=occasion)
+        base = base.filter(Q(name__icontains=q) | Q(description__icontains=q) | Q(flowers__icontains=q))
+    # Older links (home page "under ₹X") still work.
+    min_price = parse_float(params.get('min_price'), None, min_value=0)
+    max_price = parse_float(params.get('max_price'), None, min_value=0)
+    if price in PRICE_BANDS:
+        _, min_price, max_price = PRICE_BANDS[price]
+    if min_price is not None:
+        base = base.filter(price__gte=min_price)
+    if max_price is not None:
+        base = base.filter(price__lte=max_price)
 
-    if sort == 'popular':
-        products = products.annotate(ocount=Count('orderitem')).order_by('-ocount')
+    # Count each flower among the products the other filters leave, so the numbers are honest.
+    flower_names = list(base.values_list('flowers', flat=True))
+    flower_options = [
+        {
+            'key': key,
+            'label': label,
+            # Same rule as the filter below (substring match), so the count always equals the results.
+            'count': sum(key in (names or '').lower() for names in flower_names),
+            'checked': key in flowers,
+        }
+        for key, label in FLOWER_CHOICES
+    ]
+
+    products = base
+    if flowers:
+        match = Q()
+        for key in flowers:
+            match |= Q(flowers__icontains=key)
+        products = products.filter(match)
+    products = with_ratings(products).order_by(*SORTS[sort][1])
+
+    if category:
+        title = category.name
+    elif q:
+        title = f'Results for “{q}”'
     else:
-        products = products.order_by(*SORTS.get(sort, SORTS['newest']))
+        title = 'All bouquets'
 
     return render(
         request,
         'bloomapp/products/list.html',
         {
             'products': products,
-            'categories': Category.objects.filter(status='available'),
-            'selected_cat': cat_slug,
-            'min_price': request.GET.get('min_price', ''),
-            'max_price': request.GET.get('max_price', ''),
+            'title': title,
+            'categories': Category.objects.filter(status='available').order_by('name'),
+            'selected_category': category,
             'search_q': q,
+            'price': price if price in PRICE_BANDS else '',
+            'price_bands': [(key, label) for key, (label, _, _) in PRICE_BANDS.items()],
+            'flower_options': flower_options,
             'sort': sort,
-            'occasion': occasion,
-            'occasion_choices': OCCASIONS,
+            'sort_options': [(key, label) for key, (label, _) in SORTS.items()],
+            'active_filter_count': (1 if price in PRICE_BANDS else 0) + len(flowers),
             'wishlist_ids': _wishlist_ids(request.user),
         },
     )
@@ -73,23 +115,28 @@ def products_list(request):
 
 def product_detail(request, pk):
     product = get_object_or_404(Product.objects.select_related('category'), pk=pk, status='available')
-    recommendations = (
+    reviews = list(product.reviews.select_related('user').order_by('-created_at'))
+    gallery = [product.get_image] + [img.url for img in (product.image_2, product.image_3) if img]
+    recommendations = with_ratings(
         Product.objects.filter(Q(category=product.category) | Q(extra_categories=product.category), status='available')
         .exclude(pk=pk)
+        .select_related('category')
         .distinct()
-        .annotate(ocount=Count('orderitem'))
-        .order_by('-ocount')[:4]
-    )
+    ).order_by('-order_count', '-is_featured')[:4]
+    wishlist_ids = _wishlist_ids(request.user)
+    rating_avg = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
     return render(
         request,
         'bloomapp/products/detail.html',
         {
             'product': product,
-            'reviews': product.reviews.select_related('user').order_by('-created_at'),
+            'gallery': gallery,
+            'reviews': reviews,
+            'rating_avg': rating_avg,
             'recommendations': recommendations,
-            'star_range': range(1, 6),
-            'avg_rating': product.avg_rating,
-            'in_wishlist': product.pk in _wishlist_ids(request.user),
+            'wishlist_ids': wishlist_ids,
+            'in_wishlist': product.pk in wishlist_ids,
+            'max_qty': min(product.stock_quantity, 10),
         },
     )
 

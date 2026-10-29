@@ -77,3 +77,28 @@ def test_every_flower_choice_has_a_surcharge():
     from bloomapp.models import FLOWER_CHOICES
 
     assert set(pricing.FLOWER_SURCHARGES) == {key for key, _ in FLOWER_CHOICES}
+
+
+@pytest.mark.parametrize(
+    ('pincode', 'city'),
+    [('388001', 'anand'), ('390007', 'vadodara'), ('380015', 'ahmedabad'), ('395003', 'surat'), (' 387001 ', 'nadiad')],
+)
+def test_city_for_pincode(pincode, city):
+    assert pricing.city_for_pincode(pincode) == city
+
+
+@pytest.mark.parametrize('pincode', ['400001', '38800', '3880011', '088001', 'abcdef', '', None])
+def test_unknown_or_invalid_pincodes(pincode):
+    assert pricing.city_for_pincode(pincode) is None
+
+
+def test_delivery_quote_shows_lowest_normal_charge():
+    quote = pricing.delivery_quote('388001')
+    assert quote == {
+        'pincode': '388001',
+        'city': 'Anand',
+        'eta': '2–4 hrs',
+        'charge_from': 50,  # ₹20 city + ₹30 for the shortest distance
+        'free_above': 1000,
+    }
+    assert quote['charge_from'] == pricing.calc_delivery('Anand', 0, 'normal', 0)['delivery_charge']

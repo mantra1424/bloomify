@@ -95,6 +95,16 @@ def get_delivery_charge_ajax(request):
     return JsonResponse({'charge': 60.0, 'zone': 'Standard'})
 
 
+@require_GET
+def check_pincode(request):
+    """Pincode checker on the home page and header: can we deliver there, how fast, from how much."""
+    quote = pricing.delivery_quote(request.GET.get('pincode', ''))
+    if quote is None:
+        cities = ', '.join(pricing.serviceable_city_names())
+        return JsonResponse({'ok': False, 'message': f'We don’t deliver there yet. We deliver in {cities}.'})
+    return JsonResponse({'ok': True, **quote})
+
+
 @require_POST
 def calculate_delivery_api(request):
     try:

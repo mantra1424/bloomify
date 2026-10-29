@@ -1,5 +1,6 @@
 """Prices and charges. This is the single source of truth for serviceable cities."""
 
+import re
 from decimal import ROUND_HALF_UP, Decimal
 
 from bloomapp.utils import parse_float
@@ -15,6 +16,20 @@ DELIVERY_CITIES = {
 }
 
 TIME_CHARGES = {'normal': 0, 'sameday': 50, 'midnight': 120}
+
+# First three digits of the pincode areas we deliver to. These are postal areas,
+# so they also cover some towns around each city.
+PINCODE_AREAS = {
+    '380': 'ahmedabad',
+    '382': 'ahmedabad',
+    '387': 'nadiad',
+    '388': 'anand',
+    '390': 'vadodara',
+    '391': 'vadodara',
+    '392': 'bharuch',
+    '394': 'surat',
+    '395': 'surat',
+}
 
 FREE_DELIVERY_ABOVE = 1000  # subtotal (₹) at which delivery is free
 DELIVERY_DISCOUNT_ABOVE = 500  # subtotal (₹) at which ₹30 is taken off delivery
@@ -40,6 +55,30 @@ def is_serviceable(city):
 
 def serviceable_city_names():
     return [c['name'] for c in DELIVERY_CITIES.values()]
+
+
+def city_for_pincode(pincode):
+    """City key for a 6-digit pincode we deliver to, else None."""
+    pincode = (pincode or '').strip()
+    if not re.fullmatch(r'[1-9]\d{5}', pincode):
+        return None
+    return PINCODE_AREAS.get(pincode[:3])
+
+
+def delivery_quote(pincode):
+    """What a customer sees after entering a pincode: city, delivery time and lowest charge."""
+    key = city_for_pincode(pincode)
+    if key is None:
+        return None
+    city = DELIVERY_CITIES[key]
+    return {
+        'pincode': pincode.strip(),
+        'city': city['name'],
+        'eta': city['eta'],
+        # Cheapest normal delivery: city charge + the shortest distance band.
+        'charge_from': city['charge'] + distance_charge(0),
+        'free_above': FREE_DELIVERY_ABOVE,
+    }
 
 
 def distance_charge(km):

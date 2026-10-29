@@ -18,6 +18,7 @@ from .catalog import (
 from .checkout import (
     apply_coupon_ajax,
     calculate_delivery_api,
+    check_pincode,
     checkout_view,
     get_delivery_charge_ajax,
     get_slots_ajax,

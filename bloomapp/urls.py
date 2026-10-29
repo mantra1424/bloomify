@@ -62,6 +62,7 @@ urlpatterns = [
     path('checkout/', views.checkout_view, name='checkout'),
     path('checkout/slots/', views.get_slots_ajax, name='get_slots'),
     path('checkout/delivery-charge/', views.get_delivery_charge_ajax, name='delivery_charge'),
+    path('delivery/check/', views.check_pincode, name='check_pincode'),
     path('checkout/calculate-delivery/', views.calculate_delivery_api, name='calculate_delivery'),
     path('checkout/apply-coupon/', views.apply_coupon_ajax, name='apply_coupon'),
     # Payment & Orders

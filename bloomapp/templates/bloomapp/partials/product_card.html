@@ -1,0 +1,47 @@
+{% load bloom %}
+{% comment %}
+  One product card. Context: product (optionally annotated with review_count / rating_avg),
+  wishlist_ids (optional set of product ids the user has saved).
+{% endcomment %}
+<article class="product-card has-add">
+  <a class="product-card-link" href="{% url 'product_detail' product.pk %}">
+    <div class="product-card-img{% if not product.is_in_stock %} oos{% endif %}">
+      <img src="{{ product.get_image }}" alt="{{ product.name }}" loading="lazy" width="400" height="500"/>
+      {% if not product.is_in_stock %}<span class="product-card-badge oos">Sold out</span>{% endif %}
+    </div>
+    <div class="product-card-body">
+      <div class="product-card-category">{{ product.category.name }}</div>
+      <h3 class="product-card-name">{{ product.name }}</h3>
+      {% if product.review_count %}
+        <div class="product-card-rating">
+          {% icon 'star' 14 %}
+          <span>{{ product.rating_avg|floatformat:1 }}<span class="sr-only"> out of 5</span></span>
+          <span class="rating-count">({{ product.review_count }} review{{ product.review_count|pluralize }})</span>
+        </div>
+      {% endif %}
+      <div class="product-card-price">
+        <span class="price-current">{{ product.price|rupees }}</span>
+        {% if product.original_price > product.price %}
+          <span class="price-original"><span class="sr-only">was </span>{{ product.original_price|rupees }}</span>
+          <span class="price-off">{{ product.discount_percent }}% off</span>
+        {% endif %}
+      </div>
+    </div>
+  </a>
+  <form method="post" action="{% url 'toggle_wishlist' product.pk %}">
+    {% csrf_token %}
+    {% if product.pk in wishlist_ids %}
+      <button type="submit" class="wl-btn wl-active" aria-pressed="true" aria-label="Remove {{ product.name }} from wishlist">{% icon 'heart' 20 %}</button>
+    {% else %}
+      <button type="submit" class="wl-btn" aria-pressed="false" aria-label="Save {{ product.name }} to wishlist">{% icon 'heart' 20 %}</button>
+    {% endif %}
+  </form>
+  <form method="post" action="{% url 'add_to_cart' product.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="quantity" value="1"/>
+    <button type="submit" class="card-add" {% if not product.is_in_stock %}disabled{% endif %}
+            aria-label="{% if product.is_in_stock %}Add {{ product.name }} to cart{% else %}{{ product.name }} is sold out{% endif %}">
+      {% icon 'plus' 18 %}<span class="card-add-text">Add</span>
+    </button>
+  </form>
+</article>

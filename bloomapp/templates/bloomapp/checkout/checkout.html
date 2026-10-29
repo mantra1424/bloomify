@@ -286,9 +286,8 @@
           <ul class="co-items">
             {% for item in items %}
               <li class="co-item">
-                {% if item.product %}<img src="{{ item.product.get_image }}" alt="" width="52" height="64"/>
-                {% else %}<img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="52" height="64"/>{% endif %}
-                <span class="co-item-name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %}<small>Qty {{ item.quantity }}</small></span>
+                <img src="{{ item.image_url }}" alt="" width="52" height="64"/>
+                <span class="co-item-name">{{ item.display_name }}<small>Qty {{ item.quantity }}</small></span>
                 <span class="co-item-price">{{ item.subtotal|rupees }}</span>
               </li>
             {% endfor %}

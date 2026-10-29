@@ -18,7 +18,8 @@ TRACKING_STEPS = [
 
 @login_required
 def order_success(request, pk):
-    order = get_object_or_404(Order.objects.prefetch_related('items__product'), pk=pk, user=request.user)
+    orders = Order.objects.prefetch_related('items__product', 'items__custom_bouquet')
+    order = get_object_or_404(orders, pk=pk, user=request.user)
     return render(request, 'bloomapp/orders/success.html', {'order': order})
 
 

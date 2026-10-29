@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from bloomapp.forms import CustomBouquetForm, first_error
 from bloomapp.models import (
+    BOUQUET_PHOTOS,
     FLOWER_CHOICES,
     WRAPPING_CHOICES,
     CartItem,
@@ -191,14 +192,6 @@ def search_autocomplete(request):
     )
 
 
-# Free-licensed demo photos (see photo_credits.json) shown on the bouquet builder.
-BOUQUET_PHOTOS = {
-    'rose': 'bloomapp/demo/products/romantic-red-rose-bouquet.jpg',
-    'lily': 'bloomapp/demo/products/sympathy-white-lilies.jpg',
-    'tulip': 'bloomapp/demo/products/rainbow-tulip-mix.jpg',
-    'sunflower': 'bloomapp/demo/products/sunshine-sunflower-bunch.jpg',
-    'orchid': 'bloomapp/demo/products/orchid-paradise.jpg',
-}
 WRAP_LOOKS = {
     'classic': {'desc': 'Crisp white paper, satin ribbon', 'swatch': '#F7F3EE'},
     'rustic': {'desc': 'Brown kraft paper and twine', 'swatch': '#C9A67A'},

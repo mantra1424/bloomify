@@ -14,7 +14,7 @@ def admin_orders(request):
     order_service.release_expired_online_orders()
     orders = (
         Order.objects.select_related('user', 'delivery_slot', 'payment')
-        .prefetch_related('items__product')
+        .prefetch_related('items__product', 'items__custom_bouquet')
         .order_by('-created_at')
     )
     status_filter = request.GET.get('status', '')

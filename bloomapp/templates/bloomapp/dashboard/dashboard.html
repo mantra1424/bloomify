@@ -91,7 +91,7 @@
               <h3>Order #{{ order.id }}</h3>
               <p class="order-meta">Placed {{ order.created_at|date:"j M Y" }}{% if order.delivery_slot %} · Delivery {{ order.delivery_slot.date|date:"D j M" }}, {{ order.delivery_slot.slot_label }}{% endif %}</p>
               <p class="order-items">
-                {% for item in items|slice:":2" %}{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %} × {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if items|length > 2 %} and {{ items|length|add:"-2" }} more{% endif %}
+                {% for item in items|slice:":2" %}{{ item.display_name }} × {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if items|length > 2 %} and {{ items|length|add:"-2" }} more{% endif %}
               </p>
             </div>
             <div class="order-side">

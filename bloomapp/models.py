@@ -24,6 +24,14 @@ FLOWER_CHOICES = [
     ('sunflower', 'Sunflower'),
     ('orchid', 'Orchid'),
 ]
+# Free-licensed demo photo for each flower (see photo_credits.json), used for custom bouquets.
+BOUQUET_PHOTOS = {
+    'rose': 'bloomapp/demo/products/romantic-red-rose-bouquet.jpg',
+    'lily': 'bloomapp/demo/products/sympathy-white-lilies.jpg',
+    'tulip': 'bloomapp/demo/products/rainbow-tulip-mix.jpg',
+    'sunflower': 'bloomapp/demo/products/sunshine-sunflower-bunch.jpg',
+    'orchid': 'bloomapp/demo/products/orchid-paradise.jpg',
+}
 WRAPPING_CHOICES = [
     ('classic', 'Classic White'),
     ('rustic', 'Rustic Kraft'),
@@ -281,11 +289,50 @@ class CustomBouquet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Custom bouquet by {self.user.full_name if self.user else "Guest"}'
+        return f'{self.display_name} by {self.user.full_name if self.user else "Guest"}'
+
+    @property
+    def flower_label(self):
+        return dict(FLOWER_CHOICES).get(self.flowers, self.flowers.title())
+
+    @property
+    def display_name(self):
+        """How the bouquet is named in the cart, orders and emails: "Custom: Rose bouquet"."""
+        return f'Custom: {self.flower_label} bouquet'
+
+    @property
+    def summary(self):
+        stems = f'{self.flower_count} stem{"" if self.flower_count == 1 else "s"}'
+        card = ' · message card' if self.message_card else ''
+        return f'{stems} · {self.get_wrapping_display()} wrap{card}'
+
+    @property
+    def get_image(self):
+        return static(BOUQUET_PHOTOS.get(self.flowers, 'bloomapp/img/placeholder-bouquet.svg'))
+
+
+class LineItemDisplay:
+    """Name and photo for a cart or order line, whether it is a product or a custom bouquet."""
+
+    @property
+    def display_name(self):
+        if self.product:
+            return self.product.name
+        if self.custom_bouquet:
+            return self.custom_bouquet.display_name
+        return 'Bouquet'
+
+    @property
+    def image_url(self):
+        if self.product:
+            return self.product.get_image
+        if self.custom_bouquet:
+            return self.custom_bouquet.get_image
+        return static('bloomapp/img/placeholder-bouquet.svg')
 
 
 # ── Cart Item ─────────────────────────────────────────────────────────────────
-class CartItem(models.Model):
+class CartItem(LineItemDisplay, models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     custom_bouquet = models.ForeignKey(CustomBouquet, on_delete=models.CASCADE, null=True, blank=True)
@@ -293,8 +340,7 @@ class CartItem(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        name = self.product.name if self.product else 'Custom Bouquet'
-        return f'{self.user.full_name} – {name} x{self.quantity}'
+        return f'{self.user.full_name} – {self.display_name} x{self.quantity}'
 
     @property
     def unit_price(self):
@@ -357,7 +403,7 @@ class Order(models.Model):
 
 
 # ── Order Item ────────────────────────────────────────────────────────────────
-class OrderItem(models.Model):
+class OrderItem(LineItemDisplay, models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     custom_bouquet = models.ForeignKey(CustomBouquet, on_delete=models.CASCADE, null=True, blank=True)
@@ -366,8 +412,7 @@ class OrderItem(models.Model):
     line_total = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        name = self.product.name if self.product else 'Custom Bouquet'
-        return f'{name} x{self.quantity}'
+        return f'{self.display_name} x{self.quantity}'
 
 
 # ── Payment ───────────────────────────────────────────────────────────────────

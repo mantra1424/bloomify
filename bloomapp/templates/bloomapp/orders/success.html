@@ -33,7 +33,7 @@
     <div class="done-items">
       {% for item in order.items.all %}
         <div class="done-row">
-          <span>{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %} × {{ item.quantity }}</span>
+          <span>{{ item.display_name }} × {{ item.quantity }}</span>
           <span>{{ item.line_total|rupees }}</span>
         </div>
       {% endfor %}

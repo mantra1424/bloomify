@@ -150,3 +150,39 @@ def test_bouquet_builder_offers_every_flower_and_wrapping(customer_client):
     res = customer_client.get(reverse('custom_bouquet'))
     assert [f['key'] for f in res.context['flower_options']] == list(pricing.FLOWER_SURCHARGES)
     assert [w['key'] for w in res.context['wrap_options']] == list(pricing.WRAPPING_COSTS)
+
+
+# ── Custom bouquets are named and pictured like any other item ─────────────
+def _bouquet(user, flowers='orchid'):
+    from bloomapp.models import CustomBouquet
+
+    return CustomBouquet.objects.create(user=user, flowers=flowers, flower_count=24, wrapping='luxury', price=1290)
+
+
+def test_custom_bouquet_has_a_name_and_its_flower_photo(customer):
+    bouquet = _bouquet(customer)
+    assert bouquet.display_name == 'Custom: Orchid bouquet'
+    assert bouquet.get_image.endswith('orchid-paradise.jpg')
+    assert bouquet.summary == '24 stems · Luxury Satin wrap'
+
+
+def test_cart_and_drawer_show_custom_bouquet_name_and_photo(customer_client, customer):
+    from bloomapp.models import CartItem
+
+    CartItem.objects.create(user=customer, custom_bouquet=_bouquet(customer, 'tulip'), quantity=1)
+    cart = customer_client.get(reverse('cart')).content.decode()
+    assert 'Custom: Tulip bouquet' in cart
+    assert 'rainbow-tulip-mix' in cart and 'placeholder-bouquet' not in cart
+
+    customer_client.post(reverse('add_to_cart', args=[1]), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    drawer = customer_client.get(reverse('checkout')).content.decode()
+    assert 'Custom: Tulip bouquet' in drawer and 'rainbow-tulip-mix' in drawer
+
+
+def test_order_pages_name_the_custom_bouquet(customer_client, customer):
+    from bloomapp.models import OrderItem
+
+    order = make_order(customer)
+    OrderItem.objects.create(order=order, custom_bouquet=_bouquet(customer), quantity=1, price=1290, line_total=1290)
+    for url in (reverse('order_tracking', args=[order.pk]), reverse('order_success', args=[order.pk])):
+        assert 'Custom: Orchid bouquet' in customer_client.get(url).content.decode()

@@ -81,8 +81,8 @@
       <ul class="t-items">
         {% for item in items %}
         <li>
-          {% if item.product %}<img src="{{ item.product.get_image }}" alt="" width="56" height="70" loading="lazy"/>{% else %}<img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="56" height="70"/>{% endif %}
-          <div><div class="name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet{% endif %}</div><div class="qty">Qty {{ item.quantity }}</div></div>
+          <img src="{{ item.image_url }}" alt="" width="56" height="70" loading="lazy"/>
+          <div><div class="name">{{ item.display_name }}</div><div class="qty">{% if item.custom_bouquet %}{{ item.custom_bouquet.summary }} · {% endif %}Qty {{ item.quantity }}</div></div>
           <span>{{ item.line_total|rupees }}</span>
         </li>
         {% endfor %}

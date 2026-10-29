@@ -27,7 +27,7 @@ def _filters(request):
 
 def report_queryset(filters):
     """Orders matching the report filters."""
-    orders = Order.objects.select_related('user', 'coupon').prefetch_related('items__product')
+    orders = Order.objects.select_related('user', 'coupon').prefetch_related('items__product', 'items__custom_bouquet')
     if date_from := _parse_date(filters['date_from']):
         orders = orders.filter(created_at__date__gte=date_from)
     if date_to := _parse_date(filters['date_to']):
@@ -129,9 +129,7 @@ def admin_sales_report_csv(request):
         ]
     )
     for order in orders:
-        items = ' | '.join(
-            f'{item.product.name if item.product else "Custom Bouquet"} x{item.quantity}' for item in order.items.all()
-        )
+        items = ' | '.join(f'{item.display_name} x{item.quantity}' for item in order.items.all())
         writer.writerow(
             [
                 f'#{order.id}',

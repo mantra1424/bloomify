@@ -2,7 +2,7 @@ Hi {{ order.full_name }},
 
 Your Bloomify order #{{ order.id }} is confirmed.
 {% for item in items %}
-- {% if item.product %}{{ item.product.name }}{% else %}Custom Bouquet{% endif %} x{{ item.quantity }}: Rs {{ item.line_total }}{% endfor %}
+- {{ item.display_name }} x{{ item.quantity }}: Rs {{ item.line_total }}{% endfor %}
 
 Delivery: {% if order.delivery_charge == 0 %}FREE{% else %}Rs {{ order.delivery_charge }}{% endif %}{% if order.discount_amount %}
 Discount ({{ order.coupon.code }}): -Rs {{ order.discount_amount }}{% endif %}

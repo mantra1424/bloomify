@@ -63,18 +63,15 @@
       <ul>
         {% for item in items %}
         <li class="cart-line">
-          {% if item.product %}
-            <img src="{{ item.product.get_image }}" alt="" width="96" height="120"/>
-          {% else %}
-            <img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="96" height="120"/>
-          {% endif %}
+          <img src="{{ item.image_url }}" alt="" width="96" height="120"/>
           <div>
             {% if item.product %}
               <div class="cart-line-name"><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></div>
               <div class="cart-line-meta">{{ item.product.category.name }} · {{ item.unit_price|rupees }} each</div>
             {% else %}
-              <div class="cart-line-name">Custom bouquet</div>
-              <div class="cart-line-meta">{{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.get_flowers_display|lower }} stem{{ item.custom_bouquet.flower_count|pluralize }} · {{ item.custom_bouquet.get_wrapping_display }} wrap{% if item.custom_bouquet.message_card %} · with message card{% endif %} · {{ item.unit_price|rupees }} each</div>
+              <div class="cart-line-name">{{ item.display_name }}</div>
+              <div class="cart-line-meta">{{ item.custom_bouquet.summary }} · {{ item.unit_price|rupees }} each</div>
+              {% if item.custom_bouquet.message_card %}<div class="cart-line-meta">Card: “{{ item.custom_bouquet.message_card|truncatechars:60 }}”</div>{% endif %}
             {% endif %}
             <div class="cart-line-actions">
               <form method="post" action="{% url 'update_cart' %}" class="stepper" aria-label="Quantity">
@@ -87,7 +84,7 @@
               </form>
               <form method="post" action="{% url 'remove_from_cart' item.id %}">
                 {% csrf_token %}
-                <button type="submit" class="remove-btn">Remove<span class="sr-only"> {% if item.product %}{{ item.product.name }}{% else %}custom bouquet{% endif %}</span></button>
+                <button type="submit" class="remove-btn">Remove<span class="sr-only"> {{ item.display_name }}</span></button>
               </form>
             </div>
           </div>

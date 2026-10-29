@@ -129,7 +129,7 @@
                 {% for item in order.items.all %}
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid var(--gray-100);font-size:0.85rem;">
                   <div>
-                    <div style="font-weight:600;">{{ item.product.name|default:"Custom Bouquet" }}</div>
+                    <div style="font-weight:600;">{{ item.display_name }}</div>
                     <div style="color:var(--gray-400);font-size:0.75rem;">Qty: {{ item.quantity }}</div>
                   </div>
                   {% if not is_staff %}

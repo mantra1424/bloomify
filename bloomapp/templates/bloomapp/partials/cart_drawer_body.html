@@ -4,14 +4,10 @@
   <ul class="drawer-items">
     {% for item in items %}
       <li class="drawer-item">
-        {% if item.product %}
-          <img src="{{ item.product.get_image }}" alt="" width="64" height="80"/>
-        {% else %}
-          <img src="{% static 'bloomapp/img/placeholder-bouquet.svg' %}" alt="" width="64" height="80"/>
-        {% endif %}
+        <img src="{{ item.image_url }}" alt="" width="64" height="80"/>
         <div class="drawer-item-info">
-          <span class="drawer-item-name">{% if item.product %}{{ item.product.name }}{% else %}Custom bouquet · {{ item.custom_bouquet.flower_count }} {{ item.custom_bouquet.get_flowers_display|lower }} stem{{ item.custom_bouquet.flower_count|pluralize }}{% endif %}</span>
-          <span class="drawer-item-meta">Qty {{ item.quantity }} · {{ item.unit_price|rupees }} each</span>
+          <span class="drawer-item-name">{{ item.display_name }}</span>
+          <span class="drawer-item-meta">{% if item.custom_bouquet %}{{ item.custom_bouquet.flower_count }} stems · {% endif %}Qty {{ item.quantity }} · {{ item.unit_price|rupees }} each</span>
         </div>
         <span class="drawer-item-price">{{ item.subtotal|rupees }}</span>
       </li>

@@ -97,7 +97,7 @@ def user_dashboard(request):
         {
             'orders': Order.objects.filter(user=user)
             .select_related('delivery_slot')
-            .prefetch_related('items__product')
+            .prefetch_related('items__product', 'items__custom_bouquet')
             .order_by('-created_at'),
             'addresses': SavedAddress.objects.filter(user=user),
             'tab': tab if tab in ('orders', 'profile', 'addresses') else 'orders',

@@ -1,5 +1,5 @@
 """
-Business rules for Bloomify, kept separate from views so they are easy to
+Business rules for Petal & Stem, kept separate from views so they are easy to
 read and test:
 
 - pricing  – delivery charges, serviceable cities, coupons, custom bouquet price

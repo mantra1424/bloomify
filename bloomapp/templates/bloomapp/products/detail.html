@@ -1,7 +1,7 @@
 {% extends 'bloomapp/base.html' %}
 {% load bloom %}
 
-{% block title %}{{ product.name }} – Bloomify{% endblock %}
+{% block title %}{{ product.name }} – {{ brand }}{% endblock %}
 {% block meta_desc %}{{ product.name }}: {{ product.description|truncatewords:25 }}{% endblock %}
 {% block body_class %}has-buy-bar{% endblock %}
 
@@ -196,7 +196,7 @@
           {% if product.occasion_tags %}<dt>Good for</dt><dd>{{ product.occasion_tags }}</dd>{% endif %}
         </dl>
         <a class="share" target="_blank" rel="noopener"
-           href="https://wa.me/?text={{ product.name|urlencode }}%20on%20Bloomify%3A%20{{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'product_detail' product.pk %}">
+           href="https://wa.me/?text={{ product.name|urlencode }}%20on%20{{ brand|urlencode }}%3A%20{{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'product_detail' product.pk %}">
           {% icon 'whatsapp' 18 %} Share on WhatsApp
         </a>
       </div>

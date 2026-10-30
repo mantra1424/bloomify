@@ -1,5 +1,5 @@
 """
-Seed command — populates Bloomify with demo data.
+Seed command — populates Petal & Stem with demo data.
 Usage: python manage.py seed_data
 """
 
@@ -13,16 +13,16 @@ from bloomapp.models import Category, Coupon, DeliveryZone, Product, User
 
 
 class Command(BaseCommand):
-    help = 'Seed the database with demo data for Bloomify'
+    help = 'Seed the database with demo data for Petal & Stem'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write('🌸 Seeding Bloomify demo data...')
+        self.stdout.write('Seeding Petal & Stem demo data...')
 
         # ── Admin User ──────────────────────────────────────────────
         admin, created = User.objects.get_or_create(
             email='admin@bloomify.com',
             defaults={
-                'full_name': 'Bloomify Admin',
+                'full_name': 'Petal & Stem Admin',
                 'password': make_password('admin123'),
                 'phone': '9999999999',
                 'role': 'admin',
@@ -41,7 +41,7 @@ class Command(BaseCommand):
         staff, _ = User.objects.get_or_create(
             email='staff@bloomify.com',
             defaults={
-                'full_name': 'Bloomify Staff',
+                'full_name': 'Petal & Stem Staff',
                 'password': make_password('staff123'),
                 'phone': '8888888888',
                 'role': 'staff',

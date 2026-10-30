@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Bloomify – main.js
+   Petal & Stem – main.js
    Header (menu, occasions, pincode panel, search), pincode checker,
    toasts, newsletter, back-to-top, slide-in cart, password toggle.
    Never builds HTML from strings: user/server text goes in via textContent.

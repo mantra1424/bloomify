@@ -18,7 +18,7 @@ Blocks: card_title, card_intro, card.{% endcomment %}
 {% block content %}
 <div class="auth-page">
   <div class="auth-card{% block card_class %}{% endblock %}">
-    <p class="eyebrow">Bloomify</p>
+    <p class="eyebrow">{{ brand }}</p>
     <h1>{% block card_title %}{% endblock %}</h1>
     <p class="auth-intro">{% block card_intro %}{% endblock %}</p>
     {% block card %}{% endblock %}

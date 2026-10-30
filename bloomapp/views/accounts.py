@@ -1,5 +1,6 @@
 """Customer sign up, log in, log out and account dashboard."""
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -30,7 +31,7 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            messages.success(request, f'Welcome to Bloomify, {user.full_name}.')
+            messages.success(request, f'Welcome to {settings.SITE_BRAND}, {user.full_name}.')
             return redirect(_safe_next(request))
     else:
         form = SignupForm()

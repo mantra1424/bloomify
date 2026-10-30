@@ -1,6 +1,6 @@
 Hi {{ order.full_name }},
 
-Your Bloomify order #{{ order.id }} is confirmed.
+Your {{ brand|safe }} order #{{ order.id }} is confirmed.
 {% for item in items %}
 - {{ item.display_name }} x{{ item.quantity }}: Rs {{ item.line_total }}{% endfor %}
 
@@ -11,4 +11,4 @@ Total: Rs {{ order.total_amount }}
 Delivering to: {{ order.address }}, {{ order.city }} - {{ order.pincode }}
 Payment: {{ order.get_payment_mode_display }}
 
-Thank you for choosing Bloomify!
+Thank you for choosing {{ brand|safe }}!

@@ -71,7 +71,7 @@ class User(AbstractUser):
     """
     Customer, staff member or admin.
 
-    `role` controls access to the Bloomify admin panel (staff = orders only,
+    `role` controls access to the admin panel (staff = orders only,
     admin = everything). `is_staff`/`is_superuser` control the built-in
     Django admin at /django-admin/.
     """

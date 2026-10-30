@@ -1,9 +1,9 @@
 # Project abstract
 
-**Title:** Bloomify — Online Flower Bouquet Ordering and Delivery Management System Using Django
+**Title:** Petal & Stem — Online Flower Bouquet Ordering and Delivery Management System Using Django
 
 **Abstract:**
-Bloomify is a full-stack web application built with Python and Django that lets customers
+Petal & Stem is a full-stack web application built with Python and Django that lets customers
 browse, customise and order flower bouquets online, and lets a florist manage products, orders
 and deliveries from a role-based admin panel. Customers can search and filter bouquets by
 occasion, design a custom bouquet (flowers, stem count, wrapping and message card), apply coupon

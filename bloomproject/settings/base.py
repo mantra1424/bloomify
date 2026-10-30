@@ -36,6 +36,9 @@ def env_bool(name, default=False):
     return os.environ.get(name, str(default)).lower() in ('1', 'true', 'yes')
 
 
+# The shop's name as customers see it. Change it here to rebrand the whole site.
+SITE_BRAND = 'Petal & Stem'
+
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
 DEBUG = False
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
@@ -186,7 +189,7 @@ else:
     # No SMTP account configured: print emails to the log instead of sending them.
     MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.console.EmailBackend'}}
 
-DEFAULT_FROM_EMAIL = f'Bloomify 🌸 <{SMTP_USER or "noreply@bloomify.local"}>'
+DEFAULT_FROM_EMAIL = f'{SITE_BRAND} <{SMTP_USER or "noreply@bloomify.local"}>'
 
 # ── Logging: everything to the console (Render/Docker collect stdout) ────────
 LOGGING = {

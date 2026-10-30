@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 def send_order_confirmation_email(order):
     items = list(order.items.select_related('product', 'custom_bouquet'))
-    context = {'order': order, 'items': items}
+    context = {'order': order, 'items': items, 'brand': settings.SITE_BRAND}
     try:
         send_mail(
-            subject=f'Order #{order.id} Confirmed – Bloomify',
+            subject=f'Order #{order.id} confirmed – {settings.SITE_BRAND}',
             message=render_to_string('bloomapp/emails/order_confirmation.txt', context),
             html_message=render_to_string('bloomapp/emails/order_confirmation.html', context),
             from_email=settings.DEFAULT_FROM_EMAIL,

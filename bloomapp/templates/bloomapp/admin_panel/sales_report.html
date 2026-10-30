@@ -1,5 +1,5 @@
 {% extends 'bloomapp/admin_panel/base_admin.html' %}
-{% block title %}Sales Report – Bloomify Admin{% endblock %}
+{% block title %}Sales Report – {{ brand }} Admin{% endblock %}
 {% block page_title %}📊 Sales Report{% endblock %}
 
 {% block extra_css %}
@@ -647,7 +647,7 @@
     // Build a clean filename
     const from = document.getElementById('date_from').value || 'all';
     const to = document.getElementById('date_to').value || 'all';
-    const filename = `Bloomify_Sales_Report_${from}_to_${to}.pdf`;
+    const filename = `Petal-and-Stem_Sales_Report_${from}_to_${to}.pdf`;
 
     // Inject a branded header into the PDF (hidden on screen)
     const header = document.createElement('div');
@@ -664,7 +664,7 @@
     ].join(';');
     header.innerHTML = `
     <div>
-      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">🌸 Bloomify</div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">{{ brand }}</div>
       <div style="font-size:13px;opacity:0.85;margin-top:2px;">Sales Report</div>
     </div>
     <div style="text-align:right;font-size:12px;opacity:0.85;">

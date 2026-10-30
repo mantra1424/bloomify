@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from .models import CartItem, Category
 from .services import pricing
 
@@ -13,6 +15,7 @@ def cart_count(request):
 def site_nav(request):
     """Header/footer data: occasions for the menu and the delivery promise."""
     return {
+        'brand': settings.SITE_BRAND,
         # Lazy queryset: only hits the database when a template loops over it.
         'nav_categories': Category.objects.filter(status='available').order_by('name'),
         'delivery_city_names': pricing.serviceable_city_names(),

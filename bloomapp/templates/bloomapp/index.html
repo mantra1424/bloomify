@@ -1,7 +1,7 @@
 {% extends 'bloomapp/base.html' %}
 {% load static bloom %}
 
-{% block title %}Bloomify – Fresh Flower Bouquets, Delivered Today{% endblock %}
+{% block title %}{{ brand }} – Fresh Flower Bouquets, Delivered Today{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -134,7 +134,7 @@
   </div>
 </section>
 
-<section class="trust" aria-label="Why order from Bloomify">
+<section class="trust" aria-label="Why order from {{ brand }}">
   <div class="container"><ul class="trust-list">
     <li class="trust-item">{% icon 'clock' 28 %}<span><strong>2–4 hour delivery</strong><span>Same-day and midnight slots</span></span></li>
     <li class="trust-item">{% icon 'truck' 28 %}<span><strong>Free over {{ free_delivery_above|rupees }}</strong><span>₹30 off delivery over ₹500</span></span></li>

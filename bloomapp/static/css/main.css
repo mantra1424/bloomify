@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════
-   Bloomify – design system (direction A: modern florist boutique)
+   Petal & Stem – design system (direction A: modern florist boutique)
    Warm ivory ground, deep wine accent, sage for delivery/trust cues.
    Fonts are loaded in base.html: Fraunces (display) + Inter (body).
    ══════════════════════════════════════════════════════════════════ */
@@ -187,12 +187,13 @@ a.link:hover { color: var(--accent-hover); text-decoration: underline; }
   font-size: 1.75rem; font-weight: 600;
   color: var(--accent); letter-spacing: -0.02em; line-height: 1;
   display: inline-flex; align-items: center; min-height: var(--tap);
+  white-space: nowrap; flex: none;
 }
 .nav-links { display: flex; align-items: center; gap: 0.25rem; }
 .nav-links > li { position: relative; }
 .nav-links a, .nav-links button {
   display: inline-flex; align-items: center; gap: 0.25rem;
-  min-height: var(--tap); padding: 0 0.85rem;
+  min-height: var(--tap); padding: 0 0.85rem; white-space: nowrap;
   font-size: 0.9375rem; font-weight: 500; color: var(--ink);
   border-radius: var(--radius-full);
 }

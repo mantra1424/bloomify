@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   Bloomify – admin.js  (Charts + CRUD)
+   Petal & Stem – admin.js  (Charts + CRUD)
    ═══════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {

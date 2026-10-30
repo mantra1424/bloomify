@@ -27,7 +27,7 @@ def payment_page_context(order):
             'amount': payments.amount_in_paise(order.total_amount),
             'currency': 'INR',
             'order_id': order.razorpay_order_id,
-            'name': 'Bloomify',
+            'name': settings.SITE_BRAND,
             'description': f'Order #{order.id}',
             'prefill': {'name': order.full_name, 'email': order.email, 'contact': order.phone},
             'theme': {'color': '#7B2D3B'},

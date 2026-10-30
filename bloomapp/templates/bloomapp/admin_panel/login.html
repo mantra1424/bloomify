@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Login – Bloomify</title>
+  <title>Admin Login – {{ brand }}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap"/>
   <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
   <link rel="stylesheet" href="{% static 'css/animations.css' %}"/>
@@ -30,7 +30,7 @@
   </div>
   <div style="background:white;border-radius:var(--radius-xl);padding:2.5rem;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
     <h2 style="margin-bottom:0.25rem;">Welcome Back</h2>
-    <p style="color:var(--gray-400);font-size:0.85rem;margin-bottom:2rem;">Sign in to manage Bloomify</p>
+    <p style="color:var(--gray-400);font-size:0.85rem;margin-bottom:2rem;">Sign in to manage {{ brand }}</p>
     <form method="post">
       {% csrf_token %}
       <div class="form-group">

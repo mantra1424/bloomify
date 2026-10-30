@@ -1,4 +1,4 @@
-"""Access rules for the Bloomify admin panel (separate from /django-admin/)."""
+"""Access rules for the Petal & Stem admin panel (separate from /django-admin/)."""
 
 from functools import wraps
 

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
@@ -22,6 +23,7 @@ urlpatterns = [
             email_template_name='bloomapp/emails/password_reset_email.txt',
             subject_template_name='bloomapp/emails/password_reset_subject.txt',
             success_url=reverse_lazy('password_reset_done'),
+            extra_email_context={'brand': settings.SITE_BRAND},
         ),
         name='password_reset',
     ),

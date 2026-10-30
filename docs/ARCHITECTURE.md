@@ -1,4 +1,4 @@
-# Bloomify architecture
+# Petal & Stem architecture
 
 This document explains how the code is organised and how the important flows work.
 For setup and running instructions see the [README](../README.md).
@@ -96,7 +96,7 @@ is ignored (`mark_order_paid` is idempotent):
 
 1. **Browser callback** — `POST /order/confirm-payment/`. The order is found by the Razorpay
    order id that was paid, and the Razorpay signature is checked. Because every Razorpay order is
-   created for one Bloomify order's exact total, proof of payment for a cheaper order can't be
+   created for one Petal & Stem order's exact total, proof of payment for a cheaper order can't be
    reused for a more expensive one.
 2. **Webhook** — `POST /payments/webhook/`, called by Razorpay's servers. The request body must be
    signed with `RAZORPAY_WEBHOOK_SECRET`, and the amount must match the order total. This confirms

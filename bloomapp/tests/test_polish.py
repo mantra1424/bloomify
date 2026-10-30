@@ -186,3 +186,20 @@ def test_order_pages_name_the_custom_bouquet(customer_client, customer):
     OrderItem.objects.create(order=order, custom_bouquet=_bouquet(customer), quantity=1, price=1290, line_total=1290)
     for url in (reverse('order_tracking', args=[order.pk]), reverse('order_success', args=[order.pk])):
         assert 'Custom: Orchid bouquet' in customer_client.get(url).content.decode()
+
+
+# ── Brand name comes from one setting ──────────────────────────────────────
+def test_brand_name_comes_from_settings(client, settings):
+    settings.SITE_BRAND = 'Test Florist'
+    html = client.get(reverse('home')).content.decode()
+    assert 'Test Florist' in html and 'Bloomify' not in html
+
+
+def test_order_email_uses_brand_without_html_escaping(customer, mailoutbox, settings):
+    from bloomapp.services.emails import send_order_confirmation_email
+
+    settings.SITE_BRAND = 'Petal & Stem'
+    send_order_confirmation_email(make_order(customer))
+    mail = mailoutbox[0]
+    assert mail.subject.endswith('– Petal & Stem')
+    assert 'Your Petal & Stem order' in mail.body and '&amp;' not in mail.body

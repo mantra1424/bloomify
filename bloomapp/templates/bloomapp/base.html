@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}Bloomify – Fresh Flower Bouquets Delivered{% endblock %}</title>
+  <title>{% block title %}{{ brand }} – Fresh Flower Bouquets Delivered{% endblock %}</title>
   <meta name="description" content="{% block meta_desc %}Hand-tied flower bouquets with same-day and midnight delivery in {{ delivery_city_names|join:', ' }}.{% endblock %}"/>
   <meta name="theme-color" content="#FBF7F2"/>
   <script>document.documentElement.classList.add('js');</script>
@@ -31,7 +31,7 @@
 
 <header class="navbar">
   <div class="container nav-inner">
-    <a href="{% url 'home' %}" class="nav-logo-text">Bloomify</a>
+    <a href="{% url 'home' %}" class="nav-logo-text">{{ brand }}</a>
 
     <nav aria-label="Main">
       <ul class="nav-links">
@@ -122,12 +122,12 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="{% url 'home' %}" class="footer-logo">Bloomify</a>
+        <a href="{% url 'home' %}" class="footer-logo">{{ brand }}</a>
         <p>Hand-tied bouquets, delivered across {{ delivery_city_names|join:', ' }}.</p>
         <div class="social-links">
-          <a href="https://www.facebook.com/mantra.patel.7393/" target="_blank" rel="noopener" aria-label="Bloomify on Facebook">{% icon 'facebook' 20 %}</a>
-          <a href="https://www.instagram.com/mant.ra_14/" target="_blank" rel="noopener" aria-label="Bloomify on Instagram">{% icon 'instagram' 20 %}</a>
-          <a href="https://wa.me/919428974532" target="_blank" rel="noopener" aria-label="Chat with Bloomify on WhatsApp">{% icon 'whatsapp' 20 %}</a>
+          <a href="https://www.facebook.com/mantra.patel.7393/" target="_blank" rel="noopener" aria-label="{{ brand }} on Facebook">{% icon 'facebook' 20 %}</a>
+          <a href="https://www.instagram.com/mant.ra_14/" target="_blank" rel="noopener" aria-label="{{ brand }} on Instagram">{% icon 'instagram' 20 %}</a>
+          <a href="https://wa.me/919428974532" target="_blank" rel="noopener" aria-label="Chat with {{ brand }} on WhatsApp">{% icon 'whatsapp' 20 %}</a>
         </div>
       </div>
       <div class="footer-col">
@@ -162,7 +162,7 @@
       </form>
     </div>
     <div class="footer-bottom">
-      <p>© {% now "Y" %} Bloomify</p>
+      <p>© {% now "Y" %} {{ brand }}</p>
       <p>Secure payments by Razorpay · Cash on delivery available</p>
     </div>
   </div>

@@ -104,7 +104,7 @@ def admin_sales_report_print(request):
 def admin_sales_report_csv(request):
     filters = _filters(request)
     orders = report_queryset(filters)
-    filename = f'bloomify_sales_{filters["date_from"] or "all"}_to_{filters["date_to"] or "all"}.csv'
+    filename = f'petal-and-stem_sales_{filters["date_from"] or "all"}_to_{filters["date_to"] or "all"}.csv'
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 

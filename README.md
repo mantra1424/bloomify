@@ -1,4 +1,6 @@
-# 🌸 Bloomify — Online Flower Bouquet Ordering & Delivery
+# Petal & Stem — Online Flower Bouquet Ordering & Delivery
+
+_Formerly Bloomify. The shop's name is set in one place: `SITE_BRAND` in `bloomproject/settings/base.py`._
 
 [![CI](https://github.com/mantra1424/bloomify/actions/workflows/ci.yml/badge.svg)](https://github.com/mantra1424/bloomify/actions/workflows/ci.yml)
 ![Python 3.14](https://img.shields.io/badge/python-3.14-blue)

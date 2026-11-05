@@ -12,7 +12,7 @@ A full-stack Django e-commerce app for a florist: customers browse and order bou
 and track their order. Staff and admins run the shop from a role-based admin panel with
 stock alerts, order management, coupons and sales reports.
 
-**Live demo:** _add your Render URL here after deploying_ · **Demo logins:** [below](#demo-accounts)
+**Live demo:** [bloomify-x8kq.onrender.com](https://bloomify-x8kq.onrender.com) _(free hosting: the first visit after a quiet spell takes about a minute to wake up)_ · **Demo logins:** [below](#demo-accounts)
 
 ---
 

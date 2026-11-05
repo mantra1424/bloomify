@@ -175,6 +175,12 @@ class AbandonedOrderTests(BaseShopTest):
         self.assertEqual(self.pricey.stock_quantity, 5)
         self.assertEqual(Order.objects.get().status, 'cancelled')
 
+    def test_razorpay_failure_keeps_the_cart(self):
+        with patch('razorpay.resources.order.Order.create', side_effect=Exception('down')):
+            self.buy(self.pricey, qty=2, payment_mode='upi')
+        item = CartItem.objects.get(user=self.user)
+        self.assertEqual((item.product, item.quantity), (self.pricey, 2))
+
     def test_cancel_restores_stock_once(self):
         self.buy(self.cheap, qty=2, payment_mode='cod')
         order = Order.objects.get()

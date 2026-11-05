@@ -11,6 +11,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from bloomapp.models import (
+    CartItem,
     Coupon,
     DeliverySlot,
     DeliveryZone,
@@ -159,11 +160,22 @@ def place_order(user, cart_items, details: CheckoutDetails):
     try:
         order.razorpay_order_id = payments.create_razorpay_order(order)
     except Exception as exc:
+        if not (settings.RAZORPAY_KEY_ID and settings.RAZORPAY_SECRET_KEY):
+            logger.error('Razorpay keys are not set: add RAZORPAY_KEY_ID and RAZORPAY_SECRET_KEY to the environment')
         logger.exception('Razorpay order creation failed for order %s', order.id)
         release_order(order, payment_status='failed')
+        _restore_cart(order)
         raise PaymentStartError(str(exc)) from exc
     order.save(update_fields=['razorpay_order_id', 'updated_at'])
     return order
+
+
+def _restore_cart(order):
+    """Put a failed order's items back in the customer's cart so they can try again."""
+    for item in order.items.all():
+        CartItem.objects.create(
+            user=order.user, product=item.product, custom_bouquet=item.custom_bouquet, quantity=item.quantity
+        )
 
 
 def mark_order_paid(order, razorpay_payment_id):

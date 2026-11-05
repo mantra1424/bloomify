@@ -19,6 +19,9 @@
   font-family: var(--font-display); font-size: 1.4rem;
   color: var(--pink-300); font-weight: 700;
 }
+.sidebar-brand { display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
+.sidebar-brand .logo-name em { color: #9DB39A; }
+.sidebar-brand .logo-mark { --logo-cup: #D39AA2; --logo-petal: #E8C9CC; --logo-stem: #9DB39A; --logo-leaf: #B8CBB5; }
 .sidebar-logo small {
   display: block; font-size: 0.7rem; font-weight: 400;
   color: rgba(255,255,255,0.4); font-family: var(--font-body); letter-spacing: 1px;

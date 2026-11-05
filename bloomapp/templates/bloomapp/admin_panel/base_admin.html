@@ -1,4 +1,4 @@
-{% load static %}
+{% load static bloom %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="{% static 'css/animations.css' %}"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   {% block extra_css %}{% endblock %}
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>"/>
+  <link rel="icon" type="image/svg+xml" href="{% static 'bloomapp/img/favicon.svg' %}"/>
 </head>
 <body>
 
@@ -25,18 +25,8 @@
   <!-- ── Sidebar ── -->
   <aside class="admin-sidebar" id="admin-sidebar">
     <div class="sidebar-logo">
-      <div style="display:flex;align-items:center;gap:0.6rem;">
-        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink-400),var(--pink-700));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(232,86,122,0.5);">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
-            <path d="M12 3C10.5 5.5 8 7 5 7c0 3.5 2 6.5 5 8-1 2-1 4 0 6 1-2 2.5-3 2.5-3s1.5 1 2.5 3c1-2 1-4 0-6 3-1.5 5-4.5 5-8-3 0-5.5-1.5-7-4z" fill="white"/>
-            <circle cx="12" cy="14" r="1.8" fill="rgba(255,200,200,0.8)"/>
-          </svg>
-        </div>
-        <div>
-          <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--pink-300);line-height:1;">Bloom<span style="color:#6ee7a0;">ify</span></div>
-          <small>ADMIN PANEL</small>
-        </div>
-      </div>
+      <a href="{% url 'home' %}" class="sidebar-brand">{% logo %}</a>
+      <small>ADMIN PANEL</small>
     </div>
 
     <nav class="sidebar-nav">

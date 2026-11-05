@@ -187,8 +187,11 @@ a.link:hover { color: var(--accent-hover); text-decoration: underline; }
   font-size: 1.75rem; font-weight: 600;
   color: var(--accent); letter-spacing: -0.02em; line-height: 1;
   display: inline-flex; align-items: center; min-height: var(--tap);
-  white-space: nowrap; flex: none;
+  white-space: nowrap; flex: none; gap: 0.35rem;
 }
+/* Logo: tulip mark + name with an italic sage ampersand */
+.logo-mark { width: 1.35em; height: 1.35em; flex: none; margin-top: -0.12em; }
+.logo-name em { font-style: italic; font-weight: 500; color: var(--sage); padding: 0 0.04em; }
 .nav-links { display: flex; align-items: center; gap: 0.25rem; }
 .nav-links > li { position: relative; }
 .nav-links a, .nav-links button {
@@ -484,7 +487,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .footer a { color: #E8DDD6; }
 .footer a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.6fr; gap: 2.5rem; margin-bottom: 2.5rem; }
-.footer-logo { font-family: var(--font-display); font-size: 1.75rem; color: #fff; }
+.footer-logo { display: inline-flex; align-items: center; gap: 0.35rem; font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; color: #fff; white-space: nowrap; }
+.footer-logo .logo-name em { color: #9DB39A; }
+.footer-logo .logo-mark { --logo-cup: #D39AA2; --logo-petal: #E8C9CC; --logo-stem: #9DB39A; --logo-leaf: #B8CBB5; }
 .footer-brand p { margin-top: 0.6rem; font-size: var(--text-sm); color: #CBBDB5; max-width: 260px; }
 .footer-heading { font-family: var(--font-display); font-weight: 500; font-size: var(--text-lg); color: #fff; margin: 0 0 1rem; }
 .footer-col ul { display: grid; gap: 0.6rem; }

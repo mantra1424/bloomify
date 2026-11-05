@@ -203,3 +203,15 @@ def test_order_email_uses_brand_without_html_escaping(customer, mailoutbox, sett
     mail = mailoutbox[0]
     assert mail.subject.endswith('– Petal & Stem')
     assert 'Your Petal & Stem order' in mail.body and '&amp;' not in mail.body
+
+
+def test_logo_shows_mark_and_name_on_the_shop(client):
+    html = client.get(reverse('home')).content.decode()
+    assert html.count('class="logo-mark"') == 2  # header and footer
+    assert '<span class="logo-name">Petal <em>&amp;</em> Stem</span>' in html
+    assert 'apple-touch-icon.png' in html
+
+
+def test_admin_sidebar_uses_the_new_logo(admin_client_panel):
+    html = admin_client_panel.get(reverse('admin_dashboard')).content.decode()
+    assert 'class="logo-mark"' in html and 'Bloom<span' not in html

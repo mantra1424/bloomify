@@ -302,3 +302,10 @@ document.addEventListener('submit', e => {
   const msg = e.target.dataset && e.target.dataset.confirm;
   if (msg && !window.confirm(msg)) e.preventDefault();
 }, true);
+
+/* ── Installable app: offline page + cached static files (production only) ── */
+if ('serviceWorker' in navigator && document.documentElement.dataset.sw) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(document.documentElement.dataset.sw, { scope: '/' }).catch(() => {});
+  });
+}

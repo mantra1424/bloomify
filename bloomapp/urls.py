@@ -8,6 +8,11 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
     path('healthz/', views.healthz, name='healthz'),
+    # Installable app (PWA) and Android app link
+    path('manifest.webmanifest', views.manifest, name='manifest'),
+    path('sw.js', views.service_worker, name='service_worker'),
+    path('offline/', views.offline, name='offline'),
+    path('.well-known/assetlinks.json', views.assetlinks, name='assetlinks'),
     path('contact/', views.contact_view, name='contact'),
     path('faqs/', views.faq_view, name='faqs'),
     path('returns-policy/', views.returns_view, name='returns'),

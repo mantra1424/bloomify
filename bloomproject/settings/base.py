@@ -206,3 +206,14 @@ LOGGING = {
         'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
+
+
+# ── Android app (Trusted Web Activity) ─────────────────────────────────────
+# Package name and the SHA-256 fingerprint(s) of the key that signs the app,
+# published at /.well-known/assetlinks.json so the app opens without a URL bar.
+ANDROID_APP_PACKAGE = os.environ.get('ANDROID_APP_PACKAGE', 'com.petalandstem.app')
+ANDROID_APP_SHA256_FINGERPRINTS = [
+    fp.strip() for fp in os.environ.get('ANDROID_APP_SHA256_FINGERPRINTS', '').split(',') if fp.strip()
+]
+# The service worker caches static files by name, so it is only safe where names are hashed.
+PWA_ENABLED = env_bool('PWA_ENABLED', True)  # dev.py turns it off

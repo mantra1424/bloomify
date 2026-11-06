@@ -1,11 +1,12 @@
 {% load static bloom %}<!DOCTYPE html>
-<html lang="en">
+<html lang="en"{% if pwa_enabled %} data-sw="{% url 'service_worker' %}"{% endif %}>
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}{{ brand }} – Fresh Flower Bouquets Delivered{% endblock %}</title>
   <meta name="description" content="{% block meta_desc %}Hand-tied flower bouquets with same-day and midnight delivery in {{ delivery_city_names|join:', ' }}.{% endblock %}"/>
   <meta name="theme-color" content="#FBF7F2"/>
+  <link rel="manifest" href="{% url 'manifest' %}"/>
   <script>document.documentElement.classList.add('js');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>

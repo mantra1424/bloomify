@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% load static bloom %}
+{# Cached by the service worker and shown when the phone has no connection. Keep it self-contained. #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#FBF7F2"/>
+  <title>You're offline – {{ brand }}</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: #FBF7F2; color: #4A3F3B; font: 16px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; }
+    main { max-width: 22rem; }
+    .logo-mark { width: 64px; height: 64px; }
+    h1 { font-family: Georgia, serif; font-weight: 500; color: #2B1E1C; font-size: 1.75rem; line-height: 1.2; margin: 1rem 0 0.5rem; }
+    button { min-height: 48px; margin-top: 1.5rem; padding: 0 1.75rem; border: 0; border-radius: 999px; background: #7B2D3B; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    button:hover { background: #5E1F2B; }
+  </style>
+</head>
+<body>
+  <main>
+    {% include 'bloomapp/partials/logo_mark.svg' %}
+    <h1>You're offline</h1>
+    <p>Check your internet connection and try again. Your cart is saved and will be waiting for you.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

@@ -27,3 +27,4 @@ from .checkout import (
 from .orders import cancel_order, order_success, order_tracking
 from .pages import contact_view, faq_view, healthz, home, newsletter_subscribe, photo_credits_view, returns_view
 from .payments import confirm_payment, payment_view, razorpay_webhook
+from .pwa import assetlinks, manifest, offline, service_worker

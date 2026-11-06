@@ -94,6 +94,27 @@
 .msg-detail.open { display:block; animation:fadeIn .2s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
 
+/* Reply */
+.msg-replied-tag {
+  background:#dcfce7; color:#166534;
+  font-size:0.65rem; font-weight:700; padding:2px 8px;
+  border-radius:var(--radius-full);
+}
+.msg-full { white-space:pre-line; }
+.reply-box { margin-top:1rem; padding-top:1rem; border-top:1px dashed var(--gray-200); }
+.reply-box label { display:block; font-weight:700; font-size:0.8rem; color:var(--gray-700); margin-bottom:0.4rem; }
+.reply-box textarea {
+  width:100%; min-height:140px; padding:0.75rem; resize:vertical;
+  border:1.5px solid var(--gray-200); border-radius:var(--radius-md);
+  font:inherit; font-size:0.875rem; line-height:1.6; background:white;
+}
+.reply-box textarea:focus { outline:none; border-color:var(--pink-400); box-shadow:0 0 0 3px var(--pink-100); }
+.reply-actions { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:0.6rem; flex-wrap:wrap; }
+.reply-hint { font-size:0.75rem; color:var(--gray-400); }
+.reply-sent { margin-top:1rem; padding:0.85rem 1rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:var(--radius-md); }
+.reply-sent-head { font-size:0.75rem; font-weight:700; color:#166534; margin-bottom:0.35rem; }
+.reply-sent-body { white-space:pre-line; }
+
 /* Empty */
 .empty-inbox { text-align:center; padding:5rem 2rem; }
 .empty-inbox .ei-icon { font-size:3.5rem; margin-bottom:1rem; opacity:.4; }
@@ -109,24 +130,27 @@
     <h2>💬 Contact Messages</h2>
     <p>Messages received from the Contact Us page</p>
   </div>
-  {% if unread_count > 0 %}
-  <div class="unread-pill">{{ unread_count }} Unread</div>
+  {% if needs_reply_count > 0 %}
+  <div class="unread-pill">{{ needs_reply_count }} need{{ needs_reply_count|pluralize:"s," }} a reply</div>
   {% endif %}
 </div>
 
 <!-- Tabs -->
 <div class="msg-tabs">
   <button class="msg-tab active" onclick="filterMsgs('all',this)">All</button>
-  <button class="msg-tab" onclick="filterMsgs('unread',this)">Unread</button>
-  <button class="msg-tab" onclick="filterMsgs('read',this)">Read</button>
+  <button class="msg-tab" onclick="filterMsgs('unread',this)">Unread ({{ unread_count }})</button>
+  <button class="msg-tab" onclick="filterMsgs('needs-reply',this)">Needs reply ({{ needs_reply_count }})</button>
+  <button class="msg-tab" onclick="filterMsgs('replied',this)">Replied</button>
 </div>
 
 <!-- Message list -->
 {% if messages_list %}
 <div class="msg-list" id="msg-list">
   {% for msg in messages_list %}
-  <div class="msg-card {% if msg.is_read %}read{% else %}unread{% endif %}"
+  <div class="msg-card {% if msg.is_read %}read{% else %}unread{% endif %}" id="msg-{{ msg.id }}"
+       data-id="{{ msg.id }}"
        data-status="{% if msg.is_read %}read{% else %}unread{% endif %}"
+       data-replied="{% if msg.is_replied %}replied{% else %}needs-reply{% endif %}"
        onclick="toggleDetail({{ msg.id }})">
 
     <!-- Avatar -->
@@ -138,6 +162,7 @@
         <span class="msg-sender">{{ msg.name }}</span>
         <span class="msg-subject-tag">{{ msg.subject }}</span>
         {% if not msg.is_read %}<span class="msg-new-tag">NEW</span>{% endif %}
+        {% if msg.is_replied %}<span class="msg-replied-tag">✓ Replied</span>{% endif %}
       </div>
       <div class="msg-preview">{{ msg.message }}</div>
       <div class="msg-contact">
@@ -164,9 +189,32 @@
   </div>
 
   <!-- Expandable detail -->
-  <div class="msg-detail" id="detail-{{ msg.id }}">
-    <strong>Full Message:</strong><br>
-    {{ msg.message }}
+  <div class="msg-detail{% if open_id == msg.id|stringformat:'s' %} open{% endif %}" id="detail-{{ msg.id }}">
+    <strong>Full message:</strong>
+    <div class="msg-full">{{ msg.message }}</div>
+
+    {% if msg.is_replied %}
+    <div class="reply-sent">
+      <div class="reply-sent-head">
+        ✓ Replied by {{ msg.replied_by.full_name|default:"a staff member" }} on {{ msg.replied_at|date:"d M Y, h:i A" }}
+      </div>
+      <div class="reply-sent-body">{{ msg.reply }}</div>
+    </div>
+    {% else %}
+    <form method="post" class="reply-box">
+      {% csrf_token %}
+      <input type="hidden" name="msg_id" value="{{ msg.id }}"/>
+      <input type="hidden" name="action" value="reply"/>
+      <label for="reply-{{ msg.id }}">Reply to {{ msg.name }} ({{ msg.email }})</label>
+      <textarea id="reply-{{ msg.id }}" name="reply" maxlength="{{ reply_max_length }}" required>Hi {{ msg.first_name }},
+
+</textarea>
+      <div class="reply-actions">
+        <span class="reply-hint">Sent by email from {{ brand }}, signed with your name. Their message is quoted below your reply.</span>
+        <button type="submit" class="btn btn-primary btn-sm">Send reply</button>
+      </div>
+    </form>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
@@ -193,7 +241,7 @@ function filterMsgs(type, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.msg-card').forEach(card => {
     const detail = document.getElementById('detail-' + card.dataset.id);
-    if (type === 'all' || card.dataset.status === type) {
+    if (type === 'all' || card.dataset.status === type || card.dataset.replied === type) {
       card.style.display = '';
       if (detail) detail.style.display = '';
     } else {

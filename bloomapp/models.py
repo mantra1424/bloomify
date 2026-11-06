@@ -438,12 +438,24 @@ class ContactMessage(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Filled in when a staff member answers from the admin panel.
+    reply = models.TextField(blank=True, default='')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.name} – {self.subject}'
+
+    @property
+    def is_replied(self):
+        return self.replied_at is not None
+
+    @property
+    def first_name(self):
+        return self.name.split()[0] if self.name.split() else self.name
 
 
 # ── Wishlist ──────────────────────────────────────────────────────────────────

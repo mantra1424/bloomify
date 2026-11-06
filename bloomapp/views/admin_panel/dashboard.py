@@ -2,14 +2,17 @@
 
 from datetime import timedelta
 
+from django.contrib import messages
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.http import Http404, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from bloomapp.models import Category, ContactMessage, Order, OrderItem, Product, User
 from bloomapp.permissions import admin_role_required, staff_required
+from bloomapp.services import emails
 from bloomapp.services.orders import release_expired_online_orders
 
 
@@ -97,11 +100,23 @@ def admin_users(request):
     )
 
 
+REPLY_MAX_LENGTH = 5000
+
+
 @staff_required
 def admin_messages(request):
-    if request.method == 'POST' and request.POST.get('msg_id'):
-        ContactMessage.objects.filter(id=request.POST['msg_id']).update(is_read=True)
-    msgs = ContactMessage.objects.all()
+    if request.method == 'POST':
+        msg_id = request.POST.get('msg_id', '')
+        if not msg_id.isdigit():
+            raise Http404
+        msg = get_object_or_404(ContactMessage, pk=msg_id)
+        if request.POST.get('action') == 'reply':
+            _send_reply(request, msg)
+        else:
+            ContactMessage.objects.filter(pk=msg.pk).update(is_read=True)
+        return redirect(f'{reverse("admin_messages")}?open={msg.pk}#msg-{msg.pk}')
+
+    msgs = ContactMessage.objects.select_related('replied_by')
     return render(
         request,
         'bloomapp/admin_panel/messages.html',
@@ -110,5 +125,24 @@ def admin_messages(request):
             'is_staff': not request.admin_user.is_admin(),
             'messages_list': msgs,
             'unread_count': msgs.filter(is_read=False).count(),
+            'needs_reply_count': msgs.filter(replied_at__isnull=True).count(),
+            'open_id': request.GET.get('open', ''),
+            'reply_max_length': REPLY_MAX_LENGTH,
         },
     )
+
+
+def _send_reply(request, msg):
+    reply = request.POST.get('reply', '').strip()
+    if msg.is_replied:
+        messages.info(request, f'{msg.name} has already been answered.')
+    elif not reply:
+        messages.error(request, 'Write a reply before sending.')
+    elif len(reply) > REPLY_MAX_LENGTH:
+        messages.error(request, f'Replies can be up to {REPLY_MAX_LENGTH} characters.')
+    elif not emails.send_contact_reply(msg, reply, request.admin_user.full_name):
+        messages.error(request, 'The email could not be sent. Check the email settings and try again.')
+    else:
+        msg.reply, msg.replied_at, msg.replied_by, msg.is_read = reply, timezone.now(), request.admin_user, True
+        msg.save(update_fields=['reply', 'replied_at', 'replied_by', 'is_read'])
+        messages.success(request, f'Reply sent to {msg.email}.')

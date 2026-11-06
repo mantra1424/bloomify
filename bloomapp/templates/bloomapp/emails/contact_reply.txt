@@ -1,0 +1,8 @@
+{% autoescape off %}{{ reply }}
+
+{{ staff_name }}
+{{ brand }}
+
+--- Your message on {{ msg.created_at|date:"j M Y" }} ---
+{{ msg.message }}
+{% endautoescape %}

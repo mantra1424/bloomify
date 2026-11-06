@@ -71,3 +71,9 @@ def test_old_sample_data_moves_forward_to_today():
 def test_seed_can_skip_sample_activity():
     seed('--no-activity')
     assert not Order.objects.exists() and not Payment.objects.exists()
+
+
+def test_one_sample_message_is_already_answered():
+    seed()
+    assert ContactMessage.objects.filter(replied_at__isnull=False).count() == 1
+    assert ContactMessage.objects.filter(replied_at__isnull=True).count() == 2

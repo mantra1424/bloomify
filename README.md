@@ -33,7 +33,8 @@ stock alerts, order management, coupons and sales reports.
 - Order management with status workflow (Placed → Packed → Out for delivery → Delivered)
 - Product and coupon management (admins only — staff see orders but cannot change the catalogue)
 - Sales report with filters, CSV export and a print/PDF view
-- Contact messages inbox; Django admin at `/django-admin/` for superusers
+- Contact messages inbox: staff reply by email from the panel, and see who answered and when
+- Django admin at `/django-admin/` for superusers
 
 **Engineering**
 - Business rules in a tested `services/` layer; thin views; Django forms validate every input

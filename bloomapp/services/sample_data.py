@@ -60,6 +60,11 @@ MESSAGES = [
     ('Arjun Rana', 'Delivery', 'Can I choose a delivery time for a surprise at the office tomorrow?', False),
     ('Riya Shah', 'Feedback', 'Just wanted to say the tulips were gorgeous. Thank you!', True),
 ]
+# The thank-you note above has already been answered, so the admin panel shows a sent reply too.
+SAMPLE_REPLY = (
+    'Hi Riya,\n\nThank you so much for writing in! We are glad the tulips made someone smile. '
+    'Use WELCOME15 on your next order for 15% off.'
+)
 
 CARD_NOTES = ['Happy birthday, Maa!', 'Happy anniversary, love.', 'Congratulations on the new job!', '']
 
@@ -73,6 +78,7 @@ def seed_sample_activity(log=print):
     customers = list(User.objects.filter(email__in=[sample_email(c[0]) for c in SAMPLE_CUSTOMERS]))
     if Order.objects.filter(user__in=customers).exists():
         moved = _keep_dates_recent(customers)
+        _answer_sample_message()
         note = f' (dates moved forward {moved} day{"s" if moved > 1 else ""})' if moved else ''
         log(f'  ⏭  Sample activity already exists{note}')
         return
@@ -140,11 +146,19 @@ def _create(rng, log):
         ContactMessage.objects.create(
             name=name, email=sample_email(name), subject=subject, message=message, is_read=is_read
         )
+    _answer_sample_message()
     for user, *_ in customers[:6]:
         NewsletterSubscriber.objects.get_or_create(email=user.email)
 
     counts = f'{len(customers)} customers, {orders} orders, {reviews} reviews, {len(MESSAGES)} messages'
     log(f'  ✅ Sample activity: {counts}')
+
+
+def _answer_sample_message():
+    admin = User.objects.filter(role='admin').order_by('id').first()
+    ContactMessage.objects.filter(email=sample_email('Riya Shah'), replied_at__isnull=True).update(
+        reply=SAMPLE_REPLY, replied_at=timezone.now(), replied_by=admin, is_read=True
+    )
 
 
 def _status_for(rng, days_ago):

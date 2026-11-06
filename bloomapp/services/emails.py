@@ -1,4 +1,4 @@
-"""Customer emails. Sending is best-effort: a mail failure never breaks an order."""
+"""Customer emails. Sending is best-effort: a mail failure never breaks an order or a page."""
 
 import logging
 
@@ -22,3 +22,19 @@ def send_order_confirmation_email(order):
         )
     except Exception:
         logger.exception('Could not send confirmation email for order %s', order.id)
+
+
+def send_contact_reply(msg, reply, staff_name):
+    """Email a staff reply to someone who used the contact form. Returns True if it was sent."""
+    context = {'msg': msg, 'reply': reply, 'staff_name': staff_name, 'brand': settings.SITE_BRAND}
+    try:
+        send_mail(
+            subject=f'Re: {msg.subject} – {settings.SITE_BRAND}',
+            message=render_to_string('bloomapp/emails/contact_reply.txt', context),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[msg.email],
+        )
+    except Exception:
+        logger.exception('Could not send reply to contact message %s', msg.id)
+        return False
+    return True

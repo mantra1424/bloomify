@@ -212,8 +212,15 @@ LOGGING = {
 # Package name and the SHA-256 fingerprint(s) of the key that signs the app,
 # published at /.well-known/assetlinks.json so the app opens without a URL bar.
 ANDROID_APP_PACKAGE = os.environ.get('ANDROID_APP_PACKAGE', 'com.petalandstem.app')
+# Public fingerprint of android/android.keystore (safe to publish). If Google Play re-signs the app,
+# add Play's "App signing key" fingerprint too, comma-separated, via the environment variable.
+ANDROID_UPLOAD_KEY_SHA256 = (
+    '27:C3:4A:A1:82:59:3B:58:3E:79:4F:9B:24:0F:39:C1:14:DF:49:79:A8:DC:22:01:19:7E:AB:9B:A8:D4:6E:98'
+)
 ANDROID_APP_SHA256_FINGERPRINTS = [
-    fp.strip() for fp in os.environ.get('ANDROID_APP_SHA256_FINGERPRINTS', '').split(',') if fp.strip()
+    fp.strip()
+    for fp in os.environ.get('ANDROID_APP_SHA256_FINGERPRINTS', ANDROID_UPLOAD_KEY_SHA256).split(',')
+    if fp.strip()
 ]
 # The service worker caches static files by name, so it is only safe where names are hashed.
 PWA_ENABLED = env_bool('PWA_ENABLED', True)  # dev.py turns it off

@@ -1,0 +1,52 @@
+{
+  "packageId": "com.petalandstem.app",
+  "host": "bloomify-x8kq.onrender.com",
+  "name": "Petal & Stem",
+  "launcherName": "Petal & Stem",
+  "display": "standalone",
+  "themeColor": "#FBF7F2",
+  "themeColorDark": "#2B1E1C",
+  "navigationColor": "#FBF7F2",
+  "navigationColorDark": "#2B1E1C",
+  "navigationDividerColor": "#E9DFD8",
+  "navigationDividerColorDark": "#2B1E1C",
+  "backgroundColor": "#FBF7F2",
+  "enableNotifications": false,
+  "startUrl": "/?source=app",
+  "iconUrl": "https://bloomify-x8kq.onrender.com/static/bloomapp/img/icon-512.405bd72f25a3.png",
+  "maskableIconUrl": "https://bloomify-x8kq.onrender.com/static/bloomapp/img/icon-maskable-512.1e854be07389.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "petalandstem"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "unknown",
+  "webManifestUrl": "https://bloomify-x8kq.onrender.com/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://bloomify-x8kq.onrender.com/",
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "upload key",
+      "value": "27:C3:4A:A1:82:59:3B:58:3E:79:4F:9B:24:0F:39:C1:14:DF:49:79:A8:DC:22:01:19:7E:AB:9B:A8:D4:6E:98"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

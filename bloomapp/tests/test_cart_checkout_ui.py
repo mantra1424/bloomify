@@ -70,8 +70,8 @@ class CheckoutPageTests(BaseShopTest):
 
 class SlotTimeTests(BaseShopTest):
     def test_slot_that_already_started_is_closed(self):
-        now = timezone.localtime()
-        past = make_slot(days_ahead=0, start=(now - timedelta(hours=1)).time(), end=now.time())
+        # Starts at midnight so it has begun whatever time the test runs.
+        past = make_slot(days_ahead=0, start=time(0, 0), end=timezone.localtime().time())
         self.assertTrue(past.has_started)
         self.assertFalse(past.is_bookable)
         self.assertTrue(make_slot(days_ahead=1).is_bookable)

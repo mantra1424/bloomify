@@ -10,10 +10,14 @@ from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
 from bloomapp.models import Category, Coupon, DeliveryZone, Product, User
+from bloomapp.services.sample_data import seed_sample_activity
 
 
 class Command(BaseCommand):
     help = 'Seed the database with demo data for Petal & Stem'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--no-activity', action='store_true', help='Skip the sample customers, orders and reviews')
 
     def handle(self, *args, **kwargs):
         self.stdout.write('Seeding Petal & Stem demo data...')
@@ -270,6 +274,10 @@ class Command(BaseCommand):
                 pincode_prefix=prefix, defaults={'zone_name': zone_name, 'delivery_charge': charge}
             )
         self.stdout.write(f'  ✅ {len(zones_data)} delivery zones seeded')
+
+        # ── Sample customers, orders, reviews and messages ──────────────
+        if not kwargs.get('no_activity'):
+            seed_sample_activity(self.stdout.write)
 
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('🌸 Seed complete! Run: python manage.py runserver'))

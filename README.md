@@ -152,6 +152,13 @@ Created by `python manage.py seed_data` (and on every Render deploy):
 | Staff | `staff@bloomify.com` | `staff123` | Admin panel: dashboard, orders, messages |
 | Admin | `admin@bloomify.com` | `admin123` | Whole admin panel |
 
+**Sample data.** `seed_data` also creates a month of made-up shop activity so every page has
+something to show: 10 customers, about 40 orders at every stage (placed → delivered, plus a
+few cancelled), reviews on each bouquet, contact messages, and a demo customer with past orders,
+a saved address and a wishlist. On each later run it creates nothing new; it only moves the
+sample orders forward so the dashboard's "last 7 days" charts stay filled. Sample customers use
+`@example.com` addresses and can't log in. Skip it with `python manage.py seed_data --no-activity`.
+
 The seeded admin can't open `/django-admin/`; create a private superuser for that with
 `python manage.py createsuperuser`. Change or remove the demo accounts before real use.
 

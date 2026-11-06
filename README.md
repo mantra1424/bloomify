@@ -173,6 +173,29 @@ To receive webhooks locally, expose your server (e.g. with a tunnel), add
 `https://<host>/payments/webhook/` in Razorpay Dashboard → Webhooks with the events
 `payment.captured` and `payment.failed`, and put the webhook secret in `RAZORPAY_WEBHOOK_SECRET`.
 
+## Android app
+
+The shop is also an installable app:
+
+- **On any phone:** open the site in Chrome or Safari and choose *Add to Home Screen*. It is a
+  PWA with a web app manifest, app icons and an offline page (`bloomapp/views/pwa.py`).
+- **Android app:** [`android/`](android/) is a Trusted Web Activity built with Google's
+  [Bubblewrap](https://github.com/GoogleChromeLabs/bubblewrap). It opens the live site
+  full-screen, so the app always matches the website. Package `com.petalandstem.app`, Android 7.0+.
+  The site proves it owns the app through `/.well-known/assetlinks.json`.
+
+Build it (needs Java 17, the Android SDK and `npm i -g @bubblewrap/cli`):
+
+```bash
+cd android
+bubblewrap build   # asks for the signing key password; makes app-release-signed.apk and app-release-bundle.aab
+```
+
+The signing key (`android/android.keystore`) and its passwords (`android/keystore.properties`) are
+not in git. Keep a backup: every update to a published app must be signed with the same key.
+To publish, upload `app-release-bundle.aab` in the Google Play Console. If Play App Signing is on,
+add Play's *App signing key* SHA-256 fingerprint to `ANDROID_APP_SHA256_FINGERPRINTS` on Render.
+
 ## Tests and code quality
 
 ```bash

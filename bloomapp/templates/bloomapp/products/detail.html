@@ -40,7 +40,8 @@
 .qty button:hover { background: var(--gray-100); }
 .qty input { width: 2.5rem; text-align: center; border: 0; background: transparent; font-weight: 600; font-size: var(--text-base); -moz-appearance: textfield; }
 .qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.pd-buy-row .btn-primary { flex: 1; }
+.pd-buy-row .btn-primary { flex: 1; min-width: 0; white-space: nowrap; padding-inline: 1rem; }
+@media (max-width: 400px) { .qty button { width: var(--tap); } .qty input { width: 2.25rem; } }
 .pd-wish { width: 52px; height: 52px; padding: 0; border-radius: var(--radius-full); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; }
 .pd-wish:hover, .pd-wish[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 .pd-wish[aria-pressed="true"] .icon path { fill: currentColor; }
@@ -138,7 +139,6 @@
     </div>
 
     <div class="pd-info">
-      <a class="eyebrow" href="{% url 'products' %}?category={{ product.category.slug }}">{{ product.category.name }}</a>
       <h1>{{ product.name }}</h1>
       {% if reviews %}
         <a class="pd-rating" href="#reviews">{% icon 'star' 16 %} {{ rating_avg }}<span class="sr-only"> out of 5</span> · {{ reviews|length }} review{{ reviews|length|pluralize }}</a>

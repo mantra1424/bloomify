@@ -53,7 +53,7 @@ function showToast(message, type = 'success', duration = 5000) {
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add('hide');
-    setTimeout(() => toast.remove(), 300);
+    setTimeout(() => toast.remove(), 350);  // matches --duration-medium (toast close)
   }, duration);
 }
 window.showToast = showToast;

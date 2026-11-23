@@ -130,13 +130,13 @@ bottleneck and brings a new way to fail. Here is where Petal & Stem stands on ea
 | # | Layer | Problem it fixes | In Petal & Stem |
 | --- | --- | --- | --- |
 | 1 | Separate database | App and DB fight for CPU and RAM | ✅ PostgreSQL runs as its own service on Render |
-| 2 | Load balancer + more app servers | One server maxes out or dies | ✅ Ready: app servers are stateless (sessions in the DB or Redis, uploads can go to S3), so `WEB_CONCURRENCY` or more Render instances scale out |
-| 3 | Cache | The same reads hit the DB on every visit | ✅ Menu and home page cached in Redis ([`services/cache.py`](bloomapp/services/cache.py)), cleared straight away when products, categories, reviews or stock change |
+| 2 | Load balancer + more app servers | One server maxes out or dies | ✅ Ready: app servers are stateless (sessions in the database, uploads can go to S3), so `WEB_CONCURRENCY` or more Render instances scale out |
+| 3 | Cache | The same reads hit the DB on every visit | ✅ Menu and home page cached in Redis ([`services/cache.py`](bloomapp/services/cache.py)), cleared straight away when products, categories, reviews or stock change. If Redis goes down, pages are built from the database instead |
 | 4 | CDN | Static files travel far | ✅ Ready: WhiteNoise serves hashed file names with long cache headers, so any CDN can sit in front |
 | 5 | Read replicas | Too many reads for one DB | ⏳ Not needed yet. Pages run 1–5 queries. Next step: a database router sending catalog reads to a replica, with a user's own recent writes read from the primary |
 | 6 | Message queue | Users wait on slow work | ✅ Order emails are [background tasks](bloomapp/tasks.py) (Django 6 tasks). They run in-process today; switch `TASKS` to a queue backend and add a worker to move them out of the request |
 | 7 | Sharding | Data outgrows one DB | ⏳ Far off. The natural shard key would be the customer (orders, cart, addresses) |
-| 8 | Monitoring | Outages with no clue why | ✅ Sentry for errors, a request ID and `Server-Timing` on every response, slow requests logged with their ID ([`middleware.py`](bloomapp/middleware.py)), `/healthz/` for the platform |
+| 8 | Monitoring | Outages with no clue why | ✅ Sentry for errors, a request ID and `Server-Timing` on every response, slow requests logged with their ID ([`middleware.py`](bloomapp/middleware.py)), `/healthz/` reports the database and cache |
 
 **Cache stampede protection.** When a hot key expires or the cache restarts, many requests can
 rebuild it at once and flood the database. `cached()` guards against that four ways:

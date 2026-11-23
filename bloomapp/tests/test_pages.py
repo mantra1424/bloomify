@@ -33,7 +33,7 @@ def test_product_detail_and_filters(client, product):
 def test_healthz(client):
     response = client.get(reverse('healthz'))
     assert response.status_code == 200
-    assert response.json() == {'status': 'ok'}
+    assert response.json()['status'] == 'ok'
 
 
 def test_contact_form_saves_message(client):

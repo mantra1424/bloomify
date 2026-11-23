@@ -183,3 +183,34 @@ def test_slow_requests_are_logged(client, settings, caplog):
         res = client.get(reverse('faqs'))
     assert 'Slow request GET /faqs/ status=200' in caplog.text
     assert res['X-Request-ID'] in caplog.text
+
+
+# ── When the cache itself fails ────────────────────────────────────────────
+@pytest.fixture
+def cache_down(caching, monkeypatch):
+    def broken(*args, **kwargs):
+        raise ConnectionError('redis down')
+
+    for method in ('get', 'set', 'add', 'delete', 'incr'):
+        monkeypatch.setattr(cache, method, broken)
+
+
+def test_pages_still_work_when_the_cache_is_down(cache_down, client, product, caplog):
+    with caplog.at_level(logging.WARNING, logger='bloomapp.services.cache'):
+        html = client.get(reverse('home')).content.decode()
+    assert product.name in html
+    assert 'Cache unreachable (ConnectionError)' in caplog.text
+
+
+def test_editing_products_still_works_when_the_cache_is_down(cache_down, category):
+    Product.objects.create(name='Saved anyway', category=category, original_price=100, price=100)
+    assert Product.objects.filter(name='Saved anyway').exists()
+
+
+def test_health_check_reports_the_cache(caching, client):
+    assert client.get(reverse('healthz')).json() == {'status': 'ok', 'cache': {'backend': 'memory', 'ok': True}}
+
+
+def test_health_check_stays_up_when_the_cache_is_down(cache_down, client):
+    res = client.get(reverse('healthz'))
+    assert res.status_code == 200 and res.json()['cache'] == {'backend': 'memory', 'ok': False}

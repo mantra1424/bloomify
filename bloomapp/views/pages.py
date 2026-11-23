@@ -124,10 +124,11 @@ def newsletter_subscribe(request):
 
 @require_GET
 def healthz(request):
-    """Used by Render/Docker to check the app and database are up."""
+    """Used by Render/Docker to check the app and database are up, and which cache is in use."""
     try:
         with connection.cursor() as cursor:
             cursor.execute('SELECT 1')
     except Exception:
         return JsonResponse({'status': 'error', 'database': 'unreachable'}, status=503)
-    return JsonResponse({'status': 'ok'})
+    # A cache outage only makes pages slower, so it is reported but doesn't fail the check.
+    return JsonResponse({'status': 'ok', 'cache': catalog_cache.cache_status()})

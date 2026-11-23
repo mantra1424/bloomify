@@ -229,6 +229,7 @@ PWA_ENABLED = env_bool('PWA_ENABLED', True)  # dev.py turns it off
 
 # ── Cache ──────────────────────────────────────────────────────────────────
 # Redis when REDIS_URL is set (shared by every app server), else this process's memory.
+# Sessions stay in the database, so a cache outage never logs anyone out.
 REDIS_URL = os.environ.get('REDIS_URL', '')
 if REDIS_URL:
     CACHES = {
@@ -238,8 +239,6 @@ if REDIS_URL:
             'KEY_PREFIX': 'petal',
         }
     }
-    # Sessions read from Redis, written through to the database so a cache restart logs nobody out.
-    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 else:
     CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
 # How long catalog data (menu, home page) is cached. Edits clear it straight away.

@@ -10,3 +10,5 @@ app/build/
 *.aab
 *.idsig
 local.properties
+# Duplicate copies made by Finder / iCloud ("file 2.ext")
+* 2.*

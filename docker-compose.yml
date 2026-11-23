@@ -15,14 +15,24 @@ services:
       timeout: 3s
       retries: 20
 
+  cache:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
   web:
     build: .
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py seed_data &&
+             python manage.py warm_cache &&
              gunicorn bloomproject.wsgi:application --bind 0.0.0.0:8000 --workers 2 --access-logfile -"
     environment:
       DATABASE_URL: postgres://bloomify:bloomify@db:5432/bloomify
+      REDIS_URL: redis://cache:6379/0
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-docker-only-not-secret-0123456789abcdefghijklmnop}
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
       DJANGO_HTTPS: "false"   # plain http on localhost
@@ -36,6 +46,8 @@ services:
       - media:/app/media
     depends_on:
       db:
+        condition: service_healthy
+      cache:
         condition: service_healthy
 
 volumes:

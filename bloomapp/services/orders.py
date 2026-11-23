@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
+from bloomapp import tasks
 from bloomapp.models import (
     CartItem,
     Coupon,
@@ -20,7 +21,8 @@ from bloomapp.models import (
     Payment,
     Product,
 )
-from bloomapp.services import emails, payments, pricing
+from bloomapp.services import payments, pricing
+from bloomapp.services.cache import invalidate_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +156,7 @@ def place_order(user, cart_items, details: CheckoutDetails):
             item.delete()
 
     if not is_online:
-        emails.send_order_confirmation_email(order)
+        tasks.send_order_confirmation.enqueue(order.id)
         return order
 
     try:
@@ -197,7 +199,7 @@ def mark_order_paid(order, razorpay_payment_id):
     if payment.status == 'refund_due':
         logger.warning('Payment %s arrived for cancelled order %s — refund needed', razorpay_payment_id, order.id)
         return 'refund_due'
-    emails.send_order_confirmation_email(order)
+    tasks.send_order_confirmation.enqueue(order.id)
     return 'paid'
 
 
@@ -221,6 +223,7 @@ def release_order(order, payment_status=None):
         order.save(update_fields=['status', 'updated_at'])
         if payment_status:
             Payment.objects.filter(order=order).update(status=payment_status)
+    invalidate_catalog()  # stock came back, so "Sold out" badges may change
     return True
 
 

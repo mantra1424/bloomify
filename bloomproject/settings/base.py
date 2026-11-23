@@ -56,6 +56,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # First of ours, so its timing covers everything below it.
+    'bloomapp.middleware.RequestMonitoringMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -224,3 +226,31 @@ ANDROID_APP_SHA256_FINGERPRINTS = [
 ]
 # The service worker caches static files by name, so it is only safe where names are hashed.
 PWA_ENABLED = env_bool('PWA_ENABLED', True)  # dev.py turns it off
+
+# ── Cache ──────────────────────────────────────────────────────────────────
+# Redis when REDIS_URL is set (shared by every app server), else this process's memory.
+REDIS_URL = os.environ.get('REDIS_URL', '')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'KEY_PREFIX': 'petal',
+        }
+    }
+    # Sessions read from Redis, written through to the database so a cache restart logs nobody out.
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+else:
+    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+# How long catalog data (menu, home page) is cached. Edits clear it straight away.
+CATALOG_CACHE_SECONDS = int(os.environ.get('CATALOG_CACHE_SECONDS', '300'))
+
+# ── Background tasks ───────────────────────────────────────────────────────
+# Emails are sent as tasks, queued after the database commit. The immediate
+# backend runs them in-process; point TASKS at a queue backend plus a worker
+# to move them out of the request.
+TASKS = {'default': {'BACKEND': 'django.tasks.backends.immediate.ImmediateBackend'}}
+
+# ── Monitoring ─────────────────────────────────────────────────────────────
+# Requests slower than this are logged as warnings (see bloomapp/middleware.py).
+SLOW_REQUEST_MS = int(os.environ.get('SLOW_REQUEST_MS', '800'))

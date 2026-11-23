@@ -115,10 +115,40 @@ bloomapp/
 ├── views/               # one module per area; admin_panel/ for the back office
 ├── permissions.py       # staff / admin access decorators
 ├── templates/ static/   # UI
-├── management/commands/ # seed_data, release_unpaid_orders
+├── management/commands/ # seed_data, warm_cache, release_unpaid_orders
+├── tasks.py             # background tasks (order emails)
+├── middleware.py        # request ID, timing, slow-request log
 └── tests/               # pytest suite
 bloomproject/settings/   # base · dev · prod · test
 ```
+
+## How it scales
+
+The rule: start simple and add a layer only when something breaks. Each layer fixes one
+bottleneck and brings a new way to fail. Here is where Petal & Stem stands on each one.
+
+| # | Layer | Problem it fixes | In Petal & Stem |
+| --- | --- | --- | --- |
+| 1 | Separate database | App and DB fight for CPU and RAM | ✅ PostgreSQL runs as its own service on Render |
+| 2 | Load balancer + more app servers | One server maxes out or dies | ✅ Ready: app servers are stateless (sessions in the DB or Redis, uploads can go to S3), so `WEB_CONCURRENCY` or more Render instances scale out |
+| 3 | Cache | The same reads hit the DB on every visit | ✅ Menu and home page cached in Redis ([`services/cache.py`](bloomapp/services/cache.py)), cleared straight away when products, categories, reviews or stock change |
+| 4 | CDN | Static files travel far | ✅ Ready: WhiteNoise serves hashed file names with long cache headers, so any CDN can sit in front |
+| 5 | Read replicas | Too many reads for one DB | ⏳ Not needed yet. Pages run 1–5 queries. Next step: a database router sending catalog reads to a replica, with a user's own recent writes read from the primary |
+| 6 | Message queue | Users wait on slow work | ✅ Order emails are [background tasks](bloomapp/tasks.py) (Django 6 tasks). They run in-process today; switch `TASKS` to a queue backend and add a worker to move them out of the request |
+| 7 | Sharding | Data outgrows one DB | ⏳ Far off. The natural shard key would be the customer (orders, cart, addresses) |
+| 8 | Monitoring | Outages with no clue why | ✅ Sentry for errors, a request ID and `Server-Timing` on every response, slow requests logged with their ID ([`middleware.py`](bloomapp/middleware.py)), `/healthz/` for the platform |
+
+**Cache stampede protection.** When a hot key expires or the cache restarts, many requests can
+rebuild it at once and flood the database. `cached()` guards against that four ways:
+
+- **TTL jitter:** expiry times are randomised by ±10%, so keys don't all expire together.
+- **Serve stale:** stale data is served while it is being rebuilt.
+- **Request coalescing:** a short lock lets only one request rebuild a key, and on a cold cache the
+  others wait briefly for it instead of all querying.
+- **Warming:** `manage.py warm_cache` runs before the server takes traffic.
+
+**Background tasks are safe to retry:** they take plain IDs, and a payment confirmed twice (redirect
+and webhook) sends one email.
 
 ## Getting started
 

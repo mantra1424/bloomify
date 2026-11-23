@@ -1,6 +1,8 @@
 from django.conf import settings
+from django.utils.functional import SimpleLazyObject
 
 from .models import CartItem, Category
+from .services import cache as catalog_cache
 from .services import pricing
 
 
@@ -17,8 +19,12 @@ def site_nav(request):
     return {
         'brand': settings.SITE_BRAND,
         'pwa_enabled': settings.PWA_ENABLED,
-        # Lazy queryset: only hits the database when a template loops over it.
-        'nav_categories': Category.objects.filter(status='available').order_by('name'),
+        # Most pages show the menu, so it comes from the cache, and only when a template uses it.
+        'nav_categories': SimpleLazyObject(lambda: catalog_cache.cached('nav_categories', _nav_categories)),
         'delivery_city_names': pricing.serviceable_city_names(),
         'free_delivery_above': pricing.FREE_DELIVERY_ABOVE,
     }
+
+
+def _nav_categories():
+    return list(Category.objects.filter(status='available').order_by('name'))

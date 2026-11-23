@@ -15,10 +15,26 @@ from django.views.decorators.http import require_GET, require_POST
 
 from bloomapp.forms import ContactForm
 from bloomapp.models import Category, NewsletterSubscriber, Product, Wishlist
+from bloomapp.services import cache as catalog_cache
 from bloomapp.services import pricing
 
 
 def home(request):
+    sections = catalog_cache.cached('home', _home_sections)
+    return render(
+        request,
+        'bloomapp/index.html',
+        {
+            **sections,
+            'wishlist_ids': _wishlist_ids(request.user),
+            'hero_image': 'bloomapp/demo/products/pink-garden-delight.jpg',
+            'hero_image_small': 'bloomapp/demo/hero-480.jpg',  # same photo, 480px, for phones
+        },
+    )
+
+
+def _home_sections():
+    """The home page's catalog data: the same for every visitor, so it is cached."""
     available = Product.objects.filter(status='available').select_related('category')
 
     # Each occasion tile shows a photo: its featured product's, else its newest product's.
@@ -32,23 +48,14 @@ def home(request):
     ]
 
     # Bestsellers: most ordered, then featured, then newest.
-    bestsellers = available.annotate(
-        order_count=Count('orderitem', distinct=True),
-        review_count=Count('reviews', distinct=True),
-        rating_avg=Avg('reviews__rating'),
-    ).order_by('-order_count', '-is_featured', '-created_at')[:4]
-
-    return render(
-        request,
-        'bloomapp/index.html',
-        {
-            'occasions': occasions,
-            'bestsellers': bestsellers,
-            'wishlist_ids': _wishlist_ids(request.user),
-            'hero_image': 'bloomapp/demo/products/pink-garden-delight.jpg',
-            'hero_image_small': 'bloomapp/demo/hero-480.jpg',  # same photo, 480px, for phones
-        },
+    bestsellers = list(
+        available.annotate(
+            order_count=Count('orderitem', distinct=True),
+            review_count=Count('reviews', distinct=True),
+            rating_avg=Avg('reviews__rating'),
+        ).order_by('-order_count', '-is_featured', '-created_at')[:4]
     )
+    return {'occasions': occasions, 'bestsellers': bestsellers}
 
 
 def _wishlist_ids(user):

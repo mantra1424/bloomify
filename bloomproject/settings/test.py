@@ -24,3 +24,7 @@ if os.environ.get('DATABASE_URL'):
     import dj_database_url
 
     DATABASES = {'default': dj_database_url.config()}
+
+# Each test sees fresh data: the catalog cache is off unless a test turns it on.
+CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+CATALOG_CACHE_SECONDS = 0

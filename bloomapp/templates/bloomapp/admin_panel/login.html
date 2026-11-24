@@ -1,61 +1,54 @@
-{% load static %}
-<!DOCTYPE html>
+{% load static bloom %}<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Login – {{ brand }}</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="robots" content="noindex"/>
+  <title>Staff sign-in – {{ brand }}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'bloomapp/img/favicon.svg' %}"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,500&text=%26&display=swap"/>
   <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
-  <link rel="stylesheet" href="{% static 'css/animations.css' %}"/>
+  <style>
+    .staff-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.75rem; padding: 2rem var(--gutter); }
+    .staff-logo { display: inline-flex; align-items: center; gap: 0.35rem; font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; color: var(--accent); white-space: nowrap; }
+    .staff-card { width: 100%; max-width: 26rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); padding: 2.25rem; box-shadow: var(--shadow-md); }
+    .staff-card h1 { font-size: var(--text-3xl); margin-bottom: 0.35rem; }
+    .staff-card .intro { margin-bottom: 1.5rem; }
+    .staff-card .form-alert { margin-bottom: 1.25rem; }
+    .staff-back { font-size: var(--text-sm); }
+    @media (max-width: 480px) { .staff-card { padding: 1.75rem 1.25rem; } }
+  </style>
 </head>
-<body style="background:linear-gradient(135deg,#1a0a10,#2d1220);min-height:100vh;display:flex;align-items:center;justify-content:center;">
-{% if messages %}{% for m in messages %}<div class="django-message" data-type="{{ m.tags }}" style="display:none">{{ m }}</div>{% endfor %}{% endif %}
-<div style="width:100%;max-width:420px;padding:1.5rem;">
-  <div style="text-align:center;margin-bottom:2rem;">
-    <div style="display:inline-flex;align-items:center;gap:0.65rem;margin-bottom:0.75rem;">
-      <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--pink-400),var(--pink-700));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(232,86,122,0.5);">
-        <svg viewBox="0 0 32 32" fill="white" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;">
-          <!-- 5-petal flower -->
-          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(0   16 16)"/>
-          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(72  16 16)"/>
-          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(144 16 16)"/>
-          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(216 16 16)"/>
-          <ellipse cx="16" cy="9"  rx="4" ry="7" transform="rotate(288 16 16)"/>
-          <circle cx="16" cy="16" r="4" fill="rgba(255,220,210,0.9)"/>
-        </svg>
-      </div>
-      <div style="font-family:var(--font-display);font-size:2rem;color:var(--pink-300);font-weight:700;line-height:1;">Bloom<span style="color:#6ee7a0;">ify</span></div>
-    </div>
-    <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;letter-spacing:2px;text-transform:uppercase;">Admin Panel</p>
-  </div>
-  <div style="background:white;border-radius:var(--radius-xl);padding:2.5rem;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
-    <h2 style="margin-bottom:0.25rem;">Welcome Back</h2>
-    <p style="color:var(--gray-400);font-size:0.85rem;margin-bottom:2rem;">Sign in to manage {{ brand }}</p>
-    <form method="post">
+<body>
+<main class="staff-page">
+  <a href="{% url 'home' %}" class="staff-logo">{% logo %}</a>
+  <div class="staff-card">
+    <h1>Staff sign-in</h1>
+    <p class="intro">For the {{ brand }} team: orders, products and messages.</p>
+    {% for m in messages %}
+      <p class="form-alert" role="alert">{% icon 'alert' 18 %} <span>{{ m }}</span></p>
+    {% endfor %}
+    <form method="post" novalidate>
       {% csrf_token %}
       <div class="form-group">
-        <label class="form-label">Email Address</label>
-        <div class="input-icon">
-          <span class="icon">📧</span>
-          <input type="email" name="email" class="form-control" placeholder="admin@bloomify.com" required/>
-        </div>
+        <label class="form-label" for="email">Email</label>
+        <input type="email" id="email" name="email" class="form-control" autocomplete="username" required autofocus/>
       </div>
       <div class="form-group">
-        <label class="form-label">Password</label>
-        <div style="position:relative;">
-          <input type="password" name="password" id="admin-pwd" class="form-control" placeholder="Enter password" required/>
-          <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--gray-400);"
-            onclick="const i=document.getElementById('admin-pwd');i.type=i.type==='password'?'text':'password';">👁️</span>
+        <label class="form-label" for="password">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" required/>
+          {% include 'bloomapp/auth/_pw_toggle.html' %}
         </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem;">Sign In →</button>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Sign in</button>
     </form>
-    <p style="text-align:center;margin-top:1.5rem;font-size:0.8rem;color:var(--gray-400);">
-      <a href="{% url 'home' %}" style="color:var(--pink-500);">← Back to Store</a>
-    </p>
   </div>
-</div>
-<div class="toast-container"></div>
-<script src="{% static 'js/main.js' %}"></script>
+  <a class="link staff-back" href="{% url 'home' %}">Back to the shop</a>
+</main>
+<script src="{% static 'js/main.js' %}" defer></script>
 </body>
 </html>

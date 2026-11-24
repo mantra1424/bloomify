@@ -31,7 +31,7 @@
 .today-meta { display:flex; gap:2rem; }
 .today-meta-item { text-align:center; }
 .today-meta-item .tm-val { font-size:1.5rem; font-weight:800; color:white; line-height:1; }
-.today-meta-item .tm-lbl { font-size:0.68rem; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; margin-top:0.2rem; }
+.today-meta-item .tm-lbl { font-size:0.75rem; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; margin-top:0.2rem; }
 
 /* ── Quick Actions ─────────────────────────────────── */
 .quick-actions { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.75rem; }
@@ -47,7 +47,7 @@
 .qa-btn.outline:hover { border-color:var(--pink-300); color:var(--pink-600); background:var(--pink-50); transform:translateY(-1px); }
 
 /* ── KPI Cards enhanced ────────────────────────────── */
-.kpi-trend { font-size:0.68rem; color:var(--gray-400); margin-top:0.1rem; }
+.kpi-trend { font-size:0.75rem; color:var(--gray-400); margin-top:0.1rem; }
 .kpi-bar { height:3px; border-radius:2px; margin-top:0.75rem; background:var(--gray-100); overflow:hidden; }
 .kpi-bar-fill { height:100%; border-radius:2px; transition:width 0.8s ease; }
 
@@ -164,7 +164,7 @@
   <a href="{% url 'admin_coupons' %}" class="qa-btn outline">🎟️ Create Coupon</a>
   <a href="{% url 'admin_users' %}" class="qa-btn outline">👥 View Users</a>
   <a href="{% url 'admin_messages' %}" class="qa-btn outline">💬 Messages</a>
-  <a href="{% url 'admin_sales_report' %}" class="qa-btn outline" style="border-color:#10b981;color:#059669;">📊 Sales Report</a>
+  <a href="{% url 'admin_sales_report' %}" class="qa-btn outline" style="border-color:#047857;color:#047857;">📊 Sales Report</a>
   {% else %}
   <a href="{% url 'admin_orders' %}?status=placed" class="qa-btn outline">⏳ Pending Orders</a>
   <a href="{% url 'admin_orders' %}?status=packed" class="qa-btn outline">📬 Being Packed</a>
@@ -216,7 +216,7 @@
         <span class="stock-chip stock-chip-low">⚠️ {{ p.name }} — {{ p.stock_quantity }} left</span>
       {% endfor %}
     </div>
-    <a href="{% url 'admin_products' %}" class="btn btn-sm" style="background:#ea580c;color:white;font-size:0.78rem;">Manage Stock →</a>
+    <a href="{% url 'admin_products' %}" class="btn btn-sm" style="background:#c2410c;color:white;font-size:0.78rem;">Manage Stock →</a>
   </div>
 </div>
 {% endif %}
@@ -371,12 +371,12 @@
             <td><strong>#{{ order.id }}</strong></td>
             <td>
               <div style="font-weight:600;font-size:0.82rem;">{{ order.full_name|truncatechars:16 }}</div>
-              <div style="font-size:0.72rem;color:var(--gray-400);">{{ order.created_at|date:"d M, H:i" }}</div>
+              <div style="font-size:0.75rem;color:var(--gray-400);">{{ order.created_at|date:"d M, H:i" }}</div>
             </td>
             <td style="font-size:0.78rem;color:var(--gray-500);">{{ order.city }}</td>
             <td style="font-weight:700;font-size:0.85rem;">₹{{ order.total_amount|floatformat:0 }}</td>
             <td>
-              <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}" style="font-size:0.7rem;padding:0.2rem 0.5rem;">
+              <span class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}" style="font-size:0.75rem;padding:0.2rem 0.5rem;">
                 {{ order.status_display }}
               </span>
             </td>
@@ -398,7 +398,7 @@
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--gray-100);">
     <div style="padding:1.25rem;text-align:center;border-right:1px solid var(--gray-100);">
-      <div style="font-size:1.75rem;font-weight:800;color:#f59e0b;">{{ pending_orders }}</div>
+      <div style="font-size:1.75rem;font-weight:800;color:#b45309;">{{ pending_orders }}</div>
       <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">⏳ Placed</div>
     </div>
     <div style="padding:1.25rem;text-align:center;border-right:1px solid var(--gray-100);">
@@ -410,7 +410,7 @@
       <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">🚚 Out for Delivery</div>
     </div>
     <div style="padding:1.25rem;text-align:center;">
-      <div style="font-size:1.75rem;font-weight:800;color:#10b981;">—</div>
+      <div style="font-size:1.75rem;font-weight:800;color:#047857;">—</div>
       <div style="font-size:0.78rem;color:var(--gray-500);margin-top:0.25rem;font-weight:600;">✅ Delivered Today</div>
     </div>
   </div>

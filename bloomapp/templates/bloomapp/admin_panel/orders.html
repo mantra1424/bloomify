@@ -11,16 +11,16 @@
   display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem;
 }
 .detail-block { font-size:0.85rem; }
-.detail-block label { font-size:0.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gray-400); display:block; margin-bottom:0.2rem; }
+.detail-block label { font-size:0.75rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gray-400); display:block; margin-bottom:0.2rem; }
 .detail-block span { font-weight:600; color:var(--gray-800); }
 .expand-btn { background:none; border:none; cursor:pointer; font-size:1rem; color:var(--gray-500); transition:transform 0.2s; padding:0.25rem 0.5rem; }
 .expand-btn.open { transform:rotate(90deg); color:var(--pink-600); }
 .status-pipeline { display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap; margin-top:0.5rem; }
 .status-step {
-  font-size:0.7rem; padding:0.25rem 0.6rem; border-radius:var(--radius-full);
+  font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:var(--radius-full);
   background:var(--gray-100); color:var(--gray-400); font-weight:600; white-space:nowrap;
 }
-.status-step.done { background:var(--green-50,#f0fdf4); color:#16a34a; }
+.status-step.done { background:var(--green-50,#f0fdf4); color:#15803d; }
 .status-step.current { background:var(--pink-100); color:var(--pink-700); outline:2px solid var(--pink-300); }
 </style>
 {% endblock %}
@@ -47,14 +47,14 @@
   <a href="?status={{ val }}" style="text-decoration:none;">
     <div style="background:white;border:2px solid {% if status_filter == val %}var(--pink-400){% else %}var(--gray-100){% endif %};border-radius:var(--radius-md);padding:0.6rem 1.1rem;display:flex;flex-direction:column;align-items:center;min-width:110px;cursor:pointer;transition:all 0.2s;">
       <span style="font-size:1.3rem;">{% if val == 'placed' %}📋{% elif val == 'packed' %}📦{% elif val == 'out_for_delivery' %}🚚{% elif val == 'delivered' %}✅{% else %}❌{% endif %}</span>
-      <span style="font-size:0.7rem;font-weight:700;color:var(--gray-700);margin-top:0.2rem;">{{ label }}</span>
+      <span style="font-size:0.75rem;font-weight:700;color:var(--gray-700);margin-top:0.2rem;">{{ label }}</span>
     </div>
   </a>
   {% endfor %}
   <a href="{% url 'admin_orders' %}" style="text-decoration:none;">
     <div style="background:var(--gray-50);border:2px solid var(--gray-200);border-radius:var(--radius-md);padding:0.6rem 1.1rem;display:flex;flex-direction:column;align-items:center;min-width:80px;cursor:pointer;">
       <span style="font-size:1.3rem;">📄</span>
-      <span style="font-size:0.7rem;font-weight:700;color:var(--gray-500);margin-top:0.2rem;">All</span>
+      <span style="font-size:0.75rem;font-weight:700;color:var(--gray-500);margin-top:0.2rem;">All</span>
     </div>
   </a>
 </div>
@@ -142,7 +142,7 @@
                   <span>Delivery Charge</span><span>₹{{ order.delivery_charge }}</span>
                 </div>
                 {% if order.discount_amount %}
-                <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:#16a34a;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:#15803d;">
                   <span>Discount</span><span>-₹{{ order.discount_amount }}</span>
                 </div>
                 {% endif %}

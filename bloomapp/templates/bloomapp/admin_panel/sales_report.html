@@ -24,7 +24,7 @@
   }
 
   .filter-group label {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--gray-500);
     text-transform: uppercase;
@@ -69,33 +69,17 @@
     border-radius: var(--radius-lg);
     padding: 1.1rem 1.25rem;
     box-shadow: var(--shadow-sm);
-    border-top: 3px solid transparent;
+    border: 1px solid var(--gray-100);
     text-align: center;
   }
 
-  .rep-kpi.pink {
-    border-color: var(--pink-400);
-  }
-
-  .rep-kpi.green {
-    border-color: #10b981;
-  }
-
-  .rep-kpi.blue {
-    border-color: #3b82f6;
-  }
-
-  .rep-kpi.amber {
-    border-color: #f59e0b;
-  }
-
-  .rep-kpi.red {
-    border-color: #ef4444;
-  }
-
-  .rep-kpi.purple {
-    border-color: #8b5cf6;
-  }
+  /* Each card's colour is carried by its number, not a bar along the top. */
+  .rep-kpi.pink .rk-val { color: var(--accent); }
+  .rep-kpi.green .rk-val { color: #047857; }
+  .rep-kpi.blue .rk-val { color: #1d4ed8; }
+  .rep-kpi.amber .rk-val { color: #b45309; }
+  .rep-kpi.red .rk-val { color: #b91c1c; }
+  .rep-kpi.purple .rk-val { color: var(--ink); }
 
   .rep-kpi .rk-val {
     font-size: 1.4rem;
@@ -105,7 +89,7 @@
   }
 
   .rep-kpi .rk-lbl {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--gray-400);
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -161,7 +145,7 @@
   }
 
   .br-sub {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     color: var(--gray-400);
     font-weight: 400;
   }
@@ -174,7 +158,7 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 800;
   }
 
@@ -205,7 +189,7 @@
     gap: 0.5rem;
     padding: 0.65rem 1.4rem;
     border-radius: var(--radius-full);
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: #047857;
     color: white;
     font-weight: 700;
     font-size: 0.85rem;
@@ -228,7 +212,7 @@
     gap: 0.5rem;
     padding: 0.65rem 1.4rem;
     border-radius: var(--radius-full);
-    background: linear-gradient(135deg, #c2185b, #e91e8c);
+    background: var(--accent);
     color: white;
     font-weight: 700;
     font-size: 0.85rem;
@@ -553,11 +537,11 @@
           <td style="font-size:0.78rem;white-space:nowrap;">{{ order.created_at|date:"d M Y, H:i" }}</td>
           <td>
             <div style="font-weight:600;font-size:0.85rem;">{{ order.full_name }}</div>
-            <div style="font-size:0.72rem;color:var(--gray-400);">{{ order.email }}</div>
+            <div style="font-size:0.75rem;color:var(--gray-400);">{{ order.email }}</div>
           </td>
           <td style="font-size:0.82rem;">{{ order.city }}</td>
           <td>
-            <span class="badge badge-pink" style="font-size:0.7rem;">
+            <span class="badge badge-pink" style="font-size:0.75rem;">
               {% if order.payment_mode == 'cod' %}💵{% elif order.payment_mode == 'upi' %}📱{% else %}💳{% endif %}
               {{ order.payment_mode|upper }}
             </span>
@@ -565,16 +549,16 @@
           <td>
             <span
               class="badge {% if order.status == 'delivered' %}badge-green{% elif order.status == 'placed' %}badge-yellow{% elif order.status == 'cancelled' %}badge-red{% else %}badge-pink{% endif %}"
-              style="font-size:0.7rem;">
+              style="font-size:0.75rem;">
               {{ order.status_display }}
             </span>
           </td>
           <td style="font-size:0.83rem;">₹{{ order.subtotal|floatformat:0 }}</td>
           <td
-            style="font-size:0.83rem;color:{% if order.delivery_charge == 0 %}#10b981{% else %}var(--gray-600){% endif %};">
+            style="font-size:0.83rem;color:{% if order.delivery_charge == 0 %}#047857{% else %}var(--gray-600){% endif %};">
             {% if order.delivery_charge == 0 %}FREE{% else %}₹{{ order.delivery_charge|floatformat:0 }}{% endif %}
           </td>
-          <td style="font-size:0.83rem;color:#16a34a;">
+          <td style="font-size:0.83rem;color:#15803d;">
             {% if order.discount_amount > 0 %}-₹{{ order.discount_amount|floatformat:0 }}{% else %}—{% endif %}
           </td>
           <td style="font-weight:800;font-size:0.9rem;color:var(--pink-600);">₹{{ order.total_amount|floatformat:0 }}
@@ -597,7 +581,7 @@
           </td>
           <td style="padding:0.75rem 1rem;">₹{{ total_subtotal|floatformat:0 }}</td>
           <td style="padding:0.75rem 1rem;">₹{{ total_delivery|floatformat:0 }}</td>
-          <td style="padding:0.75rem 1rem;color:#16a34a;">-₹{{ total_discount|floatformat:0 }}</td>
+          <td style="padding:0.75rem 1rem;color:#15803d;">-₹{{ total_discount|floatformat:0 }}</td>
           <td style="padding:0.75rem 1rem;font-size:1rem;color:var(--pink-600);">₹{{ total_revenue|floatformat:0 }}</td>
         </tr>
       </tfoot>
@@ -653,7 +637,7 @@
     const header = document.createElement('div');
     header.id = 'pdf-brand-header';
     header.style.cssText = [
-      'background:linear-gradient(135deg,#c2185b,#e91e8c)',
+      'background:var(--accent)',
       'color:white',
       'padding:20px 28px',
       'border-radius:12px',

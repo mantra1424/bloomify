@@ -40,14 +40,14 @@
       <a href="{% url 'admin_orders' %}" class="sidebar-link {% if 'admin_order' in request.resolver_match.url_name %}active{% endif %}">
         <span class="icon">📦</span> Orders
         {% if admin_user.role == 'staff' %}
-          <span style="margin-left:auto;background:var(--pink-500);color:white;font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:var(--radius-full);font-weight:700;">PRIMARY</span>
+          <span style="margin-left:auto;background:var(--pink-500);color:white;font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:var(--radius-full);font-weight:700;">PRIMARY</span>
         {% endif %}
       </a>
 
       <div class="sidebar-section-label">Catalogue</div>
       <a href="{% url 'admin_products' %}" class="sidebar-link {% if 'admin_product' in request.resolver_match.url_name %}active{% endif %}">
         <span class="icon">🌷</span> Products
-        {% if admin_user.role == 'staff' %}<span style="margin-left:auto;font-size:0.65rem;color:var(--gray-400);">view only</span>{% endif %}
+        {% if admin_user.role == 'staff' %}<span style="margin-left:auto;font-size:0.75rem;color:var(--gray-400);">view only</span>{% endif %}
       </a>
 
       {% if admin_user.role == 'admin' %}

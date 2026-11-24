@@ -23,13 +23,13 @@
 .sidebar-brand .logo-name em { color: #9DB39A; }
 .sidebar-brand .logo-mark { --logo-cup: #D39AA2; --logo-petal: #E8C9CC; --logo-stem: #9DB39A; --logo-leaf: #B8CBB5; }
 .sidebar-logo small {
-  display: block; font-size: 0.7rem; font-weight: 400;
+  display: block; font-size: 0.75rem; font-weight: 400;
   color: rgba(255,255,255,0.4); font-family: var(--font-body); letter-spacing: 1px;
   margin-top: 0.2rem;
 }
 .sidebar-nav { flex: 1; padding: 1.25rem 0; }
 .sidebar-section-label {
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 2px;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 2px;
   text-transform: uppercase; color: rgba(255,255,255,0.3);
   padding: 0.75rem 1.5rem 0.4rem;
 }
@@ -56,7 +56,7 @@
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
 }
-.sidebar-user-info small { display: block; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+.sidebar-user-info small { display: block; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
 .sidebar-user-name { font-size: 0.85rem; color: white; font-weight: 600; }
 
 /* ── Admin Main ──────────────────────────────────────────────────── */
@@ -83,7 +83,7 @@
 .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--gray-900); line-height: 1.1; margin: 0.25rem 0; }
 .kpi-change { font-size: 0.78rem; font-weight: 600; }
 .kpi-change.up { color: var(--green-500); }
-.kpi-change.down { color: #ef4444; }
+.kpi-change.down { color: #dc2626; }
 .kpi-icon {
   width: 48px; height: 48px; border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;

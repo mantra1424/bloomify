@@ -10,7 +10,7 @@
   box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:1rem;
 }
 .user-stat-chip .icon { font-size:1.75rem; }
-.user-stat-chip .label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--gray-400); }
+.user-stat-chip .label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--gray-400); }
 .user-stat-chip .val { font-size:1.5rem; font-weight:800; color:var(--gray-900); line-height:1; margin-top:0.1rem; }
 .user-avatar { width:36px; height:36px; border-radius:50%; background:var(--pink-100); color:var(--pink-600);
   display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; flex-shrink:0; }
@@ -76,7 +76,7 @@
               <div class="user-avatar">{{ u.full_name|slice:":1"|upper }}</div>
               <div>
                 <div style="font-weight:600;font-size:0.875rem;">{{ u.full_name }}</div>
-                <div style="font-size:0.72rem;color:var(--gray-400);">ID #{{ u.id }}</div>
+                <div style="font-size:0.75rem;color:var(--gray-400);">ID #{{ u.id }}</div>
               </div>
             </div>
           </td>
@@ -92,7 +92,7 @@
           </td>
           <td>
             <span style="font-weight:700;color:var(--gray-900);">{{ u.order_set.count }}</span>
-            <span style="font-size:0.72rem;color:var(--gray-400);margin-left:3px;">order{{ u.order_set.count|pluralize }}</span>
+            <span style="font-size:0.75rem;color:var(--gray-400);margin-left:3px;">order{{ u.order_set.count|pluralize }}</span>
           </td>
           <td style="font-weight:700;color:var(--pink-600);">
             {% with spent=u.order_set.all %}

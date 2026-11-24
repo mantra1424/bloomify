@@ -40,6 +40,15 @@
         ],
         "createdAt": "2026-11-24T05:24:53.656Z",
         "reason": "Agent: these admin cards hold a padded header and a full-width table whose cells carry their own padding (checked in the browser)"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          "bloomapp/templates/bloomapp/emails/**"
+        ],
+        "createdAt": "2026-11-24T11:36:22.843Z",
+        "reason": "Agent: email clients can't load web fonts; Arial is the email-safe stand-in for the site's Inter"
       }
     ]
   }

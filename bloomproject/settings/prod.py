@@ -21,6 +21,9 @@ CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 if RENDER_HOST:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_HOST}')
 
+if RENDER_HOST and not os.environ.get('SITE_URL'):
+    SITE_URL = f'https://{RENDER_HOST}'
+
 DATABASES = {
     'default': dj_database_url.config(conn_max_age=600, conn_health_checks=True),
 }

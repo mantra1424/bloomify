@@ -215,3 +215,20 @@ def test_logo_shows_mark_and_name_on_the_shop(client):
 def test_admin_sidebar_uses_the_new_logo(admin_client_panel):
     html = admin_client_panel.get(reverse('admin_dashboard')).content.decode()
     assert 'class="logo-mark"' in html and 'Bloom<span' not in html
+
+
+def test_order_email_links_to_tracking_and_shows_the_right_total(customer, mailoutbox, settings):
+    from bloomapp.services.emails import send_order_confirmation_email
+
+    settings.SITE_URL = 'https://shop.example'
+    order = make_order(customer, payment_mode='cod')
+    send_order_confirmation_email(order)
+    mail = mailoutbox[0]
+    html = mail.alternatives[0][0]
+    tracking = 'https://shop.example' + reverse('order_tracking', args=[order.id])
+    assert f'href="{tracking}"' in html and tracking in mail.body
+    assert 'To pay on delivery' in html and 'To pay on delivery: ₹520' in mail.body
+    assert '₹520' in html and '₹20' in html  # total and delivery, formatted like the site
+    # No emoji, and no promise of an "out for delivery" email the shop never sends.
+    assert not any(ord(ch) > 0x1F000 for ch in html + mail.body)
+    assert 'out for delivery' not in html.lower()

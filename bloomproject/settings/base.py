@@ -253,3 +253,6 @@ TASKS = {'default': {'BACKEND': 'django.tasks.backends.immediate.ImmediateBacken
 # ── Monitoring ─────────────────────────────────────────────────────────────
 # Requests slower than this are logged as warnings (see bloomapp/middleware.py).
 SLOW_REQUEST_MS = int(os.environ.get('SLOW_REQUEST_MS', '800'))
+
+# Public address of the site, for links in emails (which have no request to build them from).
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000').rstrip('/')

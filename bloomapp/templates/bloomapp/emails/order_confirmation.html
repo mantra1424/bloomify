@@ -1,60 +1,106 @@
-<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background:#fdf4f7;font-family:Inter,sans-serif;">
-  <div style="max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(43,30,28,0.10);">
-    <div style="background:#7B2D3B;padding:36px 32px;text-align:center;">
-      <div style="font-family:Georgia,serif;font-size:20px;color:#FBF7F2;margin-bottom:10px;letter-spacing:0.5px;">{{ brand }}</div>
-      <h1 style="color:white;margin:0;font-size:22px;font-weight:700;">Your order is confirmed</h1>
-      <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Thank you for choosing {{ brand }}</p>
-    </div>
-    <div style="padding:28px 32px;">
-      <p style="font-size:15px;color:#333;margin:0 0 4px;">Hi <strong>{{ order.full_name }}</strong>,</p>
-      <p style="font-size:14px;color:#666;margin:0 0 24px;">Your order <strong style="color:#7B2D3B;">#{{ order.id }}</strong> has been placed successfully and is being prepared with love! 💐</p>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-        <thead>
-          <tr style="background:#fdf4f7;">
-            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Item</th>
-            <th style="padding:10px 8px;text-align:center;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Qty</th>
-            <th style="padding:10px 8px;text-align:right;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          <tr style="border-bottom:1px solid #f5e6eb;">
-            <td style="padding:10px 8px;font-size:14px;color:#333;">{{ item.display_name }}</td>
-            <td style="padding:10px 8px;text-align:center;font-size:14px;color:#555;">×{{ item.quantity }}</td>
-            <td style="padding:10px 8px;text-align:right;font-size:14px;font-weight:600;color:#7B2D3B;">₹{{ item.line_total }}</td>
-          </tr>
-          {% endfor %}
-          <tr style="background:#fdf4f7;">
-            <td colspan="2" style="padding:8px;font-size:13px;color:#555;">Delivery</td>
-            <td style="padding:8px;text-align:right;font-size:13px;font-weight:600;color:#555;">{% if order.delivery_charge == 0 %}FREE 🎉{% else %}₹{{ order.delivery_charge }}{% endif %}</td>
-          </tr>
-          {% if order.discount_amount %}
+{% load bloom %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="light"/>
+  <title>Order #{{ order.id }} confirmed</title>
+</head>
+{# Email clients ignore most CSS: tables for layout, every style inline, colours from the shop's palette. #}
+<body style="margin:0;padding:0;background-color:#FBF7F2;">
+  {# Preview line shown next to the subject in the inbox #}
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Order #{{ order.id }} · {{ order.total_amount|rupees }} · we're preparing your bouquet now.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FBF7F2;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#FFFFFF;border:1px solid #E9DFD8;border-radius:16px;">
+          {# Header #}
           <tr>
-            <td colspan="2" style="padding:6px 8px;font-size:13px;color:#16a34a;">Discount ({{ order.coupon.code }})</td>
-            <td style="padding:6px 8px;text-align:right;font-size:13px;color:#16a34a;font-weight:600;">-₹{{ order.discount_amount }}</td>
+            <td style="background-color:#7B2D3B;border-radius:16px 16px 0 0;padding:32px 32px 28px;text-align:center;">
+              <p style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:20px;line-height:1.2;color:#FBF7F2;">{{ brand }}</p>
+              <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.25;font-weight:normal;color:#FFFFFF;">Your order is confirmed</h1>
+            </td>
           </tr>
-          {% endif %}
-        </tbody>
-        <tfoot>
-          <tr style="border-top:2px solid #fce4ec;">
-            <td colspan="2" style="padding:12px 8px;font-size:16px;font-weight:700;color:#111;">Total</td>
-            <td style="padding:12px 8px;text-align:right;font-size:18px;font-weight:800;color:#7B2D3B;">₹{{ order.total_amount }}</td>
+          {# Greeting #}
+          <tr>
+            <td style="padding:28px 32px 8px;font-family:Arial,Helvetica,sans-serif;">
+              <p style="margin:0 0 8px;font-size:16px;line-height:1.5;color:#2B1E1C;">Hi {{ order.full_name }},</p>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#4A3F3B;">Thank you for your order. Order <strong style="color:#7B2D3B;">#{{ order.id }}</strong> is placed and we're preparing it now.{% if order.delivery_slot %} It arrives on <strong style="color:#2B1E1C;">{{ order.delivery_slot.date|date:"l j F" }}, {{ order.delivery_slot.slot_label }}</strong>.{% endif %}</p>
+            </td>
           </tr>
-        </tfoot>
-      </table>
-      <div style="background:#fdf4f7;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
-        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#7B2D3B;text-transform:uppercase;letter-spacing:1px;">Delivery Details</p>
-        <p style="margin:0;font-size:14px;color:#444;">{{ order.full_name }} · {{ order.phone }}</p>
-        <p style="margin:4px 0 0;font-size:13px;color:#666;">{{ order.address }}, {{ order.city }} – {{ order.pincode }}</p>
-        <p style="margin:8px 0 0;font-size:13px;color:#888;">Payment: <strong style="color:#333;">{{ order.get_payment_mode_display }}</strong></p>
-      </div>
-      <p style="font-size:13px;color:#888;margin:0;">We'll notify you when your order is out for delivery. 🚚<br/>For support, reply to this email or WhatsApp us at <strong>+91 94289 74532</strong>.</p>
-    </div>
-    <div style="background:#fdf4f7;padding:16px 32px;text-align:center;border-top:1px solid #fce4ec;">
-      <p style="margin:0;font-size:12px;color:#aaa;">© {{ brand }} · Hand-tied flowers, delivered</p>
-    </div>
-  </div>
+          {# Items #}
+          <tr>
+            <td style="padding:20px 32px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
+                <tr>
+                  <th align="left" style="padding:0 0 10px;font-size:13px;font-weight:bold;color:#6A5B57;border-bottom:1px solid #E9DFD8;">Item</th>
+                  <th align="center" style="padding:0 0 10px;font-size:13px;font-weight:bold;color:#6A5B57;border-bottom:1px solid #E9DFD8;">Qty</th>
+                  <th align="right" style="padding:0 0 10px;font-size:13px;font-weight:bold;color:#6A5B57;border-bottom:1px solid #E9DFD8;">Price</th>
+                </tr>
+                {% for item in items %}
+                <tr>
+                  <td style="padding:12px 8px 12px 0;font-size:15px;line-height:1.4;color:#2B1E1C;border-bottom:1px solid #E9DFD8;">{{ item.display_name }}</td>
+                  <td align="center" style="padding:12px 8px;font-size:15px;color:#4A3F3B;border-bottom:1px solid #E9DFD8;">{{ item.quantity }}</td>
+                  <td align="right" style="padding:12px 0 12px 8px;font-size:15px;color:#2B1E1C;border-bottom:1px solid #E9DFD8;white-space:nowrap;">{{ item.line_total|rupees }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td colspan="2" style="padding:12px 0 4px;font-size:14px;color:#4A3F3B;">Delivery</td>
+                  <td align="right" style="padding:12px 0 4px;font-size:14px;color:#4A3F3B;white-space:nowrap;">{% if order.delivery_charge == 0 %}Free{% else %}{{ order.delivery_charge|rupees }}{% endif %}</td>
+                </tr>
+                {% if order.discount_amount %}
+                <tr>
+                  <td colspan="2" style="padding:4px 0;font-size:14px;color:#3D5A3A;">Coupon {{ order.coupon.code }}</td>
+                  <td align="right" style="padding:4px 0;font-size:14px;color:#3D5A3A;white-space:nowrap;">−{{ order.discount_amount|rupees }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                  <td colspan="2" style="padding:12px 0 0;font-size:16px;font-weight:bold;color:#2B1E1C;border-top:1px solid #E9DFD8;">{% if order.is_paid %}Total paid{% elif order.payment_mode == 'cod' %}To pay on delivery{% else %}Total{% endif %}</td>
+                  <td align="right" style="padding:12px 0 0;font-size:18px;font-weight:bold;color:#7B2D3B;border-top:1px solid #E9DFD8;white-space:nowrap;">{{ order.total_amount|rupees }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {# Delivery details #}
+          <tr>
+            <td style="padding:24px 32px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4E6E3;border-radius:12px;font-family:Arial,Helvetica,sans-serif;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#2B1E1C;">Delivering to</p>
+                    <p style="margin:0;font-size:14px;line-height:1.5;color:#4A3F3B;">{{ order.full_name }} · {{ order.phone }}<br/>{{ order.address }}, {{ order.city }} {{ order.pincode }}</p>
+                    <p style="margin:10px 0 0;font-size:14px;line-height:1.5;color:#4A3F3B;">Payment: {{ order.get_payment_mode_display }}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {# Call to action #}
+          <tr>
+            <td align="center" style="padding:28px 32px 8px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background-color:#7B2D3B;border-radius:999px;">
+                    <a href="{{ tracking_url }}" style="display:inline-block;padding:14px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Track your order</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 28px;font-family:Arial,Helvetica,sans-serif;">
+              <p style="margin:0;font-size:14px;line-height:1.6;color:#4A3F3B;text-align:center;">Follow each step of the delivery from your account. Questions? Reply to this email or WhatsApp us at <a href="https://wa.me/919428974532" style="color:#7B2D3B;font-weight:bold;">+91 94289 74532</a>.</p>
+            </td>
+          </tr>
+          {# Footer #}
+          <tr>
+            <td style="border-top:1px solid #E9DFD8;padding:16px 32px;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+              <p style="margin:0;font-size:13px;color:#6A5B57;">{{ brand }} · Hand-tied flowers, delivered across Gujarat</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

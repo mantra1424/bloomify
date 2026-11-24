@@ -5,13 +5,19 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
 
 def send_order_confirmation_email(order):
     items = list(order.items.select_related('product', 'custom_bouquet'))
-    context = {'order': order, 'items': items, 'brand': settings.SITE_BRAND}
+    context = {
+        'order': order,
+        'items': items,
+        'brand': settings.SITE_BRAND,
+        'tracking_url': settings.SITE_URL + reverse('order_tracking', args=[order.id]),
+    }
     try:
         send_mail(
             subject=f'Order #{order.id} confirmed – {settings.SITE_BRAND}',

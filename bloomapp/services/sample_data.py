@@ -123,10 +123,12 @@ def _create(rng, log):
     orders = 0
     for days_ago in range(30, -1, -1):
         signed_up = [c for c in customers if c[4] > days_ago]
-        for _ in range(rng.choice([0, 1, 1, 2]) if days_ago > 6 else rng.choice([1, 2, 2])):
+        for n in range(rng.choice([0, 1, 1, 2]) if days_ago > 6 else rng.choice([1, 2, 2])):
             user, street, city, pincode, _ = rng.choice(signed_up)
             created = _time_on(rng, now, days_ago)
-            _make_order(rng, user, street, city, pincode, products, created, _status_for(rng, days_ago))
+            # Today's first order is always new, so the dashboard has one waiting.
+            status = 'placed' if days_ago == 0 and n == 0 else _status_for(rng, days_ago)
+            _make_order(rng, user, street, city, pincode, products, created, status)
             orders += 1
 
     demo = User.objects.filter(email='demo@bloomify.com').first()

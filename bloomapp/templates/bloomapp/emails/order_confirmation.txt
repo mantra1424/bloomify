@@ -1,14 +1,20 @@
-Hi {{ order.full_name }},
+{% load bloom %}{% autoescape off %}Hi {{ order.full_name }},
 
-Your {{ brand|safe }} order #{{ order.id }} is confirmed.
+Your {{ brand }} order #{{ order.id }} is confirmed and we're preparing it now.{% if order.delivery_slot %}
+It arrives on {{ order.delivery_slot.date|date:"l j F" }}, {{ order.delivery_slot.slot_label }}.{% endif %}
 {% for item in items %}
-- {{ item.display_name }} x{{ item.quantity }}: Rs {{ item.line_total }}{% endfor %}
+- {{ item.display_name }} x{{ item.quantity }}: {{ item.line_total|rupees }}{% endfor %}
 
-Delivery: {% if order.delivery_charge == 0 %}FREE{% else %}Rs {{ order.delivery_charge }}{% endif %}{% if order.discount_amount %}
-Discount ({{ order.coupon.code }}): -Rs {{ order.discount_amount }}{% endif %}
-Total: Rs {{ order.total_amount }}
+Delivery: {% if order.delivery_charge == 0 %}Free{% else %}{{ order.delivery_charge|rupees }}{% endif %}{% if order.discount_amount %}
+Coupon {{ order.coupon.code }}: -{{ order.discount_amount|rupees }}{% endif %}
+{% if order.is_paid %}Total paid{% elif order.payment_mode == 'cod' %}To pay on delivery{% else %}Total{% endif %}: {{ order.total_amount|rupees }}
 
-Delivering to: {{ order.address }}, {{ order.city }} - {{ order.pincode }}
+Delivering to: {{ order.full_name }}, {{ order.address }}, {{ order.city }} {{ order.pincode }}
 Payment: {{ order.get_payment_mode_display }}
 
-Thank you for choosing {{ brand|safe }}!
+Track your order: {{ tracking_url }}
+
+Questions? Reply to this email or WhatsApp us at +91 94289 74532.
+
+{{ brand }}
+{% endautoescape %}
